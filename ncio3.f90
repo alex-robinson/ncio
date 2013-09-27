@@ -28,24 +28,32 @@ module ncio
     end type
 
     interface nc_write
-        module procedure    nc_write_int_1D, nc_write_int_2D, &
+        module procedure    nc_write_int_pt, &
+                            nc_write_int_1D, nc_write_int_2D, &
                             nc_write_int_3D , nc_write_int_4D  
-        module procedure    nc_write_double_1D, nc_write_double_2D, &
+        module procedure    nc_write_double_pt, &
+                            nc_write_double_1D, nc_write_double_2D, &
                             nc_write_double_3D, nc_write_double_4D
-        module procedure    nc_write_float_1D, nc_write_float_2D, &
+        module procedure    nc_write_float_pt, &
+                            nc_write_float_1D, nc_write_float_2D, &
                             nc_write_float_3D, nc_write_float_4D
-        module procedure    nc_write_logical_1D, nc_write_logical_2D, &
+        module procedure    nc_write_logical_pt, &
+                            nc_write_logical_1D, nc_write_logical_2D, &
                             nc_write_logical_3D, nc_write_logical_4D
     end interface  
 
     interface nc_read 
-        module procedure    nc_read_int_1D, nc_read_int_2D, &
+        module procedure    nc_read_int_pt, &
+                            nc_read_int_1D, nc_read_int_2D, &
                             nc_read_int_3D, nc_read_int_4D
-        module procedure    nc_read_double_1D, nc_read_double_2D, &
+        module procedure    nc_read_double_pt, &
+                            nc_read_double_1D, nc_read_double_2D, &
                             nc_read_double_3D, nc_read_double_4D
-        module procedure    nc_read_float_1D, nc_read_float_2D, &
+        module procedure    nc_read_float_pt, &
+                            nc_read_float_1D, nc_read_float_2D, &
                             nc_read_float_3D, nc_read_float_4D 
-        module procedure    nc_read_logical_1D, nc_read_logical_2D, &
+        module procedure    nc_read_logical_pt, &
+                            nc_read_logical_1D, nc_read_logical_2D, &
                             nc_read_logical_3D, nc_read_logical_4D                   
     end interface 
 
@@ -676,7 +684,7 @@ contains
             allocate(v%dim(nx))
             v%n = nx
 
-            x0_tmp = 0.d0
+            x0_tmp = 1.d0
             dx_tmp = 1.d0
 
             if (present(x0)) x0_tmp = x0
@@ -737,6 +745,38 @@ contains
 !      INTEGERS 
 !
 ! ================================
+    
+    subroutine nc_write_int_pt(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+                               long_name,standard_name,grid_mapping,units)
+
+        implicit none 
+
+        double precision, dimension(:,:,:,:), allocatable :: dat4D
+
+        ! Arguments
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
+        
+        !! Arguments related to data size and type
+        integer :: dat
+        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
+        integer,            parameter :: ndims_in = 1 
+        character (len=*) :: dim1
+        character (len=*), optional :: dim2, dim3, dim4 
+
+        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
+        if (allocated(dat4D)) deallocate(dat4D)
+        allocate(dat4D(1,1,1,1))
+        dat4D(1,1,1,1) = dble(dat)
+
+        ! Finally call the internal writing routine
+        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+                                       start,count,long_name,standard_name,grid_mapping,units)
+
+        return
+
+    end subroutine nc_write_int_pt
 
     subroutine nc_write_int_1D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units)
@@ -871,6 +911,38 @@ contains
 !
 ! ================================
     
+    subroutine nc_write_double_pt(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+                               long_name,standard_name,grid_mapping,units)
+
+        implicit none 
+
+        double precision, dimension(:,:,:,:), allocatable :: dat4D
+
+        ! Arguments
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
+        
+        !! Arguments related to data size and type
+        double precision :: dat
+        character(len=NC_STRLEN), parameter :: xtype    = "NF90_DOUBLE"
+        integer,            parameter :: ndims_in = 1 
+        character (len=*) :: dim1
+        character (len=*), optional :: dim2, dim3, dim4 
+
+        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
+        if (allocated(dat4D)) deallocate(dat4D)
+        allocate(dat4D(1,1,1,1))
+        dat4D(1,1,1,1) = dble(dat)
+
+        ! Finally call the internal writing routine
+        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+                                       start,count,long_name,standard_name,grid_mapping,units)
+
+        return
+
+    end subroutine nc_write_double_pt
+
     subroutine nc_write_double_1D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units)
 
@@ -1004,6 +1076,38 @@ contains
 !
 ! ================================
     
+    subroutine nc_write_float_pt(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+                               long_name,standard_name,grid_mapping,units)
+
+        implicit none 
+
+        double precision, dimension(:,:,:,:), allocatable :: dat4D
+
+        ! Arguments
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
+        
+        !! Arguments related to data size and type
+        real(4) :: dat
+        character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
+        integer,            parameter :: ndims_in = 1 
+        character (len=*) :: dim1
+        character (len=*), optional :: dim2, dim3, dim4 
+
+        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
+        if (allocated(dat4D)) deallocate(dat4D)
+        allocate(dat4D(1,1,1,1))
+        dat4D(1,1,1,1) = dble(dat)
+
+        ! Finally call the internal writing routine
+        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+                                       start,count,long_name,standard_name,grid_mapping,units)
+
+        return
+
+    end subroutine nc_write_float_pt
+
     subroutine nc_write_float_1D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units)
 
@@ -1136,6 +1240,39 @@ contains
     !      LOGICALS
     !
     ! ================================
+
+    subroutine nc_write_logical_pt(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+                                   long_name,standard_name,grid_mapping,units)
+
+        implicit none 
+
+        double precision, dimension(:,:,:,:), allocatable :: dat4D
+
+        ! Arguments
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
+        
+        !! Arguments related to data size and type
+        logical :: dat
+        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
+        integer,            parameter :: ndims_in = 1 
+        character (len=*) :: dim1
+        character (len=*), optional :: dim2, dim3, dim4 
+
+        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
+        if (allocated(dat4D)) deallocate(dat4D)
+        allocate(dat4D(1,1,1,1))
+        dat4D(:,:,:,:) = 0.d0
+        if (dat) dat4D(1,1,1,1) = 1.d0 
+
+        ! Finally call the internal writing routine
+        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+                                       start,count,long_name,standard_name,grid_mapping,units)
+
+        return
+
+    end subroutine nc_write_logical_pt
 
     subroutine nc_write_logical_1D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
                                    long_name,standard_name,grid_mapping,units)
@@ -1281,6 +1418,34 @@ contains
 !      INTS 
 !
 ! ================================
+    subroutine nc_read_int_pt(filename,dat,name,start,count)
+
+        implicit none 
+
+        double precision, dimension(:,:,:,:), allocatable :: dat4D
+
+        ! Arguments
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        
+        !! Arguments related to data size and type
+        integer :: dat
+        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
+
+        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
+        if (allocated(dat4D)) deallocate(dat4D)
+        allocate(dat4D(1,1,1,1))
+
+        ! Finally call the internal writing routine
+        call nc_read_internal_numeric(filename,dat4D,name,start,count)
+
+        ! Store data that was read from file in output array
+        dat = int(dat4D(1,1,1,1))
+
+        return
+
+    end subroutine nc_read_int_pt
+
     subroutine nc_read_int_1D(filename,dat,name,start,count)
 
         implicit none 
@@ -1398,6 +1563,34 @@ contains
 !      DOUBLES 
 !
 ! ================================
+    
+    subroutine nc_read_double_pt(filename,dat,name,start,count)
+
+        implicit none 
+
+        double precision, dimension(:,:,:,:), allocatable :: dat4D
+
+        ! Arguments
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        
+        !! Arguments related to data size and type
+        double precision :: dat
+        character(len=NC_STRLEN), parameter :: xtype    = "NF90_DOUBLE"
+
+        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
+        if (allocated(dat4D)) deallocate(dat4D)
+        allocate(dat4D(1,1,1,1))
+
+        ! Finally call the internal writing routine
+        call nc_read_internal_numeric(filename,dat4D,name,start,count)
+
+        ! Store data that was read from file in output array
+        dat = dble(dat4D(1,1,1,1))
+
+        return
+
+    end subroutine nc_read_double_pt
 
     subroutine nc_read_double_1D(filename,dat,name,start,count)
 
@@ -1516,6 +1709,34 @@ contains
 !      FLOATS
 !
 ! ================================
+    
+    subroutine nc_read_float_pt(filename,dat,name,start,count)
+
+        implicit none 
+
+        double precision, dimension(:,:,:,:), allocatable :: dat4D
+
+        ! Arguments
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        
+        !! Arguments related to data size and type
+        real(4) :: dat
+        character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
+
+        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
+        if (allocated(dat4D)) deallocate(dat4D)
+        allocate(dat4D(1,1,1,1))
+
+        ! Finally call the internal writing routine
+        call nc_read_internal_numeric(filename,dat4D,name,start,count)
+
+        ! Store data that was read from file in output array
+        dat = real(dat4D(1,1,1,1))
+
+        return
+
+    end subroutine nc_read_float_pt
 
     subroutine nc_read_float_1D(filename,dat,name,start,count)
 
@@ -1631,9 +1852,39 @@ contains
 
 ! ================================
 !
-!      INTS 
+!      LOGICALS 
 !
 ! ================================
+
+    subroutine nc_read_logical_pt(filename,dat,name,start,count)
+
+        implicit none 
+
+        double precision, dimension(:,:,:,:), allocatable :: dat4D
+
+        ! Arguments
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        
+        !! Arguments related to data size and type
+        logical :: dat
+        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
+
+        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
+        if (allocated(dat4D)) deallocate(dat4D)
+        allocate(dat4D(1,1,1,1))
+
+        ! Finally call the internal writing routine
+        call nc_read_internal_numeric(filename,dat4D,name,start,count)
+
+        ! Store data that was read from file in output array
+        dat = .FALSE.
+        if (dat4D(1,1,1,1) .gt. 0.d0) dat = .TRUE.
+
+        return
+
+    end subroutine nc_read_logical_pt
+
     subroutine nc_read_logical_1D(filename,dat,name,start,count)
 
         implicit none 

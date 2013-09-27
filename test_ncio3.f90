@@ -61,7 +61,11 @@ program test
 
     ! Writing a parameter value
     call nc_write(fnm_out,(/15/),"p1",dim1="parameter")
+    call nc_write(fnm_out,20,"p1",dim1="parameter")
 
+    call nc_read(fnm_out,mask(15,15),"p1")
+    write(*,*) "mask(15,15)=",mask(15,15)
+    
     ! Update time 
     call nc_write(fnm_out,(/15.d0/),"time",dim1="time",start=(/2/))
 
