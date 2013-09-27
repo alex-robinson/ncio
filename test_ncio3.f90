@@ -51,11 +51,11 @@ program test
     call nc_write_global(fnm_out,"institution", &
                          "Universidad Complutense de Madrid; Potsdam Institute for Climate Impact Research")
     
-    call nc_write_dim(fnm_out,"xc",x0=-800.d0, dx=20d0,nx=nx,units="kilometers")
-    call nc_write_dim(fnm_out,"yc",x0=-3400.d0,dx=20d0,nx=ny,units="kilometers")
+    call nc_write_dim(fnm_out,"xc",x=-800.d0, dx=20d0,nx=nx,units="kilometers")
+    call nc_write_dim(fnm_out,"yc",x=-3400.d0,dx=20d0,nx=ny,units="kilometers")
     call nc_write_dim(fnm_out,"time",x=(/ 0.d0,5.d0,100.d0 /),units="years",calendar="360_day")
-    call nc_write_dim(fnm_out,"parameter",x=(/ 1.d0 /),units="none")
-    call nc_write_dim(fnm_out,"kc",x0=1.d0,nx=nk,units="none")
+    call nc_write_dim(fnm_out,"parameter",x=1,units="none")
+    call nc_write_dim(fnm_out,"kc",x=1,nx=nk,units="none")
 
     call nc_write_map(fnm_out,mapping,lambda=-39.d0,phi=90.d0,x_e=0.d0,y_n=0.d0)
 
@@ -65,7 +65,7 @@ program test
 
     call nc_read(fnm_out,mask(15,15),"p1")
     write(*,*) "mask(15,15)=",mask(15,15)
-    
+
     ! Update time 
     call nc_write(fnm_out,(/15.d0/),"time",dim1="time",start=(/2/))
 

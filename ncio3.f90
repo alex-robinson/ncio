@@ -70,6 +70,12 @@ module ncio
         module procedure    nc_read_char_1D
     end interface
 
+    interface nc_write_dim
+        module procedure    nc_write_dim_int_pt, nc_write_dim_int_1D
+        module procedure    nc_write_dim_double_pt, nc_write_dim_double_1D
+        module procedure    nc_write_dim_float_pt, nc_write_dim_float_1D
+    end interface
+
     private 
     public :: nc_create, nc_write_global, nc_write_map, nc_write_dim
     public :: nc_write, nc_read, nc_write_char, nc_read_char
@@ -635,29 +641,198 @@ contains
 
     end subroutine nc_write_map
 
+    
+    subroutine nc_write_dim_int_pt(filename,name,x,dx,nx, &
+                                     long_name,standard_name,units,axis,calendar)
+
+        implicit none
+
+        integer :: ncid, i
+
+        integer :: x
+        integer, optional :: dx
+        integer, optional :: nx
+        double precision, allocatable :: xvec(:)
+        double precision :: dx_tmp 
+
+        character(len=*):: filename, name
+        character(len=*), optional :: long_name, standard_name, units, axis
+        character(len=*), optional :: calendar
+
+        if (present(nx)) then
+            allocate(xvec(nx))
+            dx_tmp = 1.d0
+            if (present(dx)) dx_tmp = dble(dx)
+            do i = 1, nx 
+                xvec(i) = x + (i-1)*dx_tmp 
+            end do 
+        else
+            allocate(xvec(1))
+            xvec(1) = x 
+        end if
+
+        call nc_write_dim_internal(filename,name,"NF90_INT",xvec, &
+                                   long_name=long_name,standard_name=standard_name, &
+                                   units=units,axis=axis,calendar=calendar)
+
+        return
+
+    end subroutine nc_write_dim_int_pt
+
+    subroutine nc_write_dim_int_1D(filename,name,x, &
+                                      long_name,standard_name,units,axis,calendar )
+
+        implicit none
+
+        integer :: ncid, i
+
+        integer :: x(:)
+        character(len=*):: filename, name
+        character(len=*), optional :: long_name, standard_name, units, axis
+        character(len=*), optional :: calendar
+
+        call nc_write_dim_internal(filename,name,"NF90_INT",x=dble(x), &
+                                   long_name=long_name,standard_name=standard_name, &
+                                   units=units,axis=axis,calendar=calendar)
+
+        return
+
+    end subroutine nc_write_dim_int_1D 
+
+    subroutine nc_write_dim_double_pt(filename,name,x,dx,nx, &
+                                     long_name,standard_name,units,axis,calendar)
+
+        implicit none
+
+        integer :: ncid, i
+
+        double precision :: x
+        double precision, optional :: dx
+        integer, optional :: nx
+        double precision, allocatable :: xvec(:)
+        double precision :: dx_tmp 
+
+        character(len=*):: filename, name
+        character(len=*), optional :: long_name, standard_name, units, axis
+        character(len=*), optional :: calendar
+
+        if (present(nx)) then
+            allocate(xvec(nx))
+            dx_tmp = 1.d0
+            if (present(dx)) dx_tmp = dx 
+            do i = 1, nx 
+                xvec(i) = x + (i-1)*dx_tmp 
+            end do 
+        else
+            allocate(xvec(1))
+            xvec(1) = x 
+        end if
+
+        call nc_write_dim_internal(filename,name,"NF90_DOUBLE",xvec, &
+                                   long_name=long_name,standard_name=standard_name, &
+                                   units=units,axis=axis,calendar=calendar)
+
+        return
+
+    end subroutine nc_write_dim_double_pt
+
+    subroutine nc_write_dim_double_1D(filename,name,x, &
+                                      long_name,standard_name,units,axis,calendar )
+
+        implicit none
+
+        integer :: ncid, i
+
+        double precision :: x(:)
+        character(len=*):: filename, name
+        character(len=*), optional :: long_name, standard_name, units, axis
+        character(len=*), optional :: calendar
+
+        call nc_write_dim_internal(filename,name,"NF90_DOUBLE",x=dble(x), &
+                                   long_name=long_name,standard_name=standard_name, &
+                                   units=units,axis=axis,calendar=calendar)
+
+        return
+
+    end subroutine nc_write_dim_double_1D
+
+    subroutine nc_write_dim_float_pt(filename,name,x,dx,nx, &
+                                     long_name,standard_name,units,axis,calendar)
+
+        implicit none
+
+        integer :: ncid, i
+
+        real(4) :: x
+        real(4), optional :: dx
+        integer, optional :: nx
+        double precision, allocatable :: xvec(:)
+        double precision :: dx_tmp 
+
+        character(len=*):: filename, name
+        character(len=*), optional :: long_name, standard_name, units, axis
+        character(len=*), optional :: calendar
+
+        if (present(nx)) then
+            allocate(xvec(nx))
+            dx_tmp = 1.d0
+            if (present(dx)) dx_tmp = dble(dx) 
+            do i = 1, nx 
+                xvec(i) = x + (i-1)*dx_tmp 
+            end do 
+        else
+            allocate(xvec(1))
+            xvec(1) = x 
+        end if
+
+        call nc_write_dim_internal(filename,name,"NF90_FLOAT",xvec, &
+                                   long_name=long_name,standard_name=standard_name, &
+                                   units=units,axis=axis,calendar=calendar)
+
+        return
+
+    end subroutine nc_write_dim_float_pt
+
+    subroutine nc_write_dim_float_1D(filename,name,x, &
+                                      long_name,standard_name,units,axis,calendar )
+
+        implicit none
+
+        integer :: ncid, i
+
+        real(4) :: x(:)
+        character(len=*):: filename, name
+        character(len=*), optional :: long_name, standard_name, units, axis
+        character(len=*), optional :: calendar
+
+        call nc_write_dim_internal(filename,name,"NF90_FLOAT",x=dble(x), &
+                                   long_name=long_name,standard_name=standard_name, &
+                                   units=units,axis=axis,calendar=calendar)
+
+        return
+
+    end subroutine nc_write_dim_float_1D
+
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ! Subroutine :  n c _ w r i t e _ d i m
     ! Author     :  Alex Robinson
     ! Purpose    :  Write a coordinate var to a netcdf file
     !               and make a new file if needed
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    subroutine nc_write_dim( filename,name,xtype,x,x0,nx,dx, &
-                             long_name,standard_name,units,axis,calendar )
+    subroutine nc_write_dim_internal(filename,name,xtype,x, &
+                                     long_name,standard_name,units,axis,calendar)
 
         implicit none
 
         integer :: ncid, i
 
-        character(len=*):: filename, name
-        character(len=*), optional :: xtype,long_name, standard_name, units, axis
+        character(len=*):: filename, name, xtype
+        double precision :: x(:)
+        character(len=*), optional :: long_name, standard_name, units, axis
         character(len=*), optional :: calendar
-        integer,  optional :: nx
-        double precision, optional :: x0, dx, x(:)
         character(len=14) :: tmpchar
 
         type(ncvar) :: v
-       
-        double precision :: x0_tmp, dx_tmp
 
         call nc_v_init(v,name=trim(name),xtype=xtype,coord=.TRUE.)
 
@@ -671,37 +846,9 @@ contains
         !! Clear the variable dim vector and store/generate appropriate values
         if (allocated(v%dim)) deallocate(v%dim)
 
-        if (present(x)) then 
-        ! Use x values given as argument
-          
-            v%n = size(x)
-            allocate(v%dim(v%n))
-            v%dim = x
-
-        else if (present(nx) ) then  
-        ! generate x values based on arguments or defaults
-          
-            allocate(v%dim(nx))
-            v%n = nx
-
-            x0_tmp = 1.d0
-            dx_tmp = 1.d0
-
-            if (present(x0)) x0_tmp = x0
-            if (present(dx)) dx_tmp = dx
-
-            ! Calculate each value (and round off to eliminate small errors)
-            do i = 1, nx
-                v%dim(i) = x0_tmp + (i-1)*dx_tmp
-                v%dim(i) = nint(v%dim(i)*1d4)/1d4
-            end do
-
-        else
-          
-            write(*,"(a6,a20,a)") "ncio::","nc_create:: ","error, no length given to define dimension var."
-            stop
-          
-        end if
+        v%n = size(x)
+        allocate(v%dim(v%n))
+        v%dim = x
 
         ! Get the range from the x values
         v%actual_range = (/ minval(v%dim), maxval(v%dim) /)
@@ -738,7 +885,7 @@ contains
         
         return
 
-    end subroutine nc_write_dim 
+    end subroutine nc_write_dim_internal
 
 ! ================================
 !
