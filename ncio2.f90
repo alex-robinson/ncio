@@ -84,14 +84,14 @@ contains
 
     end subroutine nc_create
 
-    subroutine nc_add_grid_mapping(filename,mapping,lambda0,phi0,x0,y0)
+    subroutine nc_add_grid_mapping(filename,mapping,lambda,phi,x_e,y_n)
 
         implicit none 
 
         character(len=*) :: filename, mapping
 
         integer :: ncid, varid, stat
-        double precision, optional :: lambda0, phi0, x0, y0
+        double precision, optional :: lambda, phi, x_e, y_n
 
         integer, parameter :: noerr = NF90_NOERR
 
@@ -113,18 +113,18 @@ contains
             select case(trim(mapping))
 
                 case("stereographic")
-                    call nc_check( nf90_put_att(ncid,varid, "longitude_of_projection_origin", lambda0) )
-                    call nc_check( nf90_put_att(ncid,varid, "latitude_of_projection_origin", phi0) )
+                    call nc_check( nf90_put_att(ncid,varid, "longitude_of_projection_origin", lambda) )
+                    call nc_check( nf90_put_att(ncid,varid, "latitude_of_projection_origin", phi) )
                     call nc_check( nf90_put_att(ncid,varid, "scale_factor_at_projection_origin", 1.d0) )
-                    call nc_check( nf90_put_att(ncid,varid, "false_easting",  x0) )
-                    call nc_check( nf90_put_att(ncid,varid, "false_northing", y0) )
+                    call nc_check( nf90_put_att(ncid,varid, "false_easting",  x_e) )
+                    call nc_check( nf90_put_att(ncid,varid, "false_northing", y_n) )
 
                 case("polar_stereographic")
-                    call nc_check( nf90_put_att(ncid,varid, "straight_vertical_longitude_from_pole", lambda0) )
-                    call nc_check( nf90_put_att(ncid,varid, "latitude_of_projection_origin", phi0) )
+                    call nc_check( nf90_put_att(ncid,varid, "straight_vertical_longitude_from_pole", lambda) )
+                    call nc_check( nf90_put_att(ncid,varid, "latitude_of_projection_origin", phi) )
                     call nc_check( nf90_put_att(ncid,varid, "scale_factor_at_projection_origin", 1.d0) )
-                    call nc_check( nf90_put_att(ncid,varid, "false_easting",  x0) )
-                    call nc_check( nf90_put_att(ncid,varid, "false_northing", y0) )
+                    call nc_check( nf90_put_att(ncid,varid, "false_easting",  x_e) )
+                    call nc_check( nf90_put_att(ncid,varid, "false_northing", y_n) )
 
                 case DEFAULT
                     ! Do nothing
