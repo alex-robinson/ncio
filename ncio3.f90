@@ -40,6 +40,13 @@ module ncio
         module procedure    nc_write_logical_pt, &
                             nc_write_logical_1D, nc_write_logical_2D, &
                             nc_write_logical_3D, nc_write_logical_4D
+        
+        ! Note: character writing and reading do not 
+        ! follow the conventions of the other data types
+        module procedure    nc_write_internal_char, &
+                            nc_write_char_1D, &
+                            nc_write_char_2D, nc_write_char_3D, nc_write_char_4D   ! Dummy procedures
+    
     end interface  
 
     interface nc_read 
@@ -55,19 +62,11 @@ module ncio
         module procedure    nc_read_logical_pt, &
                             nc_read_logical_1D, nc_read_logical_2D, &
                             nc_read_logical_3D, nc_read_logical_4D                   
-    end interface 
 
-    ! Character writing and reading are given a separate interface,  
-    ! since they do not follow the conventions of the other data types
-    interface nc_write_char
-        module procedure    nc_write_internal_char
-        module procedure    nc_write_char_1D
-        module procedure    nc_write_char_2D, nc_write_char_3D, nc_write_char_4D   ! Dummy procedures
-    end interface
-
-    interface nc_read_char 
-        module procedure    nc_read_internal_char
-        module procedure    nc_read_char_1D
+        ! Note: character writing and reading do not 
+        ! follow the conventions of the other data types
+        module procedure    nc_read_internal_char, &
+                            nc_read_char_1D
     end interface
 
     interface nc_write_dim
@@ -78,7 +77,7 @@ module ncio
 
     private 
     public :: nc_create, nc_write_global, nc_write_map, nc_write_dim
-    public :: nc_write, nc_read, nc_write_char, nc_read_char
+    public :: nc_write, nc_read
 
 contains
 

@@ -109,15 +109,15 @@ program test
     char2D(:,:) = trim(fnm_out)
 
     ! Write some strings
-    call nc_write_char(fnm_out,"All the king's men!","test")
-    call nc_write_char(fnm_out,char2D(1:5,1),"char1D")
-    call nc_write_char(fnm_out,char2D(1:2,:),"char2D")
+    call nc_write(fnm_out,"All the king's men!","test")
+    call nc_write(fnm_out,char2D(1:5,1),"char1D")
+    call nc_write(fnm_out,char2D(1:2,:),"char2D")
     
     ! Make sure I can read the strings back
-    call nc_read_char(fnm_out,char2D(1,1),"char1D")
+    call nc_read(fnm_out,char2D(1,1),"char1D")
     write(*,*) "My var: ",trim(char2D(1,1))
     char2D(:,:) = ""
-    call nc_read_char(fnm_out,char2D(1:5,1),"char1D")
+    call nc_read(fnm_out,char2D(1:5,1),"char1D")
     do i = 1,5
         write(*,*) trim(char2D(i,1))
     end do 
