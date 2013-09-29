@@ -253,21 +253,33 @@ contains
         implicit none
 
         type(ncvar) :: v
+        integer :: i 
 
         write(*,*) 
-        write(*,*) "  ncvar: ", trim(v%name), trim(v%xtype)
-        write(*,"(10x,a20,a1,2x,a)")      "long_name",":",     trim(v%long_name)
-        write(*,"(10x,a20,a1,2x,a)")      "standard_name",":", trim(v%standard_name)
-        write(*,"(10x,a20,a1,2x,a)")      "units",    ":",     trim(v%units)
-        write(*,"(10x,a20,a1,2x,a)")      "dataset",":",       trim(v%dataset)
-        write(*,"(10x,a20,a1,2x,a)")      "level_desc",":",    trim(v%level_desc)
-        write(*,"(10x,a20,a1,2x,a)")      "axis",":",          trim(v%axis)
+        write(*,*) "  ncvar: ", trim(v%name)//" : "//trim(v%xtype)
+        write(*,*) "   dims: "
+        do i = 1, size(v%dims)
+            write(*,*) "     "//trim(v%dims(i))
+        end do 
+        if (.not. trim(v%long_name) .eq. "") &
+            write(*,"(10x,a20,a1,2x,a)")      "long_name",":",     trim(v%long_name)
+        if (.not. trim(v%standard_name) .eq. "") &
+            write(*,"(10x,a20,a1,2x,a)")      "standard_name",":", trim(v%standard_name)
+        if (.not. trim(v%units) .eq. "") &
+            write(*,"(10x,a20,a1,2x,a)")      "units",    ":",     trim(v%units)
+        if (.not. trim(v%dataset) .eq. "") &
+            write(*,"(10x,a20,a1,2x,a)")      "dataset",":",       trim(v%dataset)
+        if (.not. trim(v%level_desc) .eq. "") &
+            write(*,"(10x,a20,a1,2x,a)")      "level_desc",":",    trim(v%level_desc)
+        if (.not. trim(v%axis) .eq. "") &
+            write(*,"(10x,a20,a1,2x,a)")      "axis",":",          trim(v%axis)
         write(*,"(10x,a20,a1,2x,2e12.4)") "actual_range",":",  v%actual_range
         write(*,"(10x,a20,a1,2x,e12.4)")  "add_offset",":",    v%add_offset
         write(*,"(10x,a20,a1,2x,e12.4)")  "scale_factor",":",  v%scale_factor
         write(*,"(10x,a20,a1,2x,e12.4)")  "missing_value",":", v%missing_value
         write(*,"(10x,a20,a1,2x,L2)")     "missing_set",":",   v%missing_set
-        write(*,"(10x,a20,a1,2x,a)")      "grid_mapping",":",  trim(v%grid_mapping)
+        if (.not. trim(v%grid_mapping) .eq. "") &
+            write(*,"(10x,a20,a1,2x,a)")      "grid_mapping",":",  trim(v%grid_mapping)
         write(*,*)
         return
 
@@ -820,6 +832,12 @@ contains
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     subroutine nc_write_dim_internal(filename,name,xtype,x, &
                                      long_name,standard_name,units,axis,calendar)
+
+        ! Note: an error can occur: "NetCDF: Invalid dimension ID or name"
+        ! This happens when writing a dimension after some data has already
+        ! been written to the file. A warning is needed for this case.
+        ! How can this be checked?
+        ! ajr, 2013-09-29
 
         implicit none
 
