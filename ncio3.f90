@@ -347,10 +347,28 @@ contains
                         call nc_check( nf90_put_att(ncid, v%varid, "add_offset",   v%add_offset) )
                     end if 
 
-                    if (v%missing_set) &
-                        call nc_check( nf90_put_att(ncid, v%varid, "missing_value", v%missing_value) )
-                    if (v%FillValue_set) &
-                        call nc_check( nf90_put_att(ncid, v%varid, "FillValue", v%FillValue) )
+                    if (v%missing_set) then
+                        select case(trim(v%xtype))
+                            case("NF90_INT")
+                                call nc_check( nf90_put_att(ncid, v%varid, "missing_value", int(v%missing_value)) )
+                            case("NF90_FLOAT")
+                                call nc_check( nf90_put_att(ncid, v%varid, "missing_value", real(v%missing_value)) )
+                            case("NF90_DOUBLE")
+                                call nc_check( nf90_put_att(ncid, v%varid, "missing_value", v%missing_value) )
+                        end select 
+                    end if 
+
+                    if (v%FillValue_set) then
+                        select case(trim(v%xtype))
+                            case("NF90_INT")
+                                call nc_check( nf90_put_att(ncid, v%varid, "FillValue", int(v%FillValue)) )
+                            case("NF90_FLOAT")
+                                call nc_check( nf90_put_att(ncid, v%varid, "FillValue", real(v%FillValue)) )
+                            case("NF90_DOUBLE")
+                                call nc_check( nf90_put_att(ncid, v%varid, "FillValue", v%FillValue) )
+                        end select 
+                    end if 
+
             end if
 
             ! Add additional variable attributes 
@@ -406,7 +424,7 @@ contains
     ! Author     :  Alex Robinson
     ! Purpose    :  Get attributes from a netcdf file for a given variable
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    subroutine nc_get_att(ncid, v)
+    subroutine nc_get_att(ncid, v, readmeta)
 
         implicit none
 
@@ -421,6 +439,12 @@ contains
         integer, allocatable :: dimids(:)
 
         integer, parameter :: noerr = NF90_NOERR
+
+        logical, optional :: readmeta 
+        logical :: read_meta 
+
+        read_meta = .TRUE. 
+        if (present(readmeta)) read_meta = readmeta 
 
         ! Get the current variable's id, if it exists
         stat = nf90_inq_varid(ncid, trim(v%name), v%varid)
@@ -442,79 +466,81 @@ contains
                 call nc_check ( nf90_inquire_dimension(ncid,dimids(i),name=v%dims(i),len=v%dlen(i)) )
             end do
 
-            stat = nc_check_att( nf90_get_att(ncid, v%varid, "units", tmpstr) )
-            if (stat .eq. noerr) v%units = trim(tmpstr)
+            if ( read_meta ) then 
+                stat = nc_check_att( nf90_get_att(ncid, v%varid, "units", tmpstr) )
+                if (stat .eq. noerr) v%units = trim(tmpstr)
 
-            stat = nc_check_att( nf90_get_att(ncid, v%varid, "long_name", tmpstr) )
-            if (stat .eq. noerr) v%long_name = trim(tmpstr)
+                stat = nc_check_att( nf90_get_att(ncid, v%varid, "long_name", tmpstr) )
+                if (stat .eq. noerr) v%long_name = trim(tmpstr)
 
-            stat = nc_check_att( nf90_get_att(ncid, v%varid, "standard_name", tmpstr) )
-            if (stat .eq. noerr) v%standard_name = trim(tmpstr)
+                stat = nc_check_att( nf90_get_att(ncid, v%varid, "standard_name", tmpstr) )
+                if (stat .eq. noerr) v%standard_name = trim(tmpstr)
 
-            stat = nc_check_att( nf90_get_att(ncid, v%varid, "axis", tmpstr) )
-            if (stat .eq. noerr) v%axis = trim(tmpstr)
+                stat = nc_check_att( nf90_get_att(ncid, v%varid, "axis", tmpstr) )
+                if (stat .eq. noerr) v%axis = trim(tmpstr)
 
-            stat = nc_check_att( nf90_get_att(ncid, v%varid, "calendar", tmpstr) )
-            if (stat .eq. noerr) v%calendar = trim(tmpstr)
+                stat = nc_check_att( nf90_get_att(ncid, v%varid, "calendar", tmpstr) )
+                if (stat .eq. noerr) v%calendar = trim(tmpstr)
 
-            stat = nc_check_att( nf90_get_att(ncid, v%varid, "grid_mapping", tmpstr) )
-            if (stat .eq. noerr) v%grid_mapping = trim(tmpstr)
+                stat = nc_check_att( nf90_get_att(ncid, v%varid, "grid_mapping", tmpstr) )
+                if (stat .eq. noerr) v%grid_mapping = trim(tmpstr)
 
-            stat = nc_check_att( nf90_get_att(ncid, v%varid, "dataset", tmpstr) )
-            if (stat .eq. noerr) v%dataset = trim(tmpstr)
+                stat = nc_check_att( nf90_get_att(ncid, v%varid, "dataset", tmpstr) )
+                if (stat .eq. noerr) v%dataset = trim(tmpstr)
 
-            stat = nc_check_att( nf90_get_att(ncid, v%varid, "level_desc", tmpstr) )
-            if (stat .eq. noerr) v%level_desc = trim(tmpstr)
+                stat = nc_check_att( nf90_get_att(ncid, v%varid, "level_desc", tmpstr) )
+                if (stat .eq. noerr) v%level_desc = trim(tmpstr)
 
-            select case(trim(v%xtype))
-                case("NF90_INT")
+                select case(trim(v%xtype))
+                    case("NF90_INT")
 
-                    stat = nc_check_att( nf90_get_att(ncid, v%varid, "actual_range", tmpi2) )
-                    if (stat .eq. noerr) v%actual_range = dble(tmpi2)
+                        stat = nc_check_att( nf90_get_att(ncid, v%varid, "actual_range", tmpi2) )
+                        if (stat .eq. noerr) v%actual_range = dble(tmpi2)
 
-                    stat = nc_check_att( nf90_get_att(ncid, v%varid, "scale_factor", tmpi) )
-                    if (stat .eq. noerr) v%scale_factor = dble(tmpi)
+                        stat = nc_check_att( nf90_get_att(ncid, v%varid, "scale_factor", tmpi) )
+                        if (stat .eq. noerr) v%scale_factor = dble(tmpi)
 
-                    stat = nc_check_att( nf90_get_att(ncid, v%varid, "add_offset", tmpi) )
-                    if (stat .eq. noerr) v%add_offset = dble(tmpi)
+                        stat = nc_check_att( nf90_get_att(ncid, v%varid, "add_offset", tmpi) )
+                        if (stat .eq. noerr) v%add_offset = dble(tmpi)
 
-                    stat = nc_check_att( nf90_get_att(ncid, v%varid, "missing_value", tmpi) )
-                    if (stat .eq. noerr) then
-                        v%missing_value = dble(tmpi)
-                        v%missing_set = .TRUE.
-                    end if
+                        stat = nc_check_att( nf90_get_att(ncid, v%varid, "missing_value", tmpi) )
+                        if (stat .eq. noerr) then
+                            v%missing_value = dble(tmpi)
+                            v%missing_set = .TRUE.
+                        end if
 
-                    stat = nc_check_att( nf90_get_att(ncid, v%varid, "FillValue", tmpi) )
-                    if (stat .eq. noerr) then
-                        v%FillValue = dble(tmpi)
-                        v%FillValue_set = .TRUE.
-                    end if
+                        stat = nc_check_att( nf90_get_att(ncid, v%varid, "FillValue", tmpi) )
+                        if (stat .eq. noerr) then
+                            v%FillValue = dble(tmpi)
+                            v%FillValue_set = .TRUE.
+                        end if
 
-                case DEFAULT
+                    case DEFAULT
 
-                    stat = nc_check_att( nf90_get_att(ncid, v%varid, "actual_range", tmp2) )
-                    if (stat .eq. noerr) v%actual_range = tmp2
+                        stat = nc_check_att( nf90_get_att(ncid, v%varid, "actual_range", tmp2) )
+                        if (stat .eq. noerr) v%actual_range = tmp2
 
-                    stat = nc_check_att( nf90_get_att(ncid, v%varid, "scale_factor", tmp) )
-                    if (stat .eq. noerr) v%scale_factor = tmp
+                        stat = nc_check_att( nf90_get_att(ncid, v%varid, "scale_factor", tmp) )
+                        if (stat .eq. noerr) v%scale_factor = tmp
 
-                    stat = nc_check_att( nf90_get_att(ncid, v%varid, "add_offset", tmp) )
-                    if (stat .eq. noerr) v%add_offset = tmp
+                        stat = nc_check_att( nf90_get_att(ncid, v%varid, "add_offset", tmp) )
+                        if (stat .eq. noerr) v%add_offset = tmp
 
-                    stat = nc_check_att( nf90_get_att(ncid, v%varid, "missing_value", tmp) )
-                    if (stat .eq. noerr) then
-                        v%missing_value = tmp
-                        v%missing_set = .TRUE.
-                    end if
+                        stat = nc_check_att( nf90_get_att(ncid, v%varid, "missing_value", tmp) )
+                        if (stat .eq. noerr) then
+                            v%missing_value = tmp
+                            v%missing_set = .TRUE.
+                        end if
 
-                    stat = nc_check_att( nf90_get_att(ncid, v%varid, "FillValue", tmp) )
-                    if (stat .eq. noerr) then
-                        v%FillValue = tmp
-                        v%FillValue_set = .TRUE.
-                    end if
+                        stat = nc_check_att( nf90_get_att(ncid, v%varid, "FillValue", tmp) )
+                        if (stat .eq. noerr) then
+                            v%FillValue = tmp
+                            v%FillValue_set = .TRUE.
+                        end if
 
                 end select
-          
+            end if 
+
         end if
 
         return
@@ -564,7 +590,7 @@ contains
         call nc_check( nf90_close(ncid) )
 
 
-        write(*,"(a6,a20,a)") "ncio::","nc_create:: ",trim(filename)
+        write(*,"(a,a)") "ncio:: nc_create   :: ",trim(filename)
         
         return
 
@@ -587,7 +613,7 @@ contains
         call nc_check( nf90_enddef(ncid) )
         call nc_check( nf90_close(ncid) )
 
-        write(*,"(a6,a20,a)") "ncio::","nc_write_global:: ", &
+        write(*,"(a,a)") "ncio:: nc_write_global:: ", &
                               trim(filename)//" : "//trim(name)//" = "//trim(dat)
         
         return
@@ -641,7 +667,7 @@ contains
 
             end select
 
-            write(*,"(a6,a20,a,a)") "ncio::","nc_write_map:: ",trim(filename)//" : ",trim(name)
+            write(*,"(a,a,a)") "ncio:: nc_write_map:: ",trim(filename)//" : ",trim(name)
         
         end if 
 
@@ -652,7 +678,18 @@ contains
 
     end subroutine nc_write_map
 
-    
+    !> Write an integer value (one point) dimension to a NetCDF file.
+    !! @param filename name of the NetCDF file in which to define dimension
+    !! @param name name of the dimension to be defined in NetCDF file
+    !! @param x Fortran data type (point or vector) specifying values of dimension. 
+    !! If nx is present and size(x)==1, x specifies the starting point of the dimension variable
+    !! @param dx distance between each dimension value (optional)
+    !! @param nx length of dimension variable (optional) 
+    !! @param long_name NetCDF attribute, a long descriptive name of the variable (optional)
+    !! @param standard_name NetCDF attribute specifying the CF convention standard name of the variable (optional)
+    !! @param units NetCDF attribute of the units of the variable (optional)
+    !! @param axis  NetCDF attribute of the standard axis of the variable (optional)
+    !! @param calendar NetCDF attribute of the calendar type to be used for time dimensions (optional)
     subroutine nc_write_dim_int_pt(filename,name,x,dx,nx, &
                                      long_name,standard_name,units,axis,calendar)
 
@@ -700,7 +737,7 @@ contains
         integer :: x(:)
         character(len=*):: filename, name
         character(len=*), optional :: long_name, standard_name, units, axis
-        character(len=*), optional :: calendar
+        character(len=*), optional :: calendar 
 
         call nc_write_dim_internal(filename,name,"NF90_INT",x=dble(x), &
                                    long_name=long_name,standard_name=standard_name, &
@@ -898,7 +935,7 @@ contains
         call nc_check( nf90_close(ncid) )
 
         tmpchar = trim(v%name)
-        write(*,"(a6,a20,a,a14,i6)") "ncio::","nc_write_dim:: ",trim(filename)//" : ",adjustl(tmpchar),size(v%dim)
+        write(*,"(a,a,a14,i6)") "ncio:: nc_write_dim:: ",trim(filename)//" : ",adjustl(tmpchar),size(v%dim)
         
         return
 
@@ -910,6 +947,20 @@ contains
 !
 ! ================================
     
+    !> Write an integer value (one point) to a NetCDF file.
+    !! @param filename name of the NetCDF file in which to write data
+    !! @param dat Fortran data type of data to be written
+    !! @param name name of the variable in NetCDF file to be written
+    !! @param dim1 name of first dimension of variable in NetCDF file
+    !! @param dim2 name of second dimension of variable in NetCDF file (optional for variables < 2D)
+    !! @param dim3 name of third dimension of variable in NetCDF file (optional for variables < 3D)
+    !! @param dim4 name of fourth dimension of variable in NetCDF file (optional for variables < 4D)
+    !! @param start vector of values specifying starting indices for reading data from each dimension (optional)
+    !! @param count vector of values specifying how many values to read in each dimension (optional)
+    !! @param long_name NetCDF attribute, a long descriptive name of variable (optional)
+    !! @param standard_name NetCDF attribute specifying the CF convention standard name of the variable (optional)
+    !! @param grid_mapping name of the grid this variable is mapped on (optional)
+    !! @param units NetCDF attribute of the units of the variable (optional)
     subroutine nc_write_int_pt(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units)
 
@@ -943,7 +994,7 @@ contains
     end subroutine nc_write_int_pt
 
     subroutine nc_write_int_1D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
-                               long_name,standard_name,grid_mapping,units)
+                               long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
 
@@ -960,6 +1011,8 @@ contains
         integer,            parameter :: ndims_in = 1 
         character (len=*) :: dim1
         character (len=*), optional :: dim2, dim3, dim4 
+
+        integer, optional :: missing_value
 
         ! Allocate dat4D and store input data to faciliate calling internal write subroutine
         if (allocated(dat4D)) deallocate(dat4D)
@@ -1582,6 +1635,12 @@ contains
 !      INTS 
 !
 ! ================================
+    !> Read an integer value (one point) from a NetCDF file.
+    !! @param filename name of the file to read from
+    !! @param dat Fortran data type into which data will be loaded
+    !! @param name name of the variable in NetCDF file to be read
+    !! @param start vector of values specifying starting indices for reading data from each dimension
+    !! @param count vector of values specifying how many values to read in each dimension
     subroutine nc_read_int_pt(filename,dat,name,start,count)
 
         implicit none 
@@ -2172,7 +2231,7 @@ contains
 ! =================================
 
     subroutine nc_write_internal_numeric(filename,dat,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                         start,count,long_name,standard_name,grid_mapping,units)
+                                         start,count,long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
 
@@ -2182,6 +2241,7 @@ contains
 
         character (len=*) :: filename, name, xtype
         character (len=*),   optional :: long_name, standard_name, grid_mapping, units
+        double precision, optional :: missing_value
         integer :: ndims_in 
 
         type(ncvar) :: v
@@ -2201,6 +2261,11 @@ contains
         if ( present(standard_name) ) v%standard_name = trim(standard_name)
         if ( present(grid_mapping) )  v%grid_mapping  = trim(grid_mapping)
         if ( present(units) )         v%units         = trim(units)
+
+        if (present(missing_value)) then 
+            v%missing_set = .TRUE.
+            v%missing_value = missing_value 
+        end if 
 
         ! Open the file in nowrite mode
         ! and get attributes if variable already exist
@@ -2281,7 +2346,7 @@ contains
         ! sure your data are really written to disk.
         call nc_check( nf90_close(ncid) )
 
-        !write(*,"(a6,a20,a,a14)") "ncio::","nc_write:: ",trim(filename)//" : ",trim(v%name)
+        !write(*,"(a,a,a14)") "ncio:: nc_write:: ",trim(filename)//" : ",trim(v%name)
         
         return 
 
@@ -2303,24 +2368,19 @@ contains
         character (len=*) :: filename, name
         type(ncvar) :: v
 
-        double precision, allocatable, dimension(:,:,:,:) :: dat4D
+        double precision, dimension(:,:,:,:) :: dat4D
 
         double precision    :: tmp
         character (len=NC_STRLEN) :: tmpstr
+        integer :: i
 
-        ! Loop indices
-        integer :: lev, lat, lon, rec, i, j, k, nt
-
-        ! Initializing
-        v%name = name
-        
         ! Open the file. 
         call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
 
         ! Initialize the netcdf variable info and load attributes
         call nc_v_init(v,name)
-        call nc_get_att(ncid,v)
-
+        call nc_get_att(ncid,v,readmeta=.FALSE.)
+        
         ! Get variable dimension
         ndims = size(v%dims)
 
@@ -2342,7 +2402,6 @@ contains
             end do
         end if 
 
-        
         ! Read the variable data from the file
         ! (NF90 converts dat to proper type (int, real, dble)
         call nc_check( nf90_get_var(ncid, v%varid, dat4D, v%start, v%count) )
@@ -2359,7 +2418,7 @@ contains
               dat4D = dat4D*v%scale_factor + v%add_offset
         end if
 
-        write(*,"(a6,a20,a,a)") "ncio::","nc_read:: ",trim(filename)//" : ",trim(v%name)
+        write(*,"(a,a,a)") "ncio:: nc_read:: ",trim(filename)//" : ",trim(v%name)
 
         return
 
@@ -2407,7 +2466,7 @@ contains
         integer :: i, j
 
         ! Convert the character array into a long string
-        write(*,"(a6,a20,a,a14)") "ncio::","nc_write_char:: ", &
+        write(*,"(a,a,a14)") "ncio:: nc_write_char:: ", &
                                   "warning: 2D character array could not be written: "//trim(name)
         return
 
@@ -2425,7 +2484,7 @@ contains
         integer :: i, j
 
         ! Convert the character array into a long string
-        write(*,"(a6,a20,a,a14)") "ncio::","nc_write_char:: ", &
+        write(*,"(a,a,a14)") "ncio:: nc_write_char:: ", &
                                   "warning: 3D character array could not be written: "//trim(name)
         return
 
@@ -2443,7 +2502,7 @@ contains
         integer :: i, j
 
         ! Convert the character array into a long string
-        write(*,"(a6,a20,a,a14)") "ncio::","nc_write_char:: ", &
+        write(*,"(a,a,a14)") "ncio:: nc_write_char:: ", &
                                   "warning: 4D character array could not be written: "//trim(name)
         return
 
@@ -2521,7 +2580,7 @@ contains
         ! sure your data are really written to disk.
         call nc_check( nf90_close(ncid) )
 
-        !write(*,"(a6,a20,a,a14)") "ncio::","nc_write_char:: ",trim(filename)//" : ",trim(v%name)
+        !write(*,"(a,a,a14)") "ncio:: nc_write_char:: ",trim(filename)//" : ",trim(v%name)
         
         return 
 
@@ -2553,7 +2612,7 @@ contains
         ! sure your data are really written to disk.
         call nc_check( nf90_close(ncid) )
 
-        !write(*,"(a6,a20,a,a14)") "ncio::","nc_read_char:: ",trim(filename)//" : ",trim(v%name)
+        !write(*,"(a,a,a14)") "ncio:: nc_read_char:: ",trim(filename)//" : ",trim(v%name)
         
         return 
 
