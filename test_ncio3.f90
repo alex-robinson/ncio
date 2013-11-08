@@ -22,6 +22,8 @@ program test
     logical, allocatable, dimension(:,:) :: masklogic
     character(len=256), allocatable, dimension(:,:) :: char2D
 
+    integer :: tmp(5) 
+
     integer :: i, j 
 
     nx = 76
@@ -63,6 +65,11 @@ program test
     call nc_write(fnm_out,(/15/),"p1",dim1="parameter")
     call nc_write(fnm_out,20,"p1",dim1="parameter")
 
+    ! Write some integers with missing data 
+    call nc_write(fnm_out,(/1,2,3,999,5/),"test1",dim1="kc",missing_value=999)
+    call nc_read(fnm_out,tmp,"test1",missing_value=-99)
+    write(*,*) "test1 min/max: ",minval(tmp),maxval(tmp)
+    
     call nc_read(fnm_out,mask(15,15),"p1")
     write(*,*) "mask(15,15)=",mask(15,15)
 
