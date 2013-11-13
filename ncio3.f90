@@ -9,6 +9,7 @@ module ncio
     integer, parameter :: NC_STRLEN = 256 
     integer, parameter :: NC_STRLEN_MAX = 10000
     character(len=2)   :: NC_STR_SEP = "; "
+    double precision, parameter :: NC_TOL = 1d-7
 
     character(len=NC_STRLEN), parameter :: NC_CHARDIM = "strlen"
 
@@ -506,12 +507,6 @@ contains
                         call nc_get_att_double(ncid,v%varid,"missing_value",v%missing_value,stat)
                         if (stat .eq. noerr) v%missing_set = .TRUE. 
 
-!                         stat = nc_check_att( nf90_get_att(ncid, v%varid, "missing_value", tmpi) )
-!                         if (stat .eq. noerr) then
-!                             v%missing_value = dble(tmpi)
-!                             v%missing_set = .TRUE.
-!                         end if
-
                         stat = nc_check_att( nf90_get_att(ncid, v%varid, "FillValue", tmpi) )
                         if (stat .eq. noerr) then
                             v%FillValue = dble(tmpi)
@@ -531,12 +526,6 @@ contains
 
                         call nc_get_att_double(ncid,v%varid,"missing_value",v%missing_value,stat)
                         if (stat .eq. noerr) v%missing_set = .TRUE. 
-
-!                         stat = nc_check_att( nf90_get_att(ncid, v%varid, "missing_value", tmp) )
-!                         if (stat .eq. noerr) then
-!                             v%missing_value = tmp
-!                             v%missing_set = .TRUE.
-!                         end if
 
                         stat = nc_check_att( nf90_get_att(ncid, v%varid, "FillValue", tmp) )
                         if (stat .eq. noerr) then
@@ -570,13 +559,10 @@ contains
 
             select case(xtype)
                 case(NF90_INT,NF90_FLOAT,NF90_DOUBLE) 
-                    write(*,*) "GET_ATT: "//trim(name)//": numeric!"
                     stat = nf90_get_att(ncid, varid, trim(name), val)
                 case(NF90_CHAR)
-                    write(*,*) "GET_ATT: "//trim(name)//": string!"
                     stat = nf90_get_att(ncid, varid, trim(name), val_s(1:len))
-                    val = strtod(val_s(1:len))
-                    write(*,*) "String to number: ", val_s(1:len), val  
+                    val = str_to_num(val_s(1:len)) 
                 case DEFAULT
                     write(*,*) "GET_ATT: "//trim(name)//": ",xtype, len
             end select
@@ -2459,7 +2445,7 @@ contains
         ! Modify the variable according to scale and offset (if working with real or double data)
         if (trim(v%xtype) .eq. "NF90_FLOAT" .or. trim(v%xtype) .eq. "NF90_DOUBLE") then
             if (v%missing_set) then
-                where (dat .ne. v%missing_value) dat = (dat-v%add_offset)/v%scale_factor
+                where( dabs(dat-v%missing_value) .gt. NC_TOL ) dat = (dat-v%add_offset)/v%scale_factor
             else    
                 ! Apply the scalar and offset if available
                 dat = (dat-v%add_offset)/v%scale_factor
@@ -2553,24 +2539,21 @@ contains
         ! Close the file. This frees up any internal netCDF resources
         ! associated with the file.
         call nc_check( nf90_close(ncid) )
-
-        write(*,*) "Missing set:",v%missing_set, v%missing_value
-        write(*,*) trim(v%xtype) 
-        if (trim(v%xtype).eq."NF90_INT") write(*,*) missing_value_int 
+ 
         if (v%missing_set) then
-            where (dat4D .ne. v%missing_value) dat4D = dat4D*v%scale_factor + v%add_offset
+            where( dabs(dat4D-v%missing_value) .gt. NC_TOL ) dat4D = dat4D*v%scale_factor + v%add_offset
 
             ! Fill with user desired missing value 
             select case(trim(v%xtype))
                 case("NF90_INT")
                     if (present(missing_value_int)) &
-                        where( dat4D .eq. v%missing_value ) dat4D = dble(missing_value_int)
+                        where( dabs(dat4D-v%missing_value) .le. NC_TOL ) dat4D = dble(missing_value_int)
                 case("NF90_FLOAT")
                     if (present(missing_value_float)) &
-                        where( dat4D .eq. v%missing_value ) dat4D = dble(missing_value_float)
+                        where( dabs(dat4D-v%missing_value) .le. NC_TOL ) dat4D = dble(missing_value_float)
                 case("NF90_DOUBLE")
                     if (present(missing_value_double)) &
-                        where( dat4D .eq. v%missing_value ) dat4D = dble(missing_value_double)
+                        where( dabs(dat4D-v%missing_value) .le. NC_TOL ) dat4D = dble(missing_value_double)
             end select
         else    
             ! Apply the scalar and offset if available
@@ -2778,19 +2761,33 @@ contains
 
     end subroutine nc_read_internal_char
 
+    function str_to_num(str)
+        implicit none 
+        character(len=*), intent(IN) :: str 
+        character(len=100) :: tmpstr 
+        integer :: stat, n
+        double precision :: str_to_num, x 
 
-    pure function strtod(s)
-        real(kind=8) :: strtod
-        character(len=*), intent(in) :: s
-        character(len=32) :: fmt
-        integer :: dot
-        dot = index(s, ".")
-        if(dot < 1) then
-         write(fmt, '("(F",I0,".0)")'), len_trim(s)
+        tmpstr = trim(adjustl(str))
+        n      = len_trim(tmpstr)
+
+        read(tmpstr(1:n),*,IOSTAT=stat) x
+
+        str_to_num = 0
+        if (stat .eq. 0) then 
+            str_to_num = x 
         else
-         write(fmt, '("(F",I0,".",I0,")")'), len_trim(s), len_trim(s)-dot
-        end if
-        read(s,fmt), strtod
-    end function strtod
+            n = len_trim(tmpstr)-1
+            READ(tmpstr(1:n),*,IOSTAT=stat) x
+            if (stat .ne. 0) then 
+                write(*,*) "ncio::str_to_num:: ","Error converting string to number!"
+                write(*,*) "|",trim(tmpstr),"|",n,stat,x
+            else
+                str_to_num = x 
+            end if 
+        end if 
+
+        return 
+    end function str_to_num 
 
 end module ncio

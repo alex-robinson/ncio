@@ -23,6 +23,7 @@ program test
     character(len=256), allocatable, dimension(:,:) :: char2D
 
     integer :: tmp(5) 
+    double precision :: tmpd 
 
     integer :: i, j 
 
