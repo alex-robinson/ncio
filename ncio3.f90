@@ -78,7 +78,7 @@ module ncio
 
     private 
     public :: nc_create, nc_write_global, nc_write_map, nc_write_dim
-    public :: nc_write, nc_read
+    public :: nc_write, nc_read, nc_size 
 
 contains
 
@@ -571,6 +571,32 @@ contains
 
         return
     end subroutine nc_get_att_double 
+
+    ! Return the size of a dimension in netcdf file
+    function nc_size(fnm,vnm)
+
+        implicit none
+
+        integer :: nc_size
+        integer :: ncid, dimid, dimlen
+        character (len=*) :: fnm, vnm
+
+        ! Open the file. 
+        call nc_check( nf90_open(fnm, nf90_nowrite, ncid) )
+
+        if ( vnm == "Time" .or. vnm == "time" ) then
+            call nc_check( nf90_inquire(ncid, unlimitedDimId = dimid) )
+        else
+            call nc_check( nf90_inq_dimid(ncid, vnm, dimid) )
+        end if
+
+        call nc_check( nf90_inquire_dimension(ncid, dimid, len=dimlen) )
+
+        nc_size = dimlen
+
+        return
+
+    end function nc_size
 
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ! Subroutine :  n c _ c r e a t e
@@ -2511,6 +2537,8 @@ contains
         call nc_get_att(ncid,v,readmeta=.TRUE.)
         v%xtype = trim(xtype) 
 
+        write(*,*) "ncio:: name= "//trim(name), v%varid 
+        
         ! Get variable dimension
         ndims = size(v%dims)
 
@@ -2561,7 +2589,7 @@ contains
               dat4D = dat4D*v%scale_factor + v%add_offset
         end if
 
-        write(*,"(a,a,a)") "ncio:: nc_read:: ",trim(filename)//" : ",trim(v%name)
+!         write(*,"(a,a,a)") "ncio:: nc_read:: ",trim(filename)//" : ",trim(v%name)
 
         return
 
