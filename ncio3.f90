@@ -2496,7 +2496,7 @@ contains
         ! sure your data are really written to disk.
         call nc_check( nf90_close(ncid) )
 
-        !write(*,"(a,a,a14)") "ncio:: nc_write:: ",trim(filename)//" : ",trim(v%name)
+!         write(*,"(a,a,a14)") "ncio:: nc_write:: ",trim(filename)//" : ",trim(v%name)
         
         return 
 
@@ -2537,8 +2537,6 @@ contains
         call nc_get_att(ncid,v,readmeta=.TRUE.)
         v%xtype = trim(xtype) 
 
-        write(*,*) "ncio:: name= "//trim(name), v%varid 
-        
         ! Get variable dimension
         ndims = size(v%dims)
 
