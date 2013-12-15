@@ -573,21 +573,21 @@ contains
     end subroutine nc_get_att_double 
 
     ! Return the size of a dimension in netcdf file
-    function nc_size(fnm,vnm)
+    function nc_size(filename,name)
 
         implicit none
 
         integer :: nc_size
         integer :: ncid, dimid, dimlen
-        character (len=*) :: fnm, vnm
+        character (len=*) :: filename, name
 
         ! Open the file. 
-        call nc_check( nf90_open(fnm, nf90_nowrite, ncid) )
+        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
 
-        if ( vnm == "Time" .or. vnm == "time" ) then
+        if ( name == "Time" .or. name == "time" ) then
             call nc_check( nf90_inquire(ncid, unlimitedDimId = dimid) )
         else
-            call nc_check( nf90_inq_dimid(ncid, vnm, dimid) )
+            call nc_check( nf90_inq_dimid(ncid, name, dimid) )
         end if
 
         call nc_check( nf90_inquire_dimension(ncid, dimid, len=dimlen) )
@@ -647,25 +647,25 @@ contains
 
     end subroutine nc_create
 
-    subroutine nc_write_global(filename,name,dat)
+    subroutine nc_write_global(filename,name,value)
 
         implicit none 
 
-        character(len=*) :: filename, name, dat 
+        character(len=*) :: filename, name, value 
         integer :: ncid
 
         ! Open the file again and set for redefinition
         call nc_check( nf90_open(filename, nf90_write, ncid) )
         call nc_check( nf90_redef(ncid) )
 
-        call nc_check( nf90_put_att(ncid, NF90_GLOBAL,trim(name),trim(dat)) )
+        call nc_check( nf90_put_att(ncid, NF90_GLOBAL,trim(name),trim(value)) )
 
         ! End define mode and close the file.
         call nc_check( nf90_enddef(ncid) )
         call nc_check( nf90_close(ncid) )
 
         write(*,"(a,a)") "ncio:: nc_write_global:: ", &
-                              trim(filename)//" : "//trim(name)//" = "//trim(dat)
+                              trim(filename)//" : "//trim(name)//" = "//trim(value)
         
         return
 
@@ -2531,6 +2531,9 @@ contains
 
         ! Open the file. 
         call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+
+        ! TO DO: Add check to make sure variable exists !!!!
+        ! Exit if not!
 
         ! Initialize the netcdf variable info and load attributes
         call nc_v_init(v,name)
