@@ -1,9 +1,3 @@
-
-!! TO COMPILE : 
-!! gfortran -o test_ncio3.x -fcheck=all -I/opt/local/include ncio3.f90 test_ncio3.f90 -L/opt/local/lib -lnetcdff -lnetcdf
-!! or
-!! ifort -g -I/home/robinson/apps/netcdf/netcdf/include -o test_ncio3.x ncio3.f90 test_ncio3.f90 -L/home/robinson/apps/netcdf/netcdf/lib -lnetcdf
-
 program test
 
     use ncio 
@@ -45,7 +39,7 @@ program test
     call nc_read(fnm_in,lat,"lat")
     call nc_read(fnm_in,mask,"mask")
 
-    fnm_out = "out_ncio3.nc"
+    fnm_out = "out_ncio.nc"
     mapping = "stereographic"
 
     ! Create the netcdf file and the dimension variables
