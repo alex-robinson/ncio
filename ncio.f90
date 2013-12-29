@@ -4,7 +4,7 @@ module ncio
 
     implicit none
 
-    double precision, parameter :: NCIO_VERSION = 3.0d0
+    double precision, parameter :: NCIO_VERSION = 1.0d0
 
     integer, parameter :: NC_STRLEN = 256 
     integer, parameter :: NC_STRLEN_MAX = 10000
@@ -1012,7 +1012,7 @@ contains
     !! @param standard_name NetCDF attribute specifying the CF convention standard name of the variable (optional)
     !! @param grid_mapping name of the grid this variable is mapped on (optional)
     !! @param units NetCDF attribute of the units of the variable (optional)
-    subroutine nc_write_int_pt(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_int_pt(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1039,7 +1039,7 @@ contains
         dat4D(1,1,1,1) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_int=missing_value)
 
@@ -1047,7 +1047,7 @@ contains
 
     end subroutine nc_write_int_pt
 
-    subroutine nc_write_int_1D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_int_1D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1074,7 +1074,7 @@ contains
         dat4D(:,1,1,1) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_int=missing_value)
 
@@ -1082,7 +1082,7 @@ contains
 
     end subroutine nc_write_int_1D
 
-    subroutine nc_write_int_2D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_int_2D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1109,7 +1109,7 @@ contains
         dat4D(:,:,1,1) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_int=missing_value)
 
@@ -1117,7 +1117,7 @@ contains
 
     end subroutine nc_write_int_2D
 
-    subroutine nc_write_int_3D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_int_3D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1144,7 +1144,7 @@ contains
         dat4D(:,:,:,1) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_int=missing_value)
 
@@ -1152,7 +1152,7 @@ contains
 
     end subroutine nc_write_int_3D
 
-    subroutine nc_write_int_4D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_int_4D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1178,7 +1178,7 @@ contains
         dat4D(:,:,:,:) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_int=missing_value)
 
@@ -1192,7 +1192,7 @@ contains
 !
 ! ================================
     
-    subroutine nc_write_double_pt(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_double_pt(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1219,7 +1219,7 @@ contains
         dat4D(1,1,1,1) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_double=missing_value)
 
@@ -1227,7 +1227,7 @@ contains
 
     end subroutine nc_write_double_pt
 
-    subroutine nc_write_double_1D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_double_1D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1254,7 +1254,7 @@ contains
         dat4D(:,1,1,1) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_double=missing_value)
 
@@ -1262,7 +1262,7 @@ contains
 
     end subroutine nc_write_double_1D
 
-    subroutine nc_write_double_2D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_double_2D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1289,7 +1289,7 @@ contains
         dat4D(:,:,1,1) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_double=missing_value)
 
@@ -1297,7 +1297,7 @@ contains
 
     end subroutine nc_write_double_2D
 
-    subroutine nc_write_double_3D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_double_3D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1324,7 +1324,7 @@ contains
         dat4D(:,:,:,1) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_double=missing_value)
 
@@ -1332,7 +1332,7 @@ contains
 
     end subroutine nc_write_double_3D
 
-    subroutine nc_write_double_4D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_double_4D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1358,7 +1358,7 @@ contains
         dat4D(:,:,:,:) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_double=missing_value)
 
@@ -1372,7 +1372,7 @@ contains
 !
 ! ================================
     
-    subroutine nc_write_float_pt(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_float_pt(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1399,7 +1399,7 @@ contains
         dat4D(1,1,1,1) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_float=missing_value)
 
@@ -1407,7 +1407,7 @@ contains
 
     end subroutine nc_write_float_pt
 
-    subroutine nc_write_float_1D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_float_1D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1434,7 +1434,7 @@ contains
         dat4D(:,1,1,1) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_float=missing_value)
 
@@ -1442,7 +1442,7 @@ contains
 
     end subroutine nc_write_float_1D
 
-    subroutine nc_write_float_2D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_float_2D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1469,7 +1469,7 @@ contains
         dat4D(:,:,1,1) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_float=missing_value)
 
@@ -1477,7 +1477,7 @@ contains
 
     end subroutine nc_write_float_2D
 
-    subroutine nc_write_float_3D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_float_3D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1504,7 +1504,7 @@ contains
         dat4D(:,:,:,1) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_float=missing_value)
 
@@ -1512,7 +1512,7 @@ contains
 
     end subroutine nc_write_float_3D
 
-    subroutine nc_write_float_4D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_float_4D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1538,7 +1538,7 @@ contains
         dat4D(:,:,:,:) = dble(dat)
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units, &
                                        missing_value_float=missing_value)
 
@@ -1552,7 +1552,7 @@ contains
     !
     ! ================================
 
-    subroutine nc_write_logical_pt(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_logical_pt(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
         implicit none 
@@ -1578,14 +1578,14 @@ contains
         if (dat) dat4D(1,1,1,1) = 1.d0 
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_pt
 
-    subroutine nc_write_logical_1D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_logical_1D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
         implicit none 
@@ -1611,14 +1611,14 @@ contains
         where(dat) dat4D(:,1,1,1) = 1.d0 
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_1D
 
-    subroutine nc_write_logical_2D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_logical_2D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units)
 
         implicit none 
@@ -1644,14 +1644,14 @@ contains
         where(dat) dat4D(:,:,1,1) = 1.d0 
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_2D
 
-    subroutine nc_write_logical_3D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_logical_3D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units)
 
         implicit none 
@@ -1677,14 +1677,14 @@ contains
         where(dat) dat4D(:,:,:,1) = 1.d0 
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_3D
 
-    subroutine nc_write_logical_4D(filename,dat,name,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_logical_4D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
                                long_name,standard_name,grid_mapping,units)
 
         implicit none 
@@ -1709,7 +1709,7 @@ contains
         where(dat) dat4D(:,:,:,:) = 1.d0 
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,dat4D,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                        start,count,long_name,standard_name,grid_mapping,units)
 
         return
@@ -1735,7 +1735,7 @@ contains
     !! @param name name of the variable in NetCDF file to be read
     !! @param start vector of values specifying starting indices for reading data from each dimension
     !! @param count vector of values specifying how many values to read in each dimension
-    subroutine nc_read_int_pt(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_int_pt(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -1756,7 +1756,7 @@ contains
         allocate(dat4D(1,1,1,1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_int=missing_value)
 
         ! Store data that was read from file in output array
@@ -1766,7 +1766,7 @@ contains
 
     end subroutine nc_read_int_pt
 
-    subroutine nc_read_int_1D(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_int_1D(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -1787,7 +1787,7 @@ contains
         allocate(dat4D(size(dat,1),1,1,1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_int=missing_value)
 
         ! Store data that was read from file in output array
@@ -1797,7 +1797,7 @@ contains
 
     end subroutine nc_read_int_1D
 
-    subroutine nc_read_int_2D(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_int_2D(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -1818,7 +1818,7 @@ contains
         allocate(dat4D(size(dat,1),size(dat,2),1,1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_int=missing_value)
 
         ! Store data that was read from file in output array
@@ -1828,7 +1828,7 @@ contains
 
     end subroutine nc_read_int_2D
 
-    subroutine nc_read_int_3D(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_int_3D(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -1849,7 +1849,7 @@ contains
         allocate(dat4D(size(dat,1),size(dat,2),size(dat,3),1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_int=missing_value)
 
         ! Store data that was read from file in output array
@@ -1859,7 +1859,7 @@ contains
 
     end subroutine nc_read_int_3D
 
-    subroutine nc_read_int_4D(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_int_4D(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -1880,7 +1880,7 @@ contains
         allocate(dat4D(size(dat,1),size(dat,2),size(dat,3),size(dat,4)))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_int=missing_value)
 
         ! Store data that was read from file in output array
@@ -1896,7 +1896,7 @@ contains
 !
 ! ================================
     
-    subroutine nc_read_double_pt(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_double_pt(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -1917,7 +1917,7 @@ contains
         allocate(dat4D(1,1,1,1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_double=missing_value)
 
         ! Store data that was read from file in output array
@@ -1927,7 +1927,7 @@ contains
 
     end subroutine nc_read_double_pt
 
-    subroutine nc_read_double_1D(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_double_1D(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -1948,7 +1948,7 @@ contains
         allocate(dat4D(size(dat,1),1,1,1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_double=missing_value)
 
         ! Store data that was read from file in output array
@@ -1958,7 +1958,7 @@ contains
 
     end subroutine nc_read_double_1D
 
-    subroutine nc_read_double_2D(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_double_2D(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -1979,7 +1979,7 @@ contains
         allocate(dat4D(size(dat,1),size(dat,2),1,1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_double=missing_value)
 
         ! Store data that was read from file in output array
@@ -1989,7 +1989,7 @@ contains
 
     end subroutine nc_read_double_2D
 
-    subroutine nc_read_double_3D(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_double_3D(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -2010,7 +2010,7 @@ contains
         allocate(dat4D(size(dat,1),size(dat,2),size(dat,3),1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_double=missing_value)
 
         ! Store data that was read from file in output array
@@ -2020,7 +2020,7 @@ contains
 
     end subroutine nc_read_double_3D
 
-    subroutine nc_read_double_4D(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_double_4D(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -2041,7 +2041,7 @@ contains
         allocate(dat4D(size(dat,1),size(dat,2),size(dat,3),size(dat,4)))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_double=missing_value)
 
         ! Store data that was read from file in output array
@@ -2057,7 +2057,7 @@ contains
 !
 ! ================================
     
-    subroutine nc_read_float_pt(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_float_pt(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -2078,7 +2078,7 @@ contains
         allocate(dat4D(1,1,1,1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_float=missing_value)
 
         ! Store data that was read from file in output array
@@ -2088,7 +2088,7 @@ contains
 
     end subroutine nc_read_float_pt
 
-    subroutine nc_read_float_1D(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_float_1D(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -2109,7 +2109,7 @@ contains
         allocate(dat4D(size(dat,1),1,1,1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_float=missing_value)
 
         ! Store data that was read from file in output array
@@ -2119,7 +2119,7 @@ contains
 
     end subroutine nc_read_float_1D
 
-    subroutine nc_read_float_2D(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_float_2D(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -2140,7 +2140,7 @@ contains
         allocate(dat4D(size(dat,1),size(dat,2),1,1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_float=missing_value)
 
         ! Store data that was read from file in output array
@@ -2150,7 +2150,7 @@ contains
 
     end subroutine nc_read_float_2D
 
-    subroutine nc_read_float_3D(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_float_3D(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -2171,7 +2171,7 @@ contains
         allocate(dat4D(size(dat,1),size(dat,2),size(dat,3),1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_float=missing_value)
 
         ! Store data that was read from file in output array
@@ -2181,7 +2181,7 @@ contains
 
     end subroutine nc_read_float_3D
 
-    subroutine nc_read_float_4D(filename,dat,name,start,count,missing_value)
+    subroutine nc_read_float_4D(filename,name,dat,start,count,missing_value)
 
         implicit none 
 
@@ -2202,7 +2202,7 @@ contains
         allocate(dat4D(size(dat,1),size(dat,2),size(dat,3),size(dat,4)))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype, &
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype, &
                                       missing_value_float=missing_value)
 
         ! Store data that was read from file in output array
@@ -2218,7 +2218,7 @@ contains
 !
 ! ================================
 
-    subroutine nc_read_logical_pt(filename,dat,name,start,count)
+    subroutine nc_read_logical_pt(filename,name,dat,start,count)
 
         implicit none 
 
@@ -2237,7 +2237,7 @@ contains
         allocate(dat4D(1,1,1,1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype)
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype)
 
         ! Store data that was read from file in output array
         dat = .FALSE.
@@ -2247,7 +2247,7 @@ contains
 
     end subroutine nc_read_logical_pt
 
-    subroutine nc_read_logical_1D(filename,dat,name,start,count)
+    subroutine nc_read_logical_1D(filename,name,dat,start,count)
 
         implicit none 
 
@@ -2266,7 +2266,7 @@ contains
         allocate(dat4D(size(dat,1),1,1,1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype)
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype)
 
         ! Store data that was read from file in output array
         dat = .FALSE.
@@ -2276,7 +2276,7 @@ contains
 
     end subroutine nc_read_logical_1D
 
-    subroutine nc_read_logical_2D(filename,dat,name,start,count)
+    subroutine nc_read_logical_2D(filename,name,dat,start,count)
 
         implicit none 
 
@@ -2295,7 +2295,7 @@ contains
         allocate(dat4D(size(dat,1),size(dat,2),1,1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype)
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype)
 
         ! Store data that was read from file in output array
         dat = .FALSE.
@@ -2305,7 +2305,7 @@ contains
 
     end subroutine nc_read_logical_2D
 
-    subroutine nc_read_logical_3D(filename,dat,name,start,count)
+    subroutine nc_read_logical_3D(filename,name,dat,start,count)
 
         implicit none 
 
@@ -2324,7 +2324,7 @@ contains
         allocate(dat4D(size(dat,1),size(dat,2),size(dat,3),1))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype)
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype)
 
         ! Store data that was read from file in output array
         dat = .FALSE.
@@ -2334,7 +2334,7 @@ contains
 
     end subroutine nc_read_logical_3D
 
-    subroutine nc_read_logical_4D(filename,dat,name,start,count)
+    subroutine nc_read_logical_4D(filename,name,dat,start,count)
 
         implicit none 
 
@@ -2353,7 +2353,7 @@ contains
         allocate(dat4D(size(dat,1),size(dat,2),size(dat,3),size(dat,4)))
 
         ! Finally call the internal writing routine
-        call nc_read_internal_numeric(filename,dat4D,name,start,count,xtype=xtype)
+        call nc_read_internal_numeric(filename,name,dat4D,start,count,xtype=xtype)
 
         ! Store data that was read from file in output array
         dat = .FALSE.
@@ -2369,7 +2369,7 @@ contains
 !
 ! =================================
 
-    subroutine nc_write_internal_numeric(filename,dat,name,xtype,ndims_in,dim1,dim2,dim3,dim4, &
+    subroutine nc_write_internal_numeric(filename,name,dat,xtype,ndims_in,dim1,dim2,dim3,dim4, &
                                          start,count,long_name,standard_name,grid_mapping,units, &
                                          missing_value_int,missing_value_float,missing_value_double)
 
@@ -2508,7 +2508,7 @@ contains
     ! Purpose    :  Read a variable from a netcdf file
     !               (only one time step 'ndat' at a time)
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    subroutine nc_read_internal_numeric(filename,dat4D,name,start,count,xtype, &
+    subroutine nc_read_internal_numeric(filename,name,dat4D,start,count,xtype, &
                                         missing_value_int,missing_value_float,missing_value_double)
 
         implicit none
@@ -2602,7 +2602,7 @@ contains
 !
 ! ================================
 
-    subroutine nc_write_char_1D(filename,dat,name)
+    subroutine nc_write_char_1D(filename,name,dat)
 
         implicit none 
 
@@ -2620,13 +2620,13 @@ contains
         end do
 
         ! Finally call the internal writing routine
-        call nc_write_internal_char(filename,string,name)
+        call nc_write_internal_char(filename,name,string)
 
         return
 
     end subroutine nc_write_char_1D
 
-    subroutine nc_write_char_2D(filename,dat,name)
+    subroutine nc_write_char_2D(filename,name,dat)
 
         implicit none 
 
@@ -2644,7 +2644,7 @@ contains
 
     end subroutine nc_write_char_2D
 
-    subroutine nc_write_char_3D(filename,dat,name)
+    subroutine nc_write_char_3D(filename,name,dat)
 
         implicit none 
 
@@ -2662,7 +2662,7 @@ contains
 
     end subroutine nc_write_char_3D
 
-    subroutine nc_write_char_4D(filename,dat,name)
+    subroutine nc_write_char_4D(filename,name,dat)
 
         implicit none 
 
@@ -2680,7 +2680,7 @@ contains
 
     end subroutine nc_write_char_4D
 
-    subroutine nc_read_char_1D(filename,dat,name,sep)
+    subroutine nc_read_char_1D(filename,name,dat,sep)
 
         implicit none 
 
@@ -2701,7 +2701,7 @@ contains
         nsep = len_trim(separator)
 
         ! Call the internal reading routine to get a long string
-        call nc_read_internal_char(filename,string,name)
+        call nc_read_internal_char(filename,name,string)
 
         ! Convert the string into a character array
         do i = 1, size(dat)-1
@@ -2716,7 +2716,7 @@ contains
 
     end subroutine nc_read_char_1D
 
-    subroutine nc_write_internal_char(filename,string,name)
+    subroutine nc_write_internal_char(filename,name,string)
 
         implicit none 
 
@@ -2758,7 +2758,7 @@ contains
 
     end subroutine nc_write_internal_char
 
-    subroutine nc_read_internal_char(filename,string,name)
+    subroutine nc_read_internal_char(filename,name,string)
 
         implicit none 
 
