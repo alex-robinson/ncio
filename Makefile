@@ -7,6 +7,7 @@ usage:
 	@echo "    * USAGE * "
 	@echo ""
 	@echo " make test       : compiles the test program test_ncio.x"
+	@echo " make f2py       : compiles the ncio source for use as a Python module using f2py."
 	@echo " make clean      : cleans object and executable files"
 	@echo ""
 
@@ -14,16 +15,11 @@ objdir = .obj
 
 ifort ?= 0
 debug ?= 0 
-f2py  ?= 0 
 
 ifeq ($(ifort),1)
     FC = ifort 
 else
     FC = gfortran
-endif 
-
-ifeq ($(f2py),1)
-    FC = f2py
 endif 
 
 ifeq ($(ifort),1)
@@ -50,7 +46,7 @@ else
 endif
 
 ## Individual libraries or modules ##
-$(objdir)/ncio.o: ../ncio/ncio3.f90
+$(objdir)/ncio.o: ../ncio/ncio.f90
 	$(FC) $(DFLAGS) $(FLAGS) -c -o $@ $<
 
 ## Complete programs
@@ -59,6 +55,12 @@ test: $(objdir)/ncio.o
 	$(FC) $(DFLAGS) $(FLAGS) -o test_ncio.x $^ test_ncio.f90 $(LFLAGS)
 	@echo " "
 	@echo "    test_ncio.x is ready."
+	@echo " "
+
+f2py: ncio.f90
+	f2py -m -c --f90exec=$(FC) --f90flags="$(DFLAGS) $(FLAGS)" $^ $(LFLAGS)
+	@echo " "
+	@echo "    ncio.pyc is ready."
 	@echo " "
 
 clean:
