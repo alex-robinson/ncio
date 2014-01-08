@@ -58,7 +58,8 @@ test: $(objdir)/ncio.o
 	@echo " "
 
 f2py: ncio.f90
-	f2py -m -c --f90exec=$(FC) --f90flags="$(DFLAGS) $(FLAGS)" $^ $(LFLAGS)
+	$(FC) -shared -fPIC $(DFLAGS) $(FLAGS) -o libncio.so $^ $(LFLAGS)
+	f2py -m ncio --opt=-O2 -L. -lncio libncio.so
 	@echo " "
 	@echo "    ncio.pyc is ready."
 	@echo " "
