@@ -558,7 +558,7 @@ contains
         if (stat .eq. noerr) then
 
             select case(xtype)
-                case(NF90_INT,NF90_FLOAT,NF90_DOUBLE) 
+                case(NF90_INT,NF90_FLOAT,NF90_DOUBLE,NF90_SHORT) 
                     stat = nf90_get_att(ncid, varid, trim(name), val)
                 case(NF90_CHAR)
                     stat = nf90_get_att(ncid, varid, trim(name), val_s(1:len))
@@ -2568,22 +2568,18 @@ contains
         ! Close the file. This frees up any internal netCDF resources
         ! associated with the file.
         call nc_check( nf90_close(ncid) )
- 
+        
         if (v%missing_set) then
             where( dabs(dat4D-v%missing_value) .gt. NC_TOL ) dat4D = dat4D*v%scale_factor + v%add_offset
 
             ! Fill with user desired missing value 
-            select case(trim(v%xtype))
-                case("NF90_INT")
-                    if (present(missing_value_int)) &
-                        where( dabs(dat4D-v%missing_value) .le. NC_TOL ) dat4D = dble(missing_value_int)
-                case("NF90_FLOAT")
-                    if (present(missing_value_float)) &
-                        where( dabs(dat4D-v%missing_value) .le. NC_TOL ) dat4D = dble(missing_value_float)
-                case("NF90_DOUBLE")
-                    if (present(missing_value_double)) &
-                        where( dabs(dat4D-v%missing_value) .le. NC_TOL ) dat4D = dble(missing_value_double)
-            end select
+            if (present(missing_value_int)) &
+                where( dabs(dat4D-v%missing_value) .le. NC_TOL ) dat4D = dble(missing_value_int)
+            if (present(missing_value_float)) &
+                where( dabs(dat4D-v%missing_value) .le. NC_TOL ) dat4D = dble(missing_value_float)
+            if (present(missing_value_double)) &
+                where( dabs(dat4D-v%missing_value) .le. NC_TOL ) dat4D = dble(missing_value_double)
+
         else    
             ! Apply the scalar and offset if available
             if (v%scale_factor .ne. 1.d0 .and. v%add_offset .ne. 0.d0) &
