@@ -77,7 +77,7 @@ program test
 
     call nc_write_map(fnm_out,mapping,lambda=-39.d0,phi=90.d0,x_e=0.d0,y_n=0.d0) 
 
-    call nc_write(fnm_out,"dist",dist,dim1="xcd",dim2="ycd",dim3="zcd",start=[1,1,1],count=[28,28,10])
+    call nc_write(fnm_out,"dist",dist,dim1="xcd",dim2="ycd",dim3="zcd") !,start=[1,1,1],count=[28,28,10])
 
 
     ! Writing a parameter value

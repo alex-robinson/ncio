@@ -107,7 +107,7 @@ contains
         integer, allocatable :: size_var(:)
 
         ! netCDF needed counters, array, and names of dims
-        integer :: ncid, stat, ncount
+        integer :: ncid, stat, ncount, nvar 
 
         ! Additional helper variables
         integer :: i, j, k, m, ndims
@@ -184,17 +184,30 @@ contains
         end if
 
         ! Initialize the start and count arrays
-        if (allocated(v%start)) deallocate(v%start)
-        if (allocated(v%count)) deallocate(v%count)
-        allocate(v%start(ndims),v%count(ndims))
+        allocate(v%start(ndims),v%count(ndims),size_var(ndims))
         v%start = 1
         if (present(start)) v%start = start
+
+        nvar = 1
+        do i = 1, ndims
+            size_var(i) = nc_size(filename,v%dims(i))
+            nvar = nvar*size_var(i)
+        end do
 
         ! Initialize count such that the entire input array will be stored in file
         ! unless count argument is given
         v%count = 1
-        v%count(1:size(size_in)) = size_in 
-        if (present(count)) v%count = count       
+        if (present(count)) then
+            ! Assign argument as count
+            v%count = count   
+        else if (size(dat) .eq. nvar) then
+            ! Assign count from size of variable on file
+            v%count = size_var 
+        else
+            ! Assign count from input dimension size
+            v%count(1:size(size_in)) = size_in 
+        end if 
+
 
         ! Reset or initialize the actual range of the variable
         actual_range = [minval(dat),maxval(dat)]
@@ -242,7 +255,6 @@ contains
             write(*,*) "count: ",count 
             stop
         end if 
-        allocate(size_var(ndims))
         do i = 1, ndims
             size_var(i) = nc_size(filename,v%dims(i))
             if (v%count(i) .gt. size_var(i)) then 
