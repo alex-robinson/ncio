@@ -49,12 +49,21 @@ endif
 $(objdir)/ncio.o: ../ncio/ncio.f90
 	$(FC) $(DFLAGS) $(FLAGS) -c -o $@ $<
 
+$(objdir)/ncio4.o: ../ncio/ncio4.f90
+	$(FC) $(DFLAGS) $(FLAGS) -c -o $@ $<
+
 ## Complete programs
 
 test: $(objdir)/ncio.o
 	$(FC) $(DFLAGS) $(FLAGS) -o test_ncio.x $^ test_ncio.f90 $(LFLAGS)
 	@echo " "
 	@echo "    test_ncio.x is ready."
+	@echo " "
+
+test4: $(objdir)/ncio4.o
+	$(FC) $(DFLAGS) $(FLAGS) -o test_ncio4.x $^ test_ncio4.f90 $(LFLAGS)
+	@echo " "
+	@echo "    test_ncio4.x is ready."
 	@echo " "
 
 f2py: ncio.f90

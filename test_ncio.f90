@@ -89,8 +89,17 @@ program test
                       grid_mapping=mapping,units="none")
     end do 
 
-    ! Write a 3D array 
+    ! Write a 3D array
+    vx(:,:,1) = 1.d0 
+    vx(:,:,2) = 2.d0  
     call nc_write(fnm_out,"vx",vx,dim1="xc",dim2="yc",dim3="kc",grid_mapping=mapping)
+    vx(:,:,3) = 3.d0
+    call nc_write(fnm_out,"vx",vx,dims=["xc","yc","kc"],grid_mapping=mapping)
+
+    write(*,*) "Testing new interface!"
+!     call nc4_write_internal(fnm_out,"vx",pack(vx,.TRUE.),size_in=ubound(vx),actual_range=[minval(vx),maxval(vx)], &
+!                              dim1="xc",dim2="yc",dim3="kc",grid_mapping=mapping)
+    write(*,*) "It worked?"
 
     ! Write a 4D array 
     call nc_write(fnm_out,"vx4D",vx4D,dim1="xc",dim2="yc",dim3="kc",dim4="time",grid_mapping=mapping)
