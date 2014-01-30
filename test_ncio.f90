@@ -85,8 +85,8 @@ program test
     do i = 1, 3
         call nc_write(fnm_out,"m3",mask*0+i,dim1="xc",dim2="yc",dim3="time",start=[1,1,i],&
                       grid_mapping=mapping,units="none")
-!         call nc_write(fnm_out,"m3d",dble(mask*0+i+0.1*i),dim1="xc",dim2="yc",dim3="time",start=[1,1,i],&
-!                       grid_mapping=mapping,units="none")
+        call nc_write(fnm_out,"m3d",mask*0+i+0.1*dble(i),dim1="xc",dim2="yc",dim3="time",start=[1,1,i],&
+                      grid_mapping=mapping,units="none")
     end do 
 
     ! Write a 3D array
