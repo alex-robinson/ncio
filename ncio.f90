@@ -83,8 +83,8 @@ module ncio
 
 contains
 
-    subroutine nc4_write_internal(filename,name,dat,xtype,size_in,actual_range,dims,&
-                                  dim1,dim2,dim3,dim4,dim5,dim6, &
+    subroutine nc4_write_internal(filename,name,dat,xtype,size_in,&
+                                  dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                   start,count,long_name,standard_name,grid_mapping,units, &
                                   missing_value_int,missing_value_float,missing_value_double) !result(v)
                         
@@ -102,7 +102,6 @@ contains
         integer,          optional :: missing_value_int
         real(4),          optional :: missing_value_float
         double precision, optional :: missing_value_double
-        double precision :: actual_range(2)
         integer :: size_in(:)
 
         ! netCDF needed counters, array, and names of dims
@@ -110,6 +109,7 @@ contains
 
         ! Additional helper variables
         integer :: i, j, k, m, ndims
+        double precision :: actual_range(2)
 
         ! Initialize ncvar type
         call nc_v_init(v,trim(name),xtype=trim(xtype))
@@ -189,6 +189,7 @@ contains
         end if
 
         ! Reset or initialize the actual range of the variable
+        actual_range = [minval(dat),maxval(dat)]
         if (trim(v%dims(ndims)) == "time") then
             if (v%start(ndims) .ne. 1) then
                 v%actual_range(1) = min(v%actual_range(1),actual_range(1))
@@ -1360,7 +1361,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,pack(dble([dat]),.TRUE.),"NF90_DOUBLE",ubound([dat]), &
-                                [minval([dat]),maxval([dat])],dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
 
@@ -1384,7 +1385,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,pack(dble(dat),.TRUE.),"NF90_DOUBLE",ubound(dat), &
-                                [minval(dat),maxval(dat)],dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
 
@@ -1408,7 +1409,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,pack(dble(dat),.TRUE.),"NF90_DOUBLE",ubound(dat), &
-                                [minval(dat),maxval(dat)],dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
 
@@ -1432,7 +1433,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,pack(dble(dat),.TRUE.),"NF90_DOUBLE",ubound(dat), &
-                                [minval(dat),maxval(dat)],dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
 
@@ -1456,7 +1457,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,pack(dble(dat),.TRUE.),"NF90_DOUBLE",ubound(dat), &
-                                [minval(dat),maxval(dat)],dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
 
