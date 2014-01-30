@@ -1426,12 +1426,10 @@ contains
 
         double precision, allocatable :: dat1D(:) 
 
-        if (trim(name).eq."dist") then
-            allocate(dat1D(size(dat)))
-            write(*,*) "About to pack succeeded"
-            dat1D = pack(dble(dat),.TRUE.)
-            write(*,*) "Pack succeeded"
-        end if 
+        allocate(dat1D(size(dat)))
+        write(*,*) "About to pack succeeded"
+        dat1D = pack(dble(dat),.TRUE.)
+        write(*,*) "Pack succeeded"
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_DOUBLE",ubound(dat), &
