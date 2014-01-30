@@ -163,10 +163,11 @@ contains
         ! Initialize count such that the entire input array will be stored in file
         ! unless count argument is given
         allocate(v%count(ndims))
+        v%count = 1
         v%count(1:size(size_in))    = size_in 
         if (present(count)) v%count = count
-        where(v%count .eq. 0) v%count = 1 
-            
+        !where(v%count .eq. 0) v%count = 1 
+
         ! Allocate dimensions of variable on file
         if (allocated(v%dims)) deallocate(v%dims)
         allocate( v%dims(ndims) )
@@ -218,6 +219,7 @@ contains
             write(*,*) "dat range:",minval(dat),maxval(dat)
             write(*,*) "start:",v%start 
             write(*,*) "count:",v%count 
+            write(*,*) "size_in:",size_in 
         end if 
 
         ! Open the file
