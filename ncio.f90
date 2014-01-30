@@ -1222,179 +1222,199 @@ contains
     !! @param standard_name NetCDF attribute specifying the CF convention standard name of the variable (optional)
     !! @param grid_mapping name of the grid this variable is mapped on (optional)
     !! @param units NetCDF attribute of the units of the variable (optional)
-    subroutine nc_write_int_pt(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
-                               long_name,standard_name,grid_mapping,units,missing_value)
+    subroutine nc_write_int_pt(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
-        character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        
-        !! Arguments related to data size and type
         integer :: dat
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
-        integer,            parameter :: ndims_in = 1 
-        character (len=*) :: dim1
-        character (len=*), optional :: dim2, dim3, dim4 
-
         integer, optional :: missing_value
 
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(1,1,1,1))
-        dat4D(1,1,1,1) = dble(dat)
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units, &
-                                       missing_value_int=missing_value)
+        call nc4_write_internal(filename,name,dble([dat]),"NF90_INT",shape([dat]), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_int=missing_value)
 
         return
 
     end subroutine nc_write_int_pt
 
-    subroutine nc_write_int_1D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
-                               long_name,standard_name,grid_mapping,units,missing_value)
+    subroutine nc_write_int_1D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
-        character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        
-        !! Arguments related to data size and type
         integer :: dat(:)
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
-        integer,            parameter :: ndims_in = 1 
-        character (len=*) :: dim1
-        character (len=*), optional :: dim2, dim3, dim4 
-
         integer, optional :: missing_value
 
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(size(dat,1),1,1,1))
-        dat4D(:,1,1,1) = dble(dat)
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units, &
-                                       missing_value_int=missing_value)
+        call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_int=missing_value)
 
         return
 
     end subroutine nc_write_int_1D
 
-    subroutine nc_write_int_2D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
-                               long_name,standard_name,grid_mapping,units,missing_value)
+    subroutine nc_write_int_2D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
-        character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        
-        !! Arguments related to data size and type
         integer :: dat(:,:)
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
-        integer,            parameter :: ndims_in = 2 
-        character (len=*) :: dim1, dim2
-        character (len=*), optional :: dim3, dim4 
-
         integer, optional :: missing_value
 
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(size(dat,1),size(dat,2),1,1))
-        dat4D(:,:,1,1) = dble(dat)
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units, &
-                                       missing_value_int=missing_value)
+        call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_int=missing_value)
 
         return
 
     end subroutine nc_write_int_2D
 
-    subroutine nc_write_int_3D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
-                               long_name,standard_name,grid_mapping,units,missing_value)
+    subroutine nc_write_int_3D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
-        character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        
-        !! Arguments related to data size and type
         integer :: dat(:,:,:)
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
-        integer,            parameter :: ndims_in = 3 
-        character (len=*) :: dim1, dim2, dim3
-        character (len=*), optional :: dim4 
-
         integer, optional :: missing_value
 
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(size(dat,1),size(dat,2),size(dat,3),1))
-        dat4D(:,:,:,1) = dble(dat)
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units, &
-                                       missing_value_int=missing_value)
+        call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_int=missing_value)
 
         return
 
     end subroutine nc_write_int_3D
 
-    subroutine nc_write_int_4D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
-                               long_name,standard_name,grid_mapping,units,missing_value)
+    subroutine nc_write_int_4D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
-        character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        
-        !! Arguments related to data size and type
         integer :: dat(:,:,:,:)
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
-        integer,            parameter :: ndims_in = 4 
-        character (len=*) :: dim1, dim2, dim3, dim4 
-
         integer, optional :: missing_value
 
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(size(dat,1),size(dat,2),size(dat,3),size(dat,4)))
-        dat4D(:,:,:,:) = dble(dat)
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units, &
-                                       missing_value_int=missing_value)
+        call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_int=missing_value)
 
         return
 
     end subroutine nc_write_int_4D
+
+    subroutine nc_write_int_5D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
+
+        implicit none 
+
+        ! Arguments
+        integer :: dat(:,:,:,:,:)
+        integer, optional :: missing_value
+
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
+
+        ! Finally call the internal writing routine
+        call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_int=missing_value)
+
+        return
+
+    end subroutine nc_write_int_5D
+
+    subroutine nc_write_int_6D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
+
+        implicit none 
+
+        ! Arguments
+        integer :: dat(:,:,:,:,:,:)
+        integer, optional :: missing_value
+
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
+
+        ! Finally call the internal writing routine
+        call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_int=missing_value)
+
+        return
+
+    end subroutine nc_write_int_6D
 
 ! ================================
 !
@@ -1602,179 +1622,199 @@ contains
 !
 ! ================================
     
-    subroutine nc_write_float_pt(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
-                               long_name,standard_name,grid_mapping,units,missing_value)
+    subroutine nc_write_float_pt(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
-        character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        
-        !! Arguments related to data size and type
         real(4) :: dat
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
-        integer,            parameter :: ndims_in = 1 
-        character (len=*) :: dim1
-        character (len=*), optional :: dim2, dim3, dim4 
-
         real(4), optional :: missing_value
 
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(1,1,1,1))
-        dat4D(1,1,1,1) = dble(dat)
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units, &
-                                       missing_value_float=missing_value)
+        call nc4_write_internal(filename,name,dble([dat]),"NF90_FLOAT",shape([dat]), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_float=missing_value)
 
         return
 
     end subroutine nc_write_float_pt
 
-    subroutine nc_write_float_1D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
-                               long_name,standard_name,grid_mapping,units,missing_value)
+    subroutine nc_write_float_1D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
-        character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        
-        !! Arguments related to data size and type
         real(4) :: dat(:)
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
-        integer,            parameter :: ndims_in = 1 
-        character (len=*) :: dim1
-        character (len=*), optional :: dim2, dim3, dim4 
-
         real(4), optional :: missing_value
 
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(size(dat,1),1,1,1))
-        dat4D(:,1,1,1) = dble(dat)
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units, &
-                                       missing_value_float=missing_value)
+        call nc4_write_internal(filename,name,dat1D,"NF90_FLOAT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_float=missing_value)
 
         return
 
     end subroutine nc_write_float_1D
 
-    subroutine nc_write_float_2D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
-                               long_name,standard_name,grid_mapping,units,missing_value)
+    subroutine nc_write_float_2D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
-        character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        
-        !! Arguments related to data size and type
         real(4) :: dat(:,:)
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
-        integer,            parameter :: ndims_in = 2 
-        character (len=*) :: dim1, dim2
-        character (len=*), optional :: dim3, dim4 
-
         real(4), optional :: missing_value
 
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(size(dat,1),size(dat,2),1,1))
-        dat4D(:,:,1,1) = dble(dat)
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units, &
-                                       missing_value_float=missing_value)
+        call nc4_write_internal(filename,name,dat1D,"NF90_FLOAT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_float=missing_value)
 
         return
 
     end subroutine nc_write_float_2D
 
-    subroutine nc_write_float_3D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
-                               long_name,standard_name,grid_mapping,units,missing_value)
+    subroutine nc_write_float_3D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
-        character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        
-        !! Arguments related to data size and type
         real(4) :: dat(:,:,:)
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
-        integer,            parameter :: ndims_in = 3 
-        character (len=*) :: dim1, dim2, dim3
-        character (len=*), optional :: dim4 
-
         real(4), optional :: missing_value
 
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(size(dat,1),size(dat,2),size(dat,3),1))
-        dat4D(:,:,:,1) = dble(dat)
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units, &
-                                       missing_value_float=missing_value)
+        call nc4_write_internal(filename,name,dat1D,"NF90_FLOAT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_float=missing_value)
 
         return
 
     end subroutine nc_write_float_3D
 
-    subroutine nc_write_float_4D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
-                               long_name,standard_name,grid_mapping,units,missing_value)
+    subroutine nc_write_float_4D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
-        character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        
-        !! Arguments related to data size and type
         real(4) :: dat(:,:,:,:)
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
-        integer,            parameter :: ndims_in = 4 
-        character (len=*) :: dim1, dim2, dim3, dim4 
-
         real(4), optional :: missing_value
 
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(size(dat,1),size(dat,2),size(dat,3),size(dat,4)))
-        dat4D(:,:,:,:) = dble(dat)
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units, &
-                                       missing_value_float=missing_value)
+        call nc4_write_internal(filename,name,dat1D,"NF90_FLOAT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_float=missing_value)
 
         return
 
     end subroutine nc_write_float_4D
+
+    subroutine nc_write_float_5D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
+
+        implicit none 
+
+        ! Arguments
+        real(4) :: dat(:,:,:,:,:)
+        real(4), optional :: missing_value
+
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
+
+        ! Finally call the internal writing routine
+        call nc4_write_internal(filename,name,dat1D,"NF90_FLOAT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_float=missing_value)
+
+        return
+
+    end subroutine nc_write_float_5D
+
+    subroutine nc_write_float_6D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
+
+        implicit none 
+
+        ! Arguments
+        real(4) :: dat(:,:,:,:,:,:)
+        real(4), optional :: missing_value
+
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
+
+        ! Finally call the internal writing routine
+        call nc4_write_internal(filename,name,dat1D,"NF90_FLOAT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_float=missing_value)
+
+        return
+
+    end subroutine nc_write_float_6D
 
     ! ================================
     !
@@ -1782,169 +1822,207 @@ contains
     !
     ! ================================
 
-    subroutine nc_write_logical_pt(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_logical_pt(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
+        logical :: dat
+
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        
-        !! Arguments related to data size and type
-        logical :: dat
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
-        integer,            parameter :: ndims_in = 1 
-        character (len=*) :: dim1
-        character (len=*), optional :: dim2, dim3, dim4 
-
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(1,1,1,1))
-        dat4D(:,:,:,:) = 0.d0
-        if (dat) dat4D(1,1,1,1) = 1.d0 
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        integer :: dati
+         
+        dati = 0
+        if (dat) dati = 1  
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units)
+        call nc4_write_internal(filename,name,dble([dati]),"NF90_INT",shape([dat]), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_pt
 
-    subroutine nc_write_logical_1D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
+    subroutine nc_write_logical_1D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
+        logical :: dat(:)
+
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+        integer, allocatable :: dati(:) 
         
-        !! Arguments related to data size and type
-        logical :: dat(:)
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
-        integer,            parameter :: ndims_in = 1 
-        character (len=*) :: dim1
-        character (len=*), optional :: dim2, dim3, dim4 
-
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(size(dat,1),1,1,1))
-        dat4D(:,:,:,:) = 0.d0
-        where(dat) dat4D(:,1,1,1) = 1.d0 
+        allocate(dati(size(dat)),dat1D(size(dat)))
+        dati = 0
+        where (dat) dati = 1 
+        dat1D = pack(dble(dati),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units)
+        call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_1D
 
-    subroutine nc_write_logical_2D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
-                               long_name,standard_name,grid_mapping,units)
+    subroutine nc_write_logical_2D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                   long_name,standard_name,grid_mapping,units)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
+        logical :: dat(:,:)
+
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        
-        !! Arguments related to data size and type
-        logical :: dat(:,:)
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
-        integer,            parameter :: ndims_in = 2 
-        character (len=*) :: dim1, dim2
-        character (len=*), optional :: dim3, dim4 
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+        integer, allocatable :: dati(:,:)
 
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(size(dat,1),size(dat,2),1,1))
-        dat4D(:,:,:,:) = 0.d0
-        where(dat) dat4D(:,:,1,1) = 1.d0 
+        allocate(dati(size(dat,1),size(dat,2)),dat1D(size(dat)))
+        dati = 0
+        where (dat) dati = 1 
+        dat1D = pack(dble(dati),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units)
+        call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_2D
 
-    subroutine nc_write_logical_3D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
-                               long_name,standard_name,grid_mapping,units)
+    subroutine nc_write_logical_3D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                   long_name,standard_name,grid_mapping,units)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
+        logical :: dat(:,:,:)
+
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        
-        !! Arguments related to data size and type
-        logical :: dat(:,:,:)
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
-        integer,            parameter :: ndims_in = 3 
-        character (len=*) :: dim1, dim2, dim3
-        character (len=*), optional :: dim4 
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+        integer, allocatable :: dati(:,:,:)
 
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(size(dat,1),size(dat,2),size(dat,3),1))
-        dat4D(:,:,:,:) = 0.d0
-        where(dat) dat4D(:,:,:,1) = 1.d0 
+        allocate(dati(size(dat,1),size(dat,2),size(dat,3)),dat1D(size(dat)))
+        dati = 0
+        where (dat) dati = 1 
+        dat1D = pack(dble(dati),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units)
+        call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_3D
 
-    subroutine nc_write_logical_4D(filename,name,dat,dim1,dim2,dim3,dim4,start,count, &
-                               long_name,standard_name,grid_mapping,units)
+    subroutine nc_write_logical_4D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                   long_name,standard_name,grid_mapping,units)
 
         implicit none 
 
-        double precision, dimension(:,:,:,:), allocatable :: dat4D
-
         ! Arguments
+        logical :: dat(:,:,:,:)
+
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:)
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        
-        !! Arguments related to data size and type
-        logical :: dat(:,:,:,:)
-        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
-        integer,            parameter :: ndims_in = 4 
-        character (len=*) :: dim1, dim2, dim3, dim4 
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+        integer, allocatable :: dati(:,:,:,:)
 
-        ! Allocate dat4D and store input data to faciliate calling internal write subroutine
-        if (allocated(dat4D)) deallocate(dat4D)
-        allocate(dat4D(size(dat,1),size(dat,2),size(dat,3),size(dat,4)))
-        dat4D(:,:,:,:) = 0.d0
-        where(dat) dat4D(:,:,:,:) = 1.d0 
+        allocate(dati(size(dat,1),size(dat,2),size(dat,3),size(dat,4)),dat1D(size(dat)))
+        dati = 0
+        where (dat) dati = 1 
+        dat1D = pack(dble(dati),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc_write_internal_numeric(filename,name,dat4D,xtype,ndims_in,dim1,dim2,dim3,dim4, &
-                                       start,count,long_name,standard_name,grid_mapping,units)
+        call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_4D
+
+    subroutine nc_write_logical_5D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units)
+
+        implicit none 
+
+        ! Arguments
+        logical :: dat(:,:,:,:,:)
+
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+        integer, allocatable :: dati(:,:,:,:,:)
+
+        allocate(dati(size(dat,1),size(dat,2),size(dat,3),size(dat,4),size(dat,5)))
+        allocate(dat1D(size(dat)))
+        dati = 0
+        where (dat) dati = 1 
+        dat1D = pack(dble(dati),.TRUE.)    ! Pack here to avoid segmentation faults!
+
+        ! Finally call the internal writing routine
+        call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units)
+
+        return
+
+    end subroutine nc_write_logical_5D
+
+    subroutine nc_write_logical_6D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                   long_name,standard_name,grid_mapping,units)
+
+        implicit none 
+
+        ! Arguments
+        logical :: dat(:,:,:,:,:,:)
+
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+        integer, allocatable :: dati(:,:,:,:,:,:)
+
+        allocate(dati(size(dat,1),size(dat,2),size(dat,3),size(dat,4),size(dat,5),size(dat,6)))
+        allocate(dat1D(size(dat)))
+        dati = 0
+        where (dat) dati = 1 
+        dat1D = pack(dble(dati),.TRUE.)    ! Pack here to avoid segmentation faults!
+
+        ! Finally call the internal writing routine
+        call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units)
+
+        return
+
+    end subroutine nc_write_logical_6D
 
 ! =====================
 ! =====================
