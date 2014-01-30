@@ -104,9 +104,10 @@ contains
         real(4),          optional :: missing_value_float
         double precision, optional :: missing_value_double
         integer :: size_in(:)
+        integer, allocatable :: size_var(:)
 
         ! netCDF needed counters, array, and names of dims
-        integer :: ncid, stat
+        integer :: ncid, stat, ncount
 
         ! Additional helper variables
         integer :: i, j, k, m, ndims
@@ -143,7 +144,7 @@ contains
             ndims = size(dims)
 
             ! Consistency check
-            if (present(dim1) .or. present(dim2) .or. present(dim3) .or. present(dim4)) then
+            if (present(dim1)) then
                 write(*,*) "nc_write:: Warning, either `dims` or `dim1,dim2,...` arguments "
                 write(*,*) "           should be specified - not both. Using `dims`."
             end if
@@ -155,18 +156,6 @@ contains
             if (present(dim5)) ndims = 5
             if (present(dim6)) ndims = 6
         end if 
-
-        ! Initialize the start and count arrays
-        allocate(v%start(ndims))
-        v%start(:) = 1
-        if (present(start)) v%start = start
-
-        ! Initialize count such that the entire input array will be stored in file
-        ! unless count argument is given
-        allocate(v%count(ndims))
-        v%count = 1
-        v%count(1:size(size_in))    = size_in 
-        if (present(count)) v%count = count
 
         ! Allocate dimensions of variable on file
         if (allocated(v%dims)) deallocate(v%dims)
@@ -194,6 +183,19 @@ contains
             end do
         end if
 
+        ! Initialize the start and count arrays
+        if (allocated(v%start)) deallocate(v%start)
+        if (allocated(v%count)) deallocate(v%count)
+        allocate(v%start(ndims),v%count(ndims))
+        v%start = 1
+        if (present(start)) v%start = start
+
+        ! Initialize count such that the entire input array will be stored in file
+        ! unless count argument is given
+        v%count = 1
+        v%count(1:size(size_in)) = size_in 
+        if (present(count)) v%count = count       
+
         ! Reset or initialize the actual range of the variable
         actual_range = [minval(dat),maxval(dat)]
 !         if (trim(v%dims(ndims)) == "time") then
@@ -215,16 +217,44 @@ contains
             end if
         end if
         
-        ! Summarize what we'll do (diagnostics!!)
-        if (trim(v%name)=="dist") then  
-            call nc_print_attr(v)
-            write(*,*) "ubound(dat): ",ubound(dat)
-            write(*,*) "size(dat):   ",size(dat)
-            write(*,*) "dat range:",minval(dat),maxval(dat)
-            write(*,*) "start:",v%start 
-            write(*,*) "count:",v%count 
-            write(*,*) "size_in:",size_in 
+        ! Summarize what we'll do (diagnostics!!)  
+!         call nc_print_attr(v)
+!         write(*,*) "ubound(dat): ",ubound(dat)
+!         write(*,*) "size(dat):   ",size(dat)
+!         write(*,*) "dat range:",minval(dat),maxval(dat)
+!         write(*,*) "start:",v%start 
+!         write(*,*) "count:",v%count 
+!         write(*,*) "size_in:",size_in 
+!         write(*,*) "shape dat:",shape(dat)
+
+        ! Make sure count size makes sense
+        ncount = 1
+        do i = 1, ndims 
+            ncount = ncount*v%count(i)
+        end do 
+        if (size(dat) .ne. ncount) then
+            write(*,*) "ncio:: error: "// &
+                       "The input variable size does not match the count of values to write to file."
+            write(*,*) trim(filename)//": "//trim(v%name)
+            write(*,*) "Size of variable: ",size(dat)
+            write(*,*) "Size of count:    ",ncount 
+            write(*,*) "start: ",start 
+            write(*,*) "count: ",count 
+            stop
         end if 
+        allocate(size_var(ndims))
+        do i = 1, ndims
+            size_var(i) = nc_size(filename,v%dims(i))
+            if (v%count(i) .gt. size_var(i)) then 
+                write(*,*) "ncio:: error: "// &
+                           "count exceeds this dimension length."
+                write(*,*) trim(filename)//": "//trim(v%name)
+                write(*,*) "Dimension exceeded: ",trim(v%dims(i)), size_var(i)," < ",v%count(i)
+                write(*,*) "Are the data values a different shape than the file dimensions?"
+                write(*,*) "   In that case, specify start+count as arguments."
+                stop 
+            end if 
+        end do 
 
         ! Open the file
         call nc_check( nf90_open(filename, nf90_write, ncid) )
@@ -1366,7 +1396,6 @@ contains
         implicit none 
 
         ! Arguments
-        ! Arguments
         double precision :: dat
         double precision, optional :: missing_value
 
@@ -1377,7 +1406,7 @@ contains
 
 
         ! Finally call the internal writing routine
-        call nc4_write_internal(filename,name,pack(dble([dat]),.TRUE.),"NF90_DOUBLE",ubound([dat]), &
+        call nc4_write_internal(filename,name,dble([dat]),"NF90_DOUBLE",shape([dat]), &
                                 dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
@@ -1399,9 +1428,13 @@ contains
         integer, optional :: start(:), count(:)
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc4_write_internal(filename,name,pack(dble(dat),.TRUE.),"NF90_DOUBLE",ubound(dat), &
+        call nc4_write_internal(filename,name,dat1D,"NF90_DOUBLE",shape(dat), &
                                 dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
@@ -1423,16 +1456,13 @@ contains
         integer, optional :: start(:), count(:)
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-
         double precision, allocatable :: dat1D(:) 
 
         allocate(dat1D(size(dat)))
-        write(*,*) "About to pack succeeded"
-        dat1D = pack(dble(dat),.TRUE.)
-        write(*,*) "Pack succeeded"
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc4_write_internal(filename,name,dat1D,"NF90_DOUBLE",ubound(dat), &
+        call nc4_write_internal(filename,name,dat1D,"NF90_DOUBLE",shape(dat), &
                                 dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
@@ -1455,8 +1485,13 @@ contains
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
 
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
+
         ! Finally call the internal writing routine
-        call nc4_write_internal(filename,name,pack(dble(dat),.TRUE.),"NF90_DOUBLE",ubound(dat), &
+        call nc4_write_internal(filename,name,dat1D,"NF90_DOUBLE",shape(dat), &
                                 dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
@@ -1478,9 +1513,13 @@ contains
         integer, optional :: start(:), count(:)
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc4_write_internal(filename,name,pack(dble(dat),.TRUE.),"NF90_DOUBLE",ubound(dat), &
+        call nc4_write_internal(filename,name,dat1D,"NF90_DOUBLE",shape(dat), &
                                 dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
@@ -1502,9 +1541,13 @@ contains
         integer, optional :: start(:), count(:)
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc4_write_internal(filename,name,pack(dble(dat),.TRUE.),"NF90_DOUBLE",ubound(dat), &
+        call nc4_write_internal(filename,name,dat1D,"NF90_DOUBLE",shape(dat), &
                                 dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
@@ -1526,9 +1569,13 @@ contains
         integer, optional :: start(:), count(:)
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
+        double precision, allocatable :: dat1D(:) 
+
+        allocate(dat1D(size(dat)))
+        dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
-        call nc4_write_internal(filename,name,pack(dble(dat),.TRUE.),"NF90_DOUBLE",ubound(dat), &
+        call nc4_write_internal(filename,name,dat1D,"NF90_DOUBLE",shape(dat), &
                                 dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)

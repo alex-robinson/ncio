@@ -9,7 +9,7 @@ program test
     character(len=256) :: fnm, fnm_in, fnm_out, mapping
 
     integer :: nx, ny, nk
-    double precision, allocatable, dimension(:,:) :: lon,lat,zs
+    double precision, allocatable, dimension(:,:) :: lon,lat,zs, dist
     integer, allocatable, dimension(:,:) :: mask 
     double precision, allocatable, dimension(:,:,:) :: vx
     double precision, allocatable, dimension(:,:,:,:) :: vx4D 
@@ -19,6 +19,8 @@ program test
 
     integer :: tmp(5) 
     double precision :: tmpd 
+
+    integer :: distdim(3)
 
     integer :: i, j 
 
@@ -35,6 +37,14 @@ program test
     allocate(char2D(nx,ny))
 
     allocate(vx6D(nx,ny,nk,1,2,3))
+
+    ! Write a map array like in coordinates package
+    distdim = [28,28,10]
+    allocate(dist(distdim(1)*distdim(2),distdim(3)))
+    dist = 0.d0
+    do i =1, distdim(3)
+        dist(:,i) = dble(i)
+    end do
 
     ! Load data
     fnm_in = "topo.20km.nc"
@@ -60,7 +70,15 @@ program test
     call nc_write_dim(fnm_out,"d5",x=1,nx=2,units="none")
     call nc_write_dim(fnm_out,"d6",x=1,nx=3,units="none")
 
-    call nc_write_map(fnm_out,mapping,lambda=-39.d0,phi=90.d0,x_e=0.d0,y_n=0.d0)
+    call nc_write_dim(fnm_out,"xcd",x=1,nx=distdim(1),units="none")
+    call nc_write_dim(fnm_out,"ycd",x=1,nx=distdim(2),units="none")
+    call nc_write_dim(fnm_out,"zcd",x=1,nx=distdim(3),units="none")
+    call nc_write_dim(fnm_out,"xcd1",x=1,nx=distdim(1)*distdim(2),units="none")
+
+    call nc_write_map(fnm_out,mapping,lambda=-39.d0,phi=90.d0,x_e=0.d0,y_n=0.d0) 
+
+    call nc_write(fnm_out,"dist",dist,dim1="xcd",dim2="ycd",dim3="zcd",start=[1,1,1],count=[28,28,10])
+
 
     ! Writing a parameter value
     call nc_write(fnm_out,"p1",(/15/),dim1="parameter")
