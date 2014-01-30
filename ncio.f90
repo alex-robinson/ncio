@@ -216,15 +216,15 @@ contains
         end if
         
         ! Summarize what we'll do (diagnostics!!)
-!         if (trim(v%name)=="vx6D") then  
-!             call nc_print_attr(v)
-!             write(*,*) "ubound(dat): ",ubound(dat)
-!             write(*,*) "size(dat):   ",size(dat)
-!             write(*,*) "dat range:",minval(dat),maxval(dat)
-!             write(*,*) "start:",v%start 
-!             write(*,*) "count:",v%count 
-!             write(*,*) "size_in:",size_in 
-!         end if 
+        if (trim(v%name)=="dist") then  
+            call nc_print_attr(v)
+            write(*,*) "ubound(dat): ",ubound(dat)
+            write(*,*) "size(dat):   ",size(dat)
+            write(*,*) "dat range:",minval(dat),maxval(dat)
+            write(*,*) "start:",v%start 
+            write(*,*) "count:",v%count 
+            write(*,*) "size_in:",size_in 
+        end if 
 
         ! Open the file
         call nc_check( nf90_open(filename, nf90_write, ncid) )
