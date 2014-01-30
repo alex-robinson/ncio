@@ -13,6 +13,7 @@ program test
     integer, allocatable, dimension(:,:) :: mask 
     double precision, allocatable, dimension(:,:,:) :: vx
     double precision, allocatable, dimension(:,:,:,:) :: vx4D 
+    double precision, allocatable, dimension(:,:,:,:,:,:) :: vx6D 
     logical, allocatable, dimension(:,:) :: masklogic
     character(len=256), allocatable, dimension(:,:) :: char2D
 
@@ -32,6 +33,8 @@ program test
     allocate(  vx4D(nx,ny,nk,1))
     allocate(masklogic(nx,ny))
     allocate(char2D(nx,ny))
+
+    allocate(vx6D(nx,ny,nk,1,2,3))
 
     ! Load data
     fnm_in = "topo.20km.nc"
@@ -53,6 +56,9 @@ program test
     call nc_write_dim(fnm_out,"time",x=(/ 0.d0,5.d0,100.d0 /),units="years",calendar="360_day")
     call nc_write_dim(fnm_out,"parameter",x=1,units="none")
     call nc_write_dim(fnm_out,"kc",x=1,nx=nk,units="none")
+    call nc_write_dim(fnm_out,"d4",x=1,nx=1,units="none")
+    call nc_write_dim(fnm_out,"d5",x=1,nx=2,units="none")
+    call nc_write_dim(fnm_out,"d6",x=1,nx=3,units="none")
 
     call nc_write_map(fnm_out,mapping,lambda=-39.d0,phi=90.d0,x_e=0.d0,y_n=0.d0)
 
@@ -101,17 +107,18 @@ program test
     vx(:,:,3) = 6.d0
     call nc_write(fnm_out,"vx",vx,dims=["xc","yc","kc"],grid_mapping=mapping)
 
-    write(*,*) "Testing new interface!"
-!     call nc4_write_internal(fnm_out,"vx",pack(vx,.TRUE.),size_in=ubound(vx),actual_range=[minval(vx),maxval(vx)], &
-!                              dim1="xc",dim2="yc",dim3="kc",grid_mapping=mapping)
-    write(*,*) "It worked?"
-
     ! Write a 4D array 
     call nc_write(fnm_out,"vx4D",vx4D,dim1="xc",dim2="yc",dim3="kc",dim4="time",grid_mapping=mapping)
     call nc_write(fnm_out,"vx4Dr",real(vx4D),dim1="xc",dim2="yc",dim3="kc",dim4="time",grid_mapping=mapping)
 
     ! Read a 4D array 
     call nc_read(fnm_out,"vx4D",vx4D)
+
+    ! Write a 6D array 
+    vx6D = 66.d0
+    write(*,*) "Writing 6D!"
+    call nc_write(fnm_out,"vx6D",vx6D,dim1="xc",dim2="yc",dim3="kc",dim4="d4",dim5="d5",dim6="d6", &
+                  grid_mapping=mapping)
 
     ! Write a logical 2D array
     masklogic = .FALSE.

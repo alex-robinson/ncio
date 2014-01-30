@@ -34,7 +34,8 @@ module ncio
                             nc_write_int_3D , nc_write_int_4D  
         module procedure    nc_write_double_pt, &
                             nc_write_double_1D, nc_write_double_2D, &
-                            nc_write_double_3D, nc_write_double_4D
+                            nc_write_double_3D, nc_write_double_4D, &
+                            nc_write_double_5D, nc_write_double_6D
         module procedure    nc_write_float_pt, &
                             nc_write_float_1D, nc_write_float_2D, &
                             nc_write_float_3D, nc_write_float_4D
@@ -86,7 +87,7 @@ contains
     subroutine nc4_write_internal(filename,name,dat,xtype,size_in,&
                                   dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                   start,count,long_name,standard_name,grid_mapping,units, &
-                                  missing_value_int,missing_value_float,missing_value_double) !result(v)
+                                  missing_value_int,missing_value_float,missing_value_double)
                         
 
         implicit none 
@@ -166,7 +167,6 @@ contains
         v%count = 1
         v%count(1:size(size_in))    = size_in 
         if (present(count)) v%count = count
-        !where(v%count .eq. 0) v%count = 1 
 
         ! Allocate dimensions of variable on file
         if (allocated(v%dims)) deallocate(v%dims)
@@ -186,6 +186,10 @@ contains
                         v%dims(i) = trim(dim3)
                     case(4)
                         v%dims(i) = trim(dim4)
+                    case(5)
+                        v%dims(i) = trim(dim5)
+                    case(6)
+                        v%dims(i) = trim(dim6)
                 end select
             end do
         end if
@@ -211,16 +215,16 @@ contains
             end if
         end if
         
-        ! Summarize what we'll do
-        if (trim(v%name)=="m3d") then  
-            call nc_print_attr(v)
-            write(*,*) "ubound(dat): ",ubound(dat)
-            write(*,*) "size(dat):   ",size(dat)
-            write(*,*) "dat range:",minval(dat),maxval(dat)
-            write(*,*) "start:",v%start 
-            write(*,*) "count:",v%count 
-            write(*,*) "size_in:",size_in 
-        end if 
+        ! Summarize what we'll do (diagnostics!!)
+!         if (trim(v%name)=="vx6D") then  
+!             call nc_print_attr(v)
+!             write(*,*) "ubound(dat): ",ubound(dat)
+!             write(*,*) "size(dat):   ",size(dat)
+!             write(*,*) "dat range:",minval(dat),maxval(dat)
+!             write(*,*) "start:",v%start 
+!             write(*,*) "count:",v%count 
+!             write(*,*) "size_in:",size_in 
+!         end if 
 
         ! Open the file
         call nc_check( nf90_open(filename, nf90_write, ncid) )
@@ -231,10 +235,8 @@ contains
         call nc_check( nf90_enddef(ncid) )
         
         ! Write the data to the netcdf file
-        ! (NF90 converts dat to proper type (int, real, dble)
+        ! Note: NF90 converts dat to proper type (int, real, dble) and shape
         call nc_check( nf90_put_var(ncid, v%varid, dat,v%start,v%count) )
-!         call nc_check( nf90_put_var(ncid, v%varid, &
-!                reshape(dat,(/v%count(1)*v%count(2)*v%count(3)*v%count(4)/)),v%start,v%count) )
 
         ! Close the file. This causes netCDF to flush all buffers and make
         ! sure your data are really written to disk.
@@ -419,13 +421,9 @@ contains
 
         type(ncvar) :: v
         integer :: i 
-        character(len=512) :: tmpchar, dims_char
+        character(len=512) :: dims_char
 
-        dims_char = trim(v%dims(1))
-        do i = 2, size(v%dims)
-            tmpchar = trim(dims_char)
-            write(dims_char,"(a)") trim(tmpchar)//"  "//trim(v%dims(i))
-        end do
+        write(dims_char,*) (trim(v%dims(i))//"  ", i=1,size(v%dims))
 
         write(*,*) 
         write(*,*) "nc_print_attr::"
@@ -1483,6 +1481,54 @@ contains
         return
 
     end subroutine nc_write_double_4D
+
+    subroutine nc_write_double_5D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
+
+        implicit none 
+
+        ! Arguments
+        double precision :: dat(:,:,:,:,:)
+        double precision, optional :: missing_value
+
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+
+        ! Finally call the internal writing routine
+        call nc4_write_internal(filename,name,pack(dble(dat),.TRUE.),"NF90_DOUBLE",ubound(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_double=missing_value)
+
+        return
+
+    end subroutine nc_write_double_5D
+
+    subroutine nc_write_double_6D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+                                  long_name,standard_name,grid_mapping,units,missing_value)
+
+        implicit none 
+
+        ! Arguments
+        double precision :: dat(:,:,:,:,:,:)
+        double precision, optional :: missing_value
+
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        character (len=*), optional :: long_name, standard_name, grid_mapping, units
+
+        ! Finally call the internal writing routine
+        call nc4_write_internal(filename,name,pack(dble(dat),.TRUE.),"NF90_DOUBLE",ubound(dat), &
+                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_double=missing_value)
+
+        return
+
+    end subroutine nc_write_double_6D
 
 ! ================================
 !
