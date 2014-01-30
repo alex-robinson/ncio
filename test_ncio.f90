@@ -81,19 +81,24 @@ program test
     call nc_write(fnm_out,"lon",lon,dim1="xc",dim2="yc",grid_mapping=mapping)
     call nc_write(fnm_out,"lat",lat,dim1="xc",dim2="yc",grid_mapping=mapping)
 
+    vx(:,:,1) = 1.d0 
+    vx(:,:,2) = 2.d0  
+    vx(:,:,3) = 3.d0
+    vx(:,:,4) = -1.d0
+
     ! Write 2D time slices
     do i = 1, 3
         call nc_write(fnm_out,"m3",mask*0+i,dim1="xc",dim2="yc",dim3="time",start=[1,1,i],&
                       grid_mapping=mapping,units="none")
-        call nc_write(fnm_out,"m3d",mask*0+i+0.1*dble(i),dim1="xc",dim2="yc",dim3="time",start=[1,1,i],&
+!         call nc_write(fnm_out,"m3d",mask*0+i+0.1*dble(i),dim1="xc",dim2="yc",dim3="time",start=[1,1,i],&
+!                       grid_mapping=mapping,units="none")
+        call nc_write(fnm_out,"m3d",vx(:,:,4),dim1="xc",dim2="yc",dim3="time",start=[1,1,i],&
                       grid_mapping=mapping,units="none")
     end do 
 
     ! Write a 3D array
-    vx(:,:,1) = 1.d0 
-    vx(:,:,2) = 2.d0  
     call nc_write(fnm_out,"vx",vx,dim1="xc",dim2="yc",dim3="kc",grid_mapping=mapping)
-    vx(:,:,3) = 3.d0
+    vx(:,:,3) = 6.d0
     call nc_write(fnm_out,"vx",vx,dims=["xc","yc","kc"],grid_mapping=mapping)
 
     write(*,*) "Testing new interface!"

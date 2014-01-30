@@ -165,7 +165,8 @@ contains
         allocate(v%count(ndims))
         v%count(1:size(size_in))    = size_in 
         if (present(count)) v%count = count
-
+        where(v%count .eq. 0) v%count = 1 
+            
         ! Allocate dimensions of variable on file
         if (allocated(v%dims)) deallocate(v%dims)
         allocate( v%dims(ndims) )
@@ -190,14 +191,14 @@ contains
 
         ! Reset or initialize the actual range of the variable
         actual_range = [minval(dat),maxval(dat)]
-        if (trim(v%dims(ndims)) == "time") then
+!         if (trim(v%dims(ndims)) == "time") then
             if (v%start(ndims) .ne. 1) then
                 v%actual_range(1) = min(v%actual_range(1),actual_range(1))
                 v%actual_range(2) = max(v%actual_range(2),actual_range(2))
             else
                 v%actual_range = actual_range
             end if
-        end if
+!         end if
 
         ! Modify the variable according to scale and offset (if working with real or double data)
         if (trim(v%xtype) .eq. "NF90_FLOAT" .or. trim(v%xtype) .eq. "NF90_DOUBLE") then
@@ -209,6 +210,16 @@ contains
             end if
         end if
         
+        ! Summarize what we'll do
+        if (trim(v%name)=="m3d") then  
+            call nc_print_attr(v)
+            write(*,*) "ubound(dat): ",ubound(dat)
+            write(*,*) "size(dat):   ",size(dat)
+            write(*,*) "dat range:",minval(dat),maxval(dat)
+            write(*,*) "start:",v%start 
+            write(*,*) "count:",v%count 
+        end if 
+
         ! Open the file
         call nc_check( nf90_open(filename, nf90_write, ncid) )
 
@@ -406,13 +417,19 @@ contains
 
         type(ncvar) :: v
         integer :: i 
+        character(len=512) :: tmpchar, dims_char
+
+        dims_char = trim(v%dims(1))
+        do i = 2, size(v%dims)
+            tmpchar = trim(dims_char)
+            write(dims_char,"(a)") trim(tmpchar)//"  "//trim(v%dims(i))
+        end do
 
         write(*,*) 
-        write(*,*) "  ncvar: ", trim(v%name)//" : "//trim(v%xtype)
-        write(*,*) "   dims: "
-        do i = 1, size(v%dims)
-            write(*,*) "     "//trim(v%dims(i))
-        end do 
+        write(*,*) "nc_print_attr::"
+        write(*,"(10x,a20,a1,2x,a)") "name", ":",trim(v%name)
+        write(*,"(10x,a20,a1,2x,a)") "xtype",":",trim(v%xtype)
+        write(*,"(10x,a20,a1,2x,a)") "dims", ":",trim(dims_char)
         if (.not. trim(v%long_name) .eq. "") &
             write(*,"(10x,a20,a1,2x,a)")      "long_name",":",     trim(v%long_name)
         if (.not. trim(v%standard_name) .eq. "") &
