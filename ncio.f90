@@ -800,7 +800,9 @@ contains
             call nc_check( nf90_inq_dimid(ncid, name, dimid) )
         end if
 
+        ! Get the dimension length and close the file
         call nc_check( nf90_inquire_dimension(ncid, dimid, len=dimlen) )
+        call nc_check( nf90_close(ncid) )
 
         nc_size = dimlen
 
