@@ -826,7 +826,8 @@ contains
         integer :: ncid
 
         character(len=1024), parameter :: refs = "http://www.unidata.ucar.edu/netcdf/conventions.html"
-        character(len=1024), parameter :: conv = "CF-1.6"
+        !character(len=1024), parameter :: conv = "CF-1.6"
+        character(len=1024), parameter :: conv = ""
         character(len=1024) :: history 
 
         ! Get ncio version for writing
@@ -837,18 +838,29 @@ contains
         call nc_check( nf90_enddef(ncid) )
         call nc_check( nf90_close(ncid) )
 
-        ! Open the file again and set for redefinition
-        call nc_check( nf90_open(filename, nf90_write, ncid) )
-        call nc_check( nf90_redef(ncid) )
+        !if (present(conventions)) then
+        !    call nc_check( nf90_put_att(ncid, NF90_GLOBAL, "Conventions", trim(conventions)) )
+        !else ! Default
+        !    call nc_check( nf90_put_att(ncid, NF90_GLOBAL, "Conventions", trim(conv)) )
+        !end if 
 
-        ! Add dataset global attributes
-        call nc_check( nf90_put_att(ncid, NF90_GLOBAL, "references",  trim(refs)) )
-
+        ! update default
         if (present(conventions)) then
-            call nc_check( nf90_put_att(ncid, NF90_GLOBAL, "Conventions", trim(conventions)) )
-        else ! Default
-            call nc_check( nf90_put_att(ncid, NF90_GLOBAL, "Conventions", trim(conv)) )
-        end if 
+          write(conv, *) conventions
+        endif
+
+        ! define attribute only if "conventions" if defined
+        if (trim(conv) .ne. "") then
+
+          ! Open the file again and set for redefinition
+          call nc_check( nf90_open(filename, nf90_write, ncid) )
+          call nc_check( nf90_redef(ncid) )
+
+          ! Add dataset global attributes
+          call nc_check( nf90_put_att(ncid, NF90_GLOBAL, "references",  trim(refs)) )
+          call nc_check( nf90_put_att(ncid, NF90_GLOBAL, "Conventions", trim(conv)) )
+
+        endif
 
         ! End define mode and close the file.
         call nc_check( nf90_enddef(ncid) )
