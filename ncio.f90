@@ -827,7 +827,7 @@ contains
 
         character(len=1024), parameter :: refs = "http://www.unidata.ucar.edu/netcdf/conventions.html"
         !character(len=1024), parameter :: conv = "CF-1.6"
-        character(len=1024), parameter :: conv = ""
+        character(len=1024) :: conv = ""
         character(len=1024) :: history 
 
         ! Get ncio version for writing
@@ -835,7 +835,6 @@ contains
 
         ! Create the new empty file and close it (necessary to avoid errors with dim vars)
         call nc_check( nf90_create(filename, nf90_clobber, ncid) )
-        call nc_check( nf90_enddef(ncid) )
         call nc_check( nf90_close(ncid) )
 
         !if (present(conventions)) then
@@ -846,7 +845,8 @@ contains
 
         ! update default
         if (present(conventions)) then
-          write(conv, *) conventions
+          !write(conv, "(a)") conventions
+          conv = conventions
         endif
 
         ! define attribute only if "conventions" if defined
@@ -860,12 +860,11 @@ contains
           call nc_check( nf90_put_att(ncid, NF90_GLOBAL, "references",  trim(refs)) )
           call nc_check( nf90_put_att(ncid, NF90_GLOBAL, "Conventions", trim(conv)) )
 
+          ! End define mode and close the file
+          call nc_check( nf90_enddef(ncid) )
+          call nc_check( nf90_close(ncid) )
+
         endif
-
-        ! End define mode and close the file.
-        call nc_check( nf90_enddef(ncid) )
-        call nc_check( nf90_close(ncid) )
-
 
         write(*,"(a,a)") "ncio:: nc_create   :: ",trim(filename)
         
