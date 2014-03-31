@@ -103,6 +103,9 @@ program test
     call nc_write(fnm_out,"m2",mask(:,1)*0+2,dim1="xc",dim2="yc")
     call nc_write(fnm_out,"m2",mask(1,:)*0+3,dim1="xc",dim2="yc",start=(/10,1/),count=(/1,ny/))
 
+    ! Write some non-standard variable attribute
+    call nc_write_vattr(fnm_out, "m2", "desc", "This is the mask")
+
     ! Write a double array
     call nc_write(fnm_out,"lon",lon,dim1="xc",dim2="yc",grid_mapping=mapping)
     call nc_write(fnm_out,"lat",lat,dim1="xc",dim2="yc",grid_mapping=mapping)

@@ -78,7 +78,7 @@ module ncio
     end interface
 
     private 
-    public :: nc_create, nc_write_global, nc_write_map, nc_write_dim
+    public :: nc_create, nc_write_global, nc_write_map, nc_write_dim, nc_write_vattr
     public :: nc_write, nc_read, nc_size 
     public :: nc4_write_internal 
 
@@ -883,6 +883,33 @@ contains
         return
 
     end subroutine nc_write_global
+
+    subroutine nc_write_vattr(filename,varname, name,value)
+
+        implicit none 
+
+        character(len=*) :: filename, varname, name, value 
+        integer :: ncid, varid, stat
+        integer, parameter :: noerr = NF90_NOERR
+
+        ! Open the file again and set for redefinition
+        call nc_check( nf90_open(filename, nf90_write, ncid) )
+        call nc_check( nf90_redef(ncid) )
+
+        ! Inquire variable id and put attribute name
+        stat = nf90_inq_varid(ncid, trim(varname), varid)
+        call nc_check( nf90_put_att(ncid, varid,trim(name),trim(value)) )
+
+        ! End define mode and close the file.
+        call nc_check( nf90_enddef(ncid) )
+        call nc_check( nf90_close(ncid) )
+
+        write(*,"(a,a)") "ncio:: nc_write_vattr:: ", &
+                              trim(filename)//", "//trim(varname)//" : "//trim(name)//" = "//trim(value)
+        
+        return
+
+    end subroutine nc_write_vattr
 
     subroutine nc_write_map(filename,name,lambda,phi,x_e,y_n)
 
