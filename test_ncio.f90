@@ -63,7 +63,7 @@ program test
     
     call nc_write_dim(fnm_out,"xc",x=-800.d0, dx=20d0,nx=nx,units="kilometers")
     call nc_write_dim(fnm_out,"yc",x=-3400.d0,dx=20d0,nx=ny,units="kilometers")
-    call nc_write_dim(fnm_out,"time",x=(/ 0.d0,5.d0,100.d0 /),units="years",calendar="360_day")
+    call nc_write_dim(fnm_out,"time",x=(/ 0.d0,5.d0,100.d0 /),units="years",calendar="360_day", unlimited=.TRUE.)
     call nc_write_dim(fnm_out,"parameter",x=1,units="none")
     call nc_write_dim(fnm_out,"kc",x=1,nx=nk,units="none")
     call nc_write_dim(fnm_out,"d4",x=1,nx=1,units="none")
@@ -94,6 +94,8 @@ program test
 
     ! Update time 
     call nc_write(fnm_out,"time",(/15.d0/),dim1="time",start=(/2/))
+
+    write (*,*) "TIME DIMENSION SIZE", nc_size(fnm_out, "time")
 
     ! Writing a 2D mask and some slices
     !mask = 0

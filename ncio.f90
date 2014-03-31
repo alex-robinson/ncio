@@ -794,11 +794,12 @@ contains
         ! Open the file. 
         call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
 
-        if ( name == "Time" .or. name == "time" ) then
-            call nc_check( nf90_inquire(ncid, unlimitedDimId = dimid) )
-        else
-            call nc_check( nf90_inq_dimid(ncid, name, dimid) )
-        end if
+        !if ( name == "Time" .or. name == "time" ) then
+        !    call nc_check( nf90_inquire(ncid, unlimitedDimId = dimid) )
+        !else
+        !    call nc_check( nf90_inq_dimid(ncid, name, dimid) )
+        !end if
+        call nc_check( nf90_inq_dimid(ncid, name, dimid) )
 
         ! Get the dimension length and close the file
         call nc_check( nf90_inquire_dimension(ncid, dimid, len=dimlen) )
@@ -954,7 +955,7 @@ contains
     !! @param axis  NetCDF attribute of the standard axis of the variable (optional)
     !! @param calendar NetCDF attribute of the calendar type to be used for time dimensions (optional)
     subroutine nc_write_dim_int_pt(filename,name,x,dx,nx, &
-                                     long_name,standard_name,units,axis,calendar)
+                                     long_name,standard_name,units,axis,calendar,unlimited)
 
         implicit none
 
@@ -970,6 +971,8 @@ contains
         character(len=*), optional :: long_name, standard_name, units, axis
         character(len=*), optional :: calendar
 
+        logical, optional :: unlimited
+
         if (present(nx)) then
             allocate(xvec(nx))
             dx_tmp = 1.d0
@@ -984,14 +987,14 @@ contains
 
         call nc_write_dim_internal(filename,name,"NF90_INT",xvec, &
                                    long_name=long_name,standard_name=standard_name, &
-                                   units=units,axis=axis,calendar=calendar)
+                                   units=units,axis=axis,calendar=calendar,unlimited=unlimited)
 
         return
 
     end subroutine nc_write_dim_int_pt
 
     subroutine nc_write_dim_int_1D(filename,name,x, &
-                                      long_name,standard_name,units,axis,calendar )
+                                      long_name,standard_name,units,axis,calendar,unlimited)
 
         implicit none
 
@@ -1002,16 +1005,18 @@ contains
         character(len=*), optional :: long_name, standard_name, units, axis
         character(len=*), optional :: calendar 
 
+        logical, optional :: unlimited
+
         call nc_write_dim_internal(filename,name,"NF90_INT",x=dble(x), &
                                    long_name=long_name,standard_name=standard_name, &
-                                   units=units,axis=axis,calendar=calendar)
+                                   units=units,axis=axis,calendar=calendar,unlimited=unlimited)
 
         return
 
     end subroutine nc_write_dim_int_1D 
 
     subroutine nc_write_dim_double_pt(filename,name,x,dx,nx, &
-                                     long_name,standard_name,units,axis,calendar)
+                                     long_name,standard_name,units,axis,calendar,unlimited)
 
         implicit none
 
@@ -1026,6 +1031,7 @@ contains
         character(len=*):: filename, name
         character(len=*), optional :: long_name, standard_name, units, axis
         character(len=*), optional :: calendar
+        logical, optional :: unlimited
 
         if (present(nx)) then
             allocate(xvec(nx))
@@ -1041,14 +1047,14 @@ contains
 
         call nc_write_dim_internal(filename,name,"NF90_DOUBLE",xvec, &
                                    long_name=long_name,standard_name=standard_name, &
-                                   units=units,axis=axis,calendar=calendar)
+                                   units=units,axis=axis,calendar=calendar,unlimited=unlimited)
 
         return
 
     end subroutine nc_write_dim_double_pt
 
     subroutine nc_write_dim_double_1D(filename,name,x, &
-                                      long_name,standard_name,units,axis,calendar )
+                                      long_name,standard_name,units,axis,calendar, unlimited )
 
         implicit none
 
@@ -1058,17 +1064,18 @@ contains
         character(len=*):: filename, name
         character(len=*), optional :: long_name, standard_name, units, axis
         character(len=*), optional :: calendar
+        logical, optional :: unlimited
 
         call nc_write_dim_internal(filename,name,"NF90_DOUBLE",x=dble(x), &
                                    long_name=long_name,standard_name=standard_name, &
-                                   units=units,axis=axis,calendar=calendar)
+                                   units=units,axis=axis,calendar=calendar,unlimited=unlimited)
 
         return
 
     end subroutine nc_write_dim_double_1D
 
     subroutine nc_write_dim_float_pt(filename,name,x,dx,nx, &
-                                     long_name,standard_name,units,axis,calendar)
+                                     long_name,standard_name,units,axis,calendar,unlimited)
 
         implicit none
 
@@ -1084,6 +1091,8 @@ contains
         character(len=*), optional :: long_name, standard_name, units, axis
         character(len=*), optional :: calendar
 
+        logical, optional :: unlimited
+
         if (present(nx)) then
             allocate(xvec(nx))
             dx_tmp = 1.d0
@@ -1098,14 +1107,14 @@ contains
 
         call nc_write_dim_internal(filename,name,"NF90_FLOAT",xvec, &
                                    long_name=long_name,standard_name=standard_name, &
-                                   units=units,axis=axis,calendar=calendar)
+                                   units=units,axis=axis,calendar=calendar,unlimited=unlimited)
 
         return
 
     end subroutine nc_write_dim_float_pt
 
     subroutine nc_write_dim_float_1D(filename,name,x, &
-                                      long_name,standard_name,units,axis,calendar )
+                                      long_name,standard_name,units,axis,calendar,unlimited)
 
         implicit none
 
@@ -1115,10 +1124,12 @@ contains
         character(len=*):: filename, name
         character(len=*), optional :: long_name, standard_name, units, axis
         character(len=*), optional :: calendar
+ 
+        logical, optional :: unlimited
 
         call nc_write_dim_internal(filename,name,"NF90_FLOAT",x=dble(x), &
                                    long_name=long_name,standard_name=standard_name, &
-                                   units=units,axis=axis,calendar=calendar)
+                                   units=units,axis=axis,calendar=calendar,unlimited=unlimited)
 
         return
 
@@ -1131,7 +1142,7 @@ contains
     !               and make a new file if needed
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     subroutine nc_write_dim_internal(filename,name,xtype,x, &
-                                     long_name,standard_name,units,axis,calendar)
+                                     long_name,standard_name,units,axis,calendar,unlimited)
 
         ! Note: an error can occur: "NetCDF: Invalid dimension ID or name"
         ! This happens when writing a dimension after some data has already
@@ -1149,7 +1160,17 @@ contains
         character(len=*), optional :: calendar
         character(len=14) :: tmpchar
 
+        logical, optional :: unlimited  
+        logical :: unlimited_i
+
         type(ncvar) :: v
+
+        ! By default do NOT define dimension as unlimited
+        if (trim(name) .eq. "time") then
+            unlimited_i = .TRUE.
+        else
+            unlimited_i = .FALSE.
+        endif
 
         call nc_v_init(v,name=trim(name),xtype=xtype,coord=.TRUE.)
 
@@ -1159,6 +1180,7 @@ contains
         if ( present(units) )         v%units         = trim(units)
         if ( present(axis) )          v%axis          = trim(axis)
         if ( present(calendar) )      v%calendar      = trim(calendar) 
+        if ( present(unlimited) )      unlimited_i    = unlimited
 
         !! Clear the variable dim vector and store/generate appropriate values
         if (allocated(v%dim)) deallocate(v%dim)
@@ -1179,7 +1201,8 @@ contains
         call nc_check( nf90_redef(ncid) )
 
         !! Define the variable in the file
-        if ( trim(v%name) .eq. "time" ) then
+        !if ( trim(v%name) .eq. "time" ) then
+        if ( unlimited_i ) then
             call nc_check( nf90_def_dim(ncid, trim(v%name), NF90_UNLIMITED, v%dimid) )
         else
             call nc_check( nf90_def_dim(ncid, trim(v%name), v%n, v%dimid) )
