@@ -16,6 +16,7 @@ program test
     double precision, allocatable, dimension(:,:,:,:,:,:) :: vx6D 
     logical, allocatable, dimension(:,:) :: masklogic
     character(len=256), allocatable, dimension(:,:) :: char2D
+    character(len=256) :: testchar
 
     integer :: tmp(5) 
     double precision :: tmpd 
@@ -57,9 +58,12 @@ program test
 
     ! Create the netcdf file and the dimension variables
     call nc_create(fnm_out)
-    call nc_write_global(fnm_out,"title","Greenland simulation")
-    call nc_write_global(fnm_out,"institution", &
+    call nc_write_attr_global(fnm_out,"title","Greenland simulation")
+    call nc_write_attr_global(fnm_out,"institution", &
                          "Universidad Complutense de Madrid; Potsdam Institute for Climate Impact Research")
+
+    call nc_read_attr_global(fnm_out, "institution", testchar)
+    write(*,*) "Institution: ", trim(testchar)
     
     call nc_write_dim(fnm_out,"xc",x=-800.d0, dx=20d0,nx=nx,units="kilometers")
     call nc_write_dim(fnm_out,"yc",x=-3400.d0,dx=20d0,nx=ny,units="kilometers")
@@ -104,7 +108,9 @@ program test
     call nc_write(fnm_out,"m2",mask(1,:)*0+3,dim1="xc",dim2="yc",start=(/10,1/),count=(/1,ny/))
 
     ! Write some non-standard variable attribute
-    call nc_write_vattr(fnm_out, "m2", "desc", "This is the mask")
+    call nc_write_attr(fnm_out, "m2", "desc", "This is the mask")
+    call nc_read_attr(fnm_out, "m2", "desc", testchar)
+    write(*,*) "m2 desc: ", trim(testchar)
 
     ! Write a double array
     call nc_write(fnm_out,"lon",lon,dim1="xc",dim2="yc",grid_mapping=mapping)

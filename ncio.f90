@@ -78,7 +78,8 @@ module ncio
     end interface
 
     private 
-    public :: nc_create, nc_write_global, nc_write_map, nc_write_dim, nc_write_vattr
+    public :: nc_create, nc_write_map, nc_write_dim
+    public :: nc_write_attr_global, nc_read_attr_global, nc_write_attr, nc_read_attr
     public :: nc_write, nc_read, nc_size 
     public :: nc4_write_internal 
 
@@ -860,7 +861,7 @@ contains
 
     end subroutine nc_create
 
-    subroutine nc_write_global(filename,name,value)
+    subroutine nc_write_attr_global(filename,name,value)
 
         implicit none 
 
@@ -877,14 +878,32 @@ contains
         call nc_check( nf90_enddef(ncid) )
         call nc_check( nf90_close(ncid) )
 
-        write(*,"(a,a)") "ncio:: nc_write_global:: ", &
+        write(*,"(a,a)") "ncio:: nc_write_attr_global:: ", &
                               trim(filename)//" : "//trim(name)//" = "//trim(value)
         
         return
 
-    end subroutine nc_write_global
+    end subroutine nc_write_attr_global
 
-    subroutine nc_write_vattr(filename,varname, name,value)
+    subroutine nc_read_attr_global(filename,name,value)
+
+        implicit none 
+
+        character(len=*), intent(in) :: filename, name
+        character(len=*), intent(out) :: value 
+        integer :: ncid
+
+        ! Open the file again and set for redefinition
+        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        call nc_check( nf90_get_att(ncid, NF90_GLOBAL,trim(name), value) )
+        call nc_check( nf90_close(ncid) )
+        
+        return
+
+    end subroutine nc_read_attr_global
+
+
+    subroutine nc_write_attr(filename,varname, name,value)
 
         implicit none 
 
@@ -904,12 +923,29 @@ contains
         call nc_check( nf90_enddef(ncid) )
         call nc_check( nf90_close(ncid) )
 
-        write(*,"(a,a)") "ncio:: nc_write_vattr:: ", &
+        write(*,"(a,a)") "ncio:: nc_write_attr:: ", &
                               trim(filename)//", "//trim(varname)//" : "//trim(name)//" = "//trim(value)
         
         return
 
-    end subroutine nc_write_vattr
+    end subroutine nc_write_attr
+
+    subroutine nc_read_attr(filename,varname, name,value)
+
+        implicit none 
+
+        character(len=*), intent(in) :: filename, varname, name
+        character(len=*), intent(out) :: value 
+        integer :: ncid, varid, stat
+
+        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        stat = nf90_inq_varid(ncid, trim(varname), varid)
+        call nc_check( nf90_get_att(ncid, varid ,trim(name), value) )
+        call nc_check( nf90_close(ncid) )
+        
+        return
+
+    end subroutine nc_read_attr
 
     subroutine nc_write_map(filename,name,lambda,phi,x_e,y_n)
 
@@ -981,6 +1017,7 @@ contains
     !! @param units NetCDF attribute of the units of the variable (optional)
     !! @param axis  NetCDF attribute of the standard axis of the variable (optional)
     !! @param calendar NetCDF attribute of the calendar type to be used for time dimensions (optional)
+
     subroutine nc_write_dim_int_pt(filename,name,x,dx,nx, &
                                      long_name,standard_name,units,axis,calendar,unlimited)
 
