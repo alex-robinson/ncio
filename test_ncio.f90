@@ -67,7 +67,7 @@ program test
     
     call nc_write_dim(fnm_out,"xc",x=-800.d0, dx=20d0,nx=nx,units="kilometers")
     call nc_write_dim(fnm_out,"yc",x=-3400.d0,dx=20d0,nx=ny,units="kilometers")
-    call nc_write_dim(fnm_out,"time",x=(/ 0.d0,5.d0,100.d0 /),units="years",calendar="360_day", unlimited=.TRUE.)
+    call nc_write_dim(fnm_out,"time",x=[0.d0,5.d0,100.d0],units="years",calendar="360_day", unlimited=.TRUE.)
     call nc_write_dim(fnm_out,"parameter",x=1,units="none")
     call nc_write_dim(fnm_out,"kc",x=1,nx=nk,units="none")
     call nc_write_dim(fnm_out,"d4",x=1,nx=1,units="none")
@@ -85,11 +85,11 @@ program test
 
 
     ! Writing a parameter value
-    call nc_write(fnm_out,"p1",(/15/),dim1="parameter")
+    call nc_write(fnm_out,"p1",[15],dim1="parameter")
     call nc_write(fnm_out,"p1",20,dim1="parameter")
 
     ! Write some integers with missing data 
-    call nc_write(fnm_out,"test1",(/1,2,3,999,5/),dim1="kc",missing_value=999)
+    call nc_write(fnm_out,"test1",[1,2,3,999,5],dim1="kc",missing_value=999)
     call nc_read(fnm_out,"test1",tmp,missing_value=-99)
     write(*,*) "test1 min/max: ",minval(tmp),maxval(tmp)
     
@@ -97,7 +97,7 @@ program test
     write(*,*) "mask(15,15)=",mask(15,15)
 
     ! Update time 
-    call nc_write(fnm_out,"time",(/15.d0/),dim1="time",start=(/2/))
+    call nc_write(fnm_out,"time",[15.d0],dim1="time",start=[2])
 
     write (*,*) "TIME DIMENSION SIZE", nc_size(fnm_out, "time")
 
@@ -105,7 +105,7 @@ program test
     !mask = 0
     call nc_write(fnm_out,"m2",mask,         dim1="xc",dim2="yc",grid_mapping=mapping,units="none")
     call nc_write(fnm_out,"m2",mask(:,1)*0+2,dim1="xc",dim2="yc")
-    call nc_write(fnm_out,"m2",mask(1,:)*0+3,dim1="xc",dim2="yc",start=(/10,1/),count=(/1,ny/))
+    call nc_write(fnm_out,"m2",mask(1,:)*0+3,dim1="xc",dim2="yc",start=[10,1],count=[1,ny])
 
     ! Write some non-standard variable attribute
     call nc_write_attr(fnm_out, "m2", "desc", "This is the mask")
