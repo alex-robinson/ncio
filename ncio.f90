@@ -817,18 +817,14 @@ contains
     ! Author     :  Alex Robinson
     ! Purpose    :  Create a new empty netcdf file
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    subroutine nc_create(filename,conventions)
+    subroutine nc_create(filename, conventions, author, creation_date, institution, description)
 
         implicit none 
 
         character(len=*) :: filename
-        character(len=*), optional :: conventions
         integer :: ncid
-
-        character(len=1024), parameter :: refs = "http://www.unidata.ucar.edu/netcdf/conventions.html"
-        !character(len=1024), parameter :: conv = "CF-1.6"
-        character(len=1024) :: conv = ""
-        character(len=1024) :: history 
+        character(len=1024) :: history
+        character(len=*), optional, intent(in) :: conventions, author, creation_date, institution, description
 
         ! Get ncio version for writing
         write(history,"(a,f4.2)") "Dataset generated using ncio v", NCIO_VERSION
@@ -837,34 +833,11 @@ contains
         call nc_check( nf90_create(filename, nf90_clobber, ncid) )
         call nc_check( nf90_close(ncid) )
 
-        !if (present(conventions)) then
-        !    call nc_check( nf90_put_att(ncid, NF90_GLOBAL, "Conventions", trim(conventions)) )
-        !else ! Default
-        !    call nc_check( nf90_put_att(ncid, NF90_GLOBAL, "Conventions", trim(conv)) )
-        !end if 
-
-        ! update default
-        if (present(conventions)) then
-          !write(conv, "(a)") conventions
-          conv = conventions
-        endif
-
-        ! define attribute only if "conventions" if defined
-        if (trim(conv) .ne. "") then
-
-          ! Open the file again and set for redefinition
-          call nc_check( nf90_open(filename, nf90_write, ncid) )
-          call nc_check( nf90_redef(ncid) )
-
-          ! Add dataset global attributes
-          call nc_check( nf90_put_att(ncid, NF90_GLOBAL, "references",  trim(refs)) )
-          call nc_check( nf90_put_att(ncid, NF90_GLOBAL, "Conventions", trim(conv)) )
-
-          ! End define mode and close the file
-          call nc_check( nf90_enddef(ncid) )
-          call nc_check( nf90_close(ncid) )
-
-        endif
+        if (present(conventions)) call nc_write_attr_global(filename, 'conventions', conventions)
+        if (present(author)) call nc_write_attr_global(filename, 'author', author)
+        if (present(creation_date)) call nc_write_attr_global(filename, 'creation_date', creation_date)
+        if (present(institution)) call nc_write_attr_global(filename, 'institution', institution)
+        if (present(description)) call nc_write_attr_global(filename, 'description', description)
 
         write(*,"(a,a)") "ncio:: nc_create   :: ",trim(filename)
         
