@@ -15,7 +15,6 @@ module ncio
 
     type ncvar
         character (len=NC_STRLEN) :: name, long_name, standard_name, units
-        character (len=NC_STRLEN) :: dataset, level_desc
         character (len=NC_STRLEN) :: axis, calendar, grid_mapping
         character (len=NC_STRLEN) :: xtype, dims_in(4)
         character (len=NC_STRLEN), allocatable :: dims(:)
@@ -315,11 +314,8 @@ contains
         ! Intialize all variable information with default values
         v%name          = trim(name)
         v%long_name     = ""
-        v%standard_name = ""
         v%units         = ""
         v%axis          = ""
-        v%level_desc    = ""
-        v%dataset       = ""
         v%calendar      = ""
         v%add_offset    = 0.d0
         v%scale_factor  = 1.d0
@@ -336,7 +332,6 @@ contains
 
         ! If args are present, reassign these variables        
         if ( present(long_name) )     v%long_name      = trim(long_name)
-        if ( present(standard_name) ) v%standard_name  = trim(standard_name)
         if ( present(grid_mapping) )  v%grid_mapping   = trim(grid_mapping)
         if ( present(units) )         v%units          = trim(units)
         if ( present(axis) )          v%axis           = trim(axis)
@@ -479,10 +474,6 @@ contains
             write(*,"(10x,a20,a1,2x,a)")      "standard_name",":", trim(v%standard_name)
         if (.not. trim(v%units) .eq. "") &
             write(*,"(10x,a20,a1,2x,a)")      "units",    ":",     trim(v%units)
-        if (.not. trim(v%dataset) .eq. "") &
-            write(*,"(10x,a20,a1,2x,a)")      "dataset",":",       trim(v%dataset)
-        if (.not. trim(v%level_desc) .eq. "") &
-            write(*,"(10x,a20,a1,2x,a)")      "level_desc",":",    trim(v%level_desc)
         if (.not. trim(v%axis) .eq. "") &
             write(*,"(10x,a20,a1,2x,a)")      "axis",":",          trim(v%axis)
         write(*,"(10x,a20,a1,2x,2e12.4)") "actual_range",":",  v%actual_range
@@ -602,12 +593,6 @@ contains
             if (trim(v%grid_mapping) .ne. "") &
                 call nc_check( nf90_put_att(ncid, v%varid, "grid_mapping", trim(v%grid_mapping) ) )
 
-            if (trim(v%dataset) .ne. "") &
-                call nc_check( nf90_put_att(ncid, v%varid, "dataset", trim(v%dataset) ) )
-
-            if (trim(v%level_desc) .ne. "") &
-                call nc_check( nf90_put_att(ncid, v%varid, "level_desc", trim(v%level_desc) ) )
-
         end if
 
         ! ! Always update the actual range (whether new or not) if it exists
@@ -696,12 +681,6 @@ contains
 
                 stat = nc_check_att( nf90_get_att(ncid, v%varid, "grid_mapping", tmpstr) )
                 if (stat .eq. noerr) v%grid_mapping = trim(tmpstr)
-
-                stat = nc_check_att( nf90_get_att(ncid, v%varid, "dataset", tmpstr) )
-                if (stat .eq. noerr) v%dataset = trim(tmpstr)
-
-                stat = nc_check_att( nf90_get_att(ncid, v%varid, "level_desc", tmpstr) )
-                if (stat .eq. noerr) v%level_desc = trim(tmpstr)
 
                 select case(trim(v%xtype))
                     case("NF90_INT")
