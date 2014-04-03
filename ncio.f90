@@ -53,16 +53,20 @@ module ncio
     interface nc_read 
         module procedure    nc_read_int_pt, &
                             nc_read_int_1D, nc_read_int_2D, &
-                            nc_read_int_3D, nc_read_int_4D
+                            nc_read_int_3D, nc_read_int_4D, &
+                            nc_read_int_5D, nc_read_int_6D 
         module procedure    nc_read_double_pt, &
                             nc_read_double_1D, nc_read_double_2D, &
-                            nc_read_double_3D, nc_read_double_4D
+                            nc_read_double_3D, nc_read_double_4D, &
+                            nc_read_double_5D, nc_read_double_6D 
         module procedure    nc_read_float_pt, &
                             nc_read_float_1D, nc_read_float_2D, &
-                            nc_read_float_3D, nc_read_float_4D 
+                            nc_read_float_3D, nc_read_float_4D, &
+                            nc_read_float_5D, nc_read_float_6D  
         module procedure    nc_read_logical_pt, &
                             nc_read_logical_1D, nc_read_logical_2D, &
-                            nc_read_logical_3D, nc_read_logical_4D                   
+                            nc_read_logical_3D, nc_read_logical_4D, &
+                            nc_read_logical_5D, nc_read_logical_6D                    
 
         ! Note: character writing and reading do not 
         ! follow the conventions of the other data types
@@ -2638,6 +2642,68 @@ contains
 
     end subroutine nc_read_double_4D
 
+    subroutine nc_read_double_5D(filename,name,dat,start,count,missing_value)
+
+        implicit none 
+
+        double precision, dimension(:), allocatable :: dat1D
+
+        ! Arguments
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        
+        !! Arguments related to data size and type
+        double precision :: dat(:,:,:,:,:)
+        character(len=NC_STRLEN), parameter :: xtype    = "NF90_DOUBLE"
+
+        double precision, optional :: missing_value 
+
+        ! Allocate dat1D and store input data to facilitate calling internal write subroutine
+        if (allocated(dat1D)) deallocate(dat1D)
+        allocate(dat1D(size(dat,1)*size(dat,2)*size(dat,3)*size(dat,4)*size(dat,5)))
+
+        ! Finally call the internal writing routine
+        call nc4_read_internal_numeric(filename,name,dat1D,shape(dat),start,count,xtype=xtype, &
+                                       missing_value_double=missing_value)
+
+        ! Store data that was read from file in output array
+        dat = dble(reshape(dat1D,shape(dat)))
+
+        return
+
+    end subroutine nc_read_double_5D
+
+    subroutine nc_read_double_6D(filename,name,dat,start,count,missing_value)
+
+        implicit none 
+
+        double precision, dimension(:), allocatable :: dat1D
+
+        ! Arguments
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        
+        !! Arguments related to data size and type
+        double precision :: dat(:,:,:,:,:,:)
+        character(len=NC_STRLEN), parameter :: xtype    = "NF90_DOUBLE"
+
+        double precision, optional :: missing_value 
+
+        ! Allocate dat1D and store input data to facilitate calling internal write subroutine
+        if (allocated(dat1D)) deallocate(dat1D)
+        allocate(dat1D(size(dat,1)*size(dat,2)*size(dat,3)*size(dat,4)*size(dat,5)*size(dat,6)))
+
+        ! Finally call the internal writing routine
+        call nc4_read_internal_numeric(filename,name,dat1D,shape(dat),start,count,xtype=xtype, &
+                                       missing_value_double=missing_value)
+
+        ! Store data that was read from file in output array
+        dat = dble(reshape(dat1D,shape(dat)))
+
+        return
+
+    end subroutine nc_read_double_6D
+
 ! ================================
 !
 !      FLOATS
@@ -2799,6 +2865,68 @@ contains
 
     end subroutine nc_read_float_4D
 
+    subroutine nc_read_float_5D(filename,name,dat,start,count,missing_value)
+
+        implicit none 
+
+        double precision, dimension(:), allocatable :: dat1D
+
+        ! Arguments
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        
+        !! Arguments related to data size and type
+        real(4) :: dat(:,:,:,:,:)
+        character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
+
+        real(4), optional :: missing_value 
+
+        ! Allocate dat1D and store input data to facilitate calling internal write subroutine
+        if (allocated(dat1D)) deallocate(dat1D)
+        allocate(dat1D(size(dat,1)*size(dat,2)*size(dat,3)*size(dat,4)*size(dat,5)))
+
+        ! Finally call the internal writing routine
+        call nc4_read_internal_numeric(filename,name,dat1D,shape(dat),start,count,xtype=xtype, &
+                                       missing_value_float=missing_value)
+
+        ! Store data that was read from file in output array
+        dat = real(reshape(dat1D,shape(dat)))
+
+        return
+
+    end subroutine nc_read_float_5D
+
+    subroutine nc_read_float_6D(filename,name,dat,start,count,missing_value)
+
+        implicit none 
+
+        double precision, dimension(:), allocatable :: dat1D
+
+        ! Arguments
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        
+        !! Arguments related to data size and type
+        real(4) :: dat(:,:,:,:,:,:)
+        character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
+
+        real(4), optional :: missing_value 
+
+        ! Allocate dat1D and store input data to facilitate calling internal write subroutine
+        if (allocated(dat1D)) deallocate(dat1D)
+        allocate(dat1D(size(dat,1)*size(dat,2)*size(dat,3)*size(dat,4)*size(dat,5)*size(dat,6)))
+
+        ! Finally call the internal writing routine
+        call nc4_read_internal_numeric(filename,name,dat1D,shape(dat),start,count,xtype=xtype, &
+                                       missing_value_float=missing_value)
+
+        ! Store data that was read from file in output array
+        dat = real(reshape(dat1D,shape(dat)))
+
+        return
+
+    end subroutine nc_read_float_6D
+
 ! ================================
 !
 !      LOGICALS 
@@ -2949,6 +3077,64 @@ contains
         return
 
     end subroutine nc_read_logical_4D
+
+    subroutine nc_read_logical_5D(filename,name,dat,start,count)
+
+        implicit none 
+
+        double precision, dimension(:), allocatable :: dat1D
+
+        ! Arguments
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        
+        !! Arguments related to data size and type
+        logical :: dat(:,:,:,:,:)
+        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
+
+        ! Allocate dat1D and store input data to facilitate calling internal write subroutine
+        if (allocated(dat1D)) deallocate(dat1D)
+        allocate(dat1D(size(dat,1)*size(dat,2)*size(dat,3)*size(dat,4)*size(dat,5)))
+
+        ! Finally call the internal writing routine
+        call nc4_read_internal_numeric(filename,name,dat1D,shape(dat),start,count,xtype=xtype)
+
+        ! Store data that was read from file in output array
+        dat = .FALSE.
+        where(reshape(dat1D,shape(dat)) .gt. 0.d0) dat = .TRUE.
+
+        return
+
+    end subroutine nc_read_logical_5D
+
+    subroutine nc_read_logical_6D(filename,name,dat,start,count)
+
+        implicit none 
+
+        double precision, dimension(:), allocatable :: dat1D
+
+        ! Arguments
+        character (len=*) :: filename, name
+        integer, optional :: start(:), count(:)
+        
+        !! Arguments related to data size and type
+        logical :: dat(:,:,:,:,:,:)
+        character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
+
+        ! Allocate dat1D and store input data to facilitate calling internal write subroutine
+        if (allocated(dat1D)) deallocate(dat1D)
+        allocate(dat1D(size(dat,1)*size(dat,2)*size(dat,3)*size(dat,4)*size(dat,5)*size(dat,6)))
+
+        ! Finally call the internal writing routine
+        call nc4_read_internal_numeric(filename,name,dat1D,shape(dat),start,count,xtype=xtype)
+
+        ! Store data that was read from file in output array
+        dat = .FALSE.
+        where(reshape(dat1D,shape(dat)) .gt. 0.d0) dat = .TRUE.
+
+        return
+
+    end subroutine nc_read_logical_6D
 
 ! ================================
 !

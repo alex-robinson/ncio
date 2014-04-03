@@ -149,6 +149,9 @@ program test
     call nc_write(fnm_out,"vx6D",vx6D,dim1="xc",dim2="yc",dim3="kc",dim4="d4",dim5="d5",dim6="d6", &
                   grid_mapping=mapping)
 
+    write(*,*) "Reading 6D!"
+    call nc_read(fnm_out,"vx6D",vx6D)
+    
     ! Write a logical 2D array
     masklogic = .FALSE.
     masklogic(20:30,20:30) = .TRUE.
