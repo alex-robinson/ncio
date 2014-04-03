@@ -57,11 +57,10 @@ program test
     mapping = "stereographic"
 
     ! Create the netcdf file and the dimension variables
-    call nc_create(fnm_out, &
-        institution="Universidad Complutense de Madrid; Potsdam Institute for Climate Impact Research")
+    call nc_create(fnm_out)
     call nc_write_attr(fnm_out,"title","Greenland simulation")
-    !call nc_write_attr(fnm_out,"institution", &
-    !                     "Universidad Complutense de Madrid; Potsdam Institute for Climate Impact Research")
+    call nc_write_attr(fnm_out,"institution", &
+                       "Universidad Complutense de Madrid; Potsdam Institute for Climate Impact Research")
 
     call nc_read_attr(fnm_out, "institution", testchar)
     write(*,*) "Institution: ", trim(testchar)
