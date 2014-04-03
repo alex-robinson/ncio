@@ -4,7 +4,7 @@ module ncio
 
     implicit none
 
-    double precision, parameter :: NCIO_VERSION = 1.0d0
+    double precision, parameter :: NCIO_VERSION = 0.2d0
 
     integer, parameter :: NC_STRLEN = 256 
     integer, parameter :: NC_STRLEN_MAX = 10000
