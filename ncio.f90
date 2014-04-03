@@ -81,6 +81,7 @@ module ncio
     public :: nc_write_attr_global, nc_read_attr_global, nc_write_attr, nc_read_attr
     public :: nc_write, nc_read, nc_size 
     public :: nc4_write_internal 
+    public :: nc_write_attr_std_dim
 
 contains
 
@@ -314,6 +315,7 @@ contains
         ! Intialize all variable information with default values
         v%name          = trim(name)
         v%long_name     = ""
+        v%standard_name = ""
         v%units         = ""
         v%axis          = ""
         v%calendar      = ""
@@ -341,44 +343,6 @@ contains
         if ( present(coord)) v%coord = coord 
         if ( present(xtype)) v%xtype = trim(xtype)
 
-        ! Update some variable info based on further default cases
-        ! (Currently overrides input arguments to comply with CF-1.6)
-        select case(trim(name))
-
-            case("x","xc")
-                v%long_name     = "x-coordinate in Cartesian system"
-                v%standard_name = "projection_x_coordinate"
-                v%units = "kilometers"
-                v%axis  = "X"
-            case("y","yc")
-                v%long_name     = "y-coordinate in Cartesian system"
-                v%standard_name = "projection_y_coordinate"
-                v%units = "kilometers"
-                v%axis  = "Y"
-            case("z","lev")
-                v%units = "meters"
-                v%axis  = "Z"
-            case("kc","kt","kr")
-                v%axis  = "Z"
-            case("time")
-                v%units = "years"
-                v%axis  = "T"
-            case("lon","longitude")
-                v%long_name = "longitude"
-                v%standard_name = "longitude"
-                v%units     = "degrees_east"
-            case("lat","latitude")
-                v%long_name = "latitude"
-                v%standard_name = "latitude"
-                v%units     = "degrees_north"
-            case default
-                ! Do nothing
-
-        end select
-
-        ! Additionally make sure time dimension loosely follows CF conventions
-        if (trim(v%name) .eq. "time") v%units = trim(v%units)//" since 0-0-0"
-
         ! Deallocate all arrays
         if (allocated(v%dim)) deallocate(v%dim)
         if (allocated(v%dims)) deallocate(v%dims)
@@ -393,6 +357,102 @@ contains
         return
 
     end subroutine nc_v_init
+
+    !
+    ! Write attributes for standard dimensions found in a netCDF file 
+    ! (if attribute not already defined)
+    !
+    subroutine nc_write_attr_std_dim(filename)
+
+        integer :: ncid, ndims, varid, stat, i
+        integer, allocatable :: dimids(:)
+
+        character (len=*), intent(in) :: filename
+        character (len=NC_STRLEN) :: name
+
+        ! Open netCDF file and get file ID
+        call nc_check( nf90_open(filename, nf90_write, ncid) )
+
+        ! Make netCDF file ready for writing attributes
+        call nc_check( nf90_redef(ncid) )
+
+        ! Loop over dimensions and update attributes
+        do i = 1, 99
+
+            ! Check whether a dimension corresponds to this ID
+            ! exit loop if not
+            stat = nf90_inquire_dimension(ncid,i,name=name) 
+            if ( stat .ne. NF90_NOERR) then
+                exit
+            endif
+
+            ! Check whether a variable is associated with this dimension
+            stat = nf90_inq_varid(ncid, trim(name), varid) 
+            if ( varid .ne. NF90_NOERR) continue ! if dimension is not defined as variable, skip it
+
+            ! Update some variable info based on further default cases
+            select case(trim(name))
+
+                case("x","xc")
+                    !call nc_check( nf90_put_att(ncid, varid, "long", v%scale_factor) )
+                    call put_att_check(ncid, varid, "long_name"     , "x-coordinate in Cartesian system")
+                    call put_att_check(ncid, varid, "standard_name" , "projection_x_coordinate")
+                    call put_att_check(ncid, varid, "units" , "kilometers")
+                    call put_att_check(ncid, varid, "axis"  , "X")
+                case("y","yc")
+                    call put_att_check(ncid, varid, "long_name"     , "y-coordinate in Cartesian system")
+                    call put_att_check(ncid, varid, "standard_name" , "projection_y_coordinate")
+                    call put_att_check(ncid, varid, "units" , "kilometers")
+                    call put_att_check(ncid, varid, "axis"  , "Y")
+                case("z","lev")
+                    call put_att_check(ncid, varid, "units" , "meters")
+                    call put_att_check(ncid, varid, "axis"  , "Z")
+                case("kc","kt","kr")
+                    call put_att_check(ncid, varid, "axis"  , "Z")
+                case("time")
+                    call put_att_check(ncid, varid, "units" , "years since 0-0-0")
+                    call put_att_check(ncid, varid, "axis"  , "T")
+                case("lon","longitude")
+                    call put_att_check(ncid, varid, "long_name" , "longitude")
+                    call put_att_check(ncid, varid, "standard_name" , "longitude")
+                    call put_att_check(ncid, varid, "units"     , "degrees_east")
+                case("lat","latitude")
+                    call put_att_check(ncid, varid, "long_name" , "latitude")
+                    call put_att_check(ncid, varid, "standard_name" , "latitude")
+                    call put_att_check(ncid, varid, "units"     , "degrees_north")
+                case default
+                    ! Do nothing
+
+            end select
+
+        end do
+
+        ! End definition mode and close file
+        call nc_check( nf90_enddef(ncid) )
+        call nc_check( nf90_close(ncid) )
+
+    end subroutine
+
+    ! write a variable attribute if not already defined
+    subroutine put_att_check(ncid, varid, name, value)
+
+        integer, intent(in) :: ncid, varid
+        character (len=*), intent(in) :: name, value
+
+        ! internal variables
+        integer :: stat
+        character (len=NC_STRLEN) :: tmpstr
+
+        ! Try to retrieve attribute
+        stat = nf90_get_att(ncid, varid, name, tmpstr)
+    
+        ! Write new attribute only if not already defined
+        if ( stat .ne. NF90_NOERR) then
+            call nc_check( nf90_put_att(ncid, varid, name, value) )
+        endif
+
+    end subroutine
+
 
     !! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     !! Subroutine :  c h e c k

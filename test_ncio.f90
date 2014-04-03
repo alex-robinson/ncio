@@ -175,5 +175,8 @@ program test
         write(*,*) trim(char2D(i,1))
     end do 
 
+    ! Write attributes on recognized standard dimensions
+    call nc_write_attr_std_dim(fnm_out)
+
     write(*,*)
 end program
