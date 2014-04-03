@@ -76,9 +76,17 @@ module ncio
         module procedure    nc_write_dim_float_pt, nc_write_dim_float_1D
     end interface
 
+    interface nc_write_attr 
+        module procedure    nc_write_attr_global, nc_write_attr_variable
+    end interface 
+
+    interface nc_read_attr 
+        module procedure    nc_read_attr_global, nc_read_attr_variable
+    end interface 
+    
     private 
     public :: nc_create, nc_write_map, nc_write_dim
-    public :: nc_write_attr_global, nc_read_attr_global, nc_write_attr, nc_read_attr
+    public :: nc_write_attr, nc_read_attr
     public :: nc_write, nc_read, nc_size 
     public :: nc4_write_internal 
     public :: nc_write_attr_std_dim
@@ -872,10 +880,10 @@ contains
         call nc_check( nf90_create(filename, nf90_clobber, ncid) )
         call nc_check( nf90_close(ncid) )
 
-        if (present(author)) call nc_write_attr_global(filename, 'author', author)
-        if (present(creation_date)) call nc_write_attr_global(filename, 'creation_date', creation_date)
-        if (present(institution)) call nc_write_attr_global(filename, 'institution', institution)
-        if (present(description)) call nc_write_attr_global(filename, 'description', description)
+        if (present(author))        call nc_write_attr(filename, 'author', author)
+        if (present(creation_date)) call nc_write_attr(filename, 'creation_date', creation_date)
+        if (present(institution))   call nc_write_attr(filename, 'institution', institution)
+        if (present(description))   call nc_write_attr(filename, 'description', description)
 
         write(*,"(a,a)") "ncio:: nc_create   :: ",trim(filename)
         
@@ -925,7 +933,7 @@ contains
     end subroutine nc_read_attr_global
 
 
-    subroutine nc_write_attr(filename,varname, name,value)
+    subroutine nc_write_attr_variable(filename,varname,name,value)
 
         implicit none 
 
@@ -950,9 +958,9 @@ contains
         
         return
 
-    end subroutine nc_write_attr
+    end subroutine nc_write_attr_variable
 
-    subroutine nc_read_attr(filename,varname, name,value)
+    subroutine nc_read_attr_variable(filename,varname,name,value)
 
         implicit none 
 
@@ -967,7 +975,7 @@ contains
         
         return
 
-    end subroutine nc_read_attr
+    end subroutine nc_read_attr_variable
 
     subroutine nc_write_map(filename,name,lambda,phi,x_e,y_n)
 

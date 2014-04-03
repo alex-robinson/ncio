@@ -59,11 +59,11 @@ program test
     ! Create the netcdf file and the dimension variables
     call nc_create(fnm_out, &
         institution="Universidad Complutense de Madrid; Potsdam Institute for Climate Impact Research")
-    call nc_write_attr_global(fnm_out,"title","Greenland simulation")
-    !call nc_write_attr_global(fnm_out,"institution", &
+    call nc_write_attr(fnm_out,"title","Greenland simulation")
+    !call nc_write_attr(fnm_out,"institution", &
     !                     "Universidad Complutense de Madrid; Potsdam Institute for Climate Impact Research")
 
-    call nc_read_attr_global(fnm_out, "institution", testchar)
+    call nc_read_attr(fnm_out, "institution", testchar)
     write(*,*) "Institution: ", trim(testchar)
     
     call nc_write_dim(fnm_out,"xc",x=-800.d0, dx=20d0,nx=nx,units="kilometers")
