@@ -796,14 +796,14 @@ contains
     ! Author     :  Alex Robinson
     ! Purpose    :  Create a new empty netcdf file
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    subroutine nc_create(filename, conventions, author, creation_date, institution, description)
+    subroutine nc_create(filename, author, creation_date, institution, description)
 
         implicit none 
 
         character(len=*) :: filename
         integer :: ncid
         character(len=1024) :: history
-        character(len=*), optional, intent(in) :: conventions, author, creation_date, institution, description
+        character(len=*), optional, intent(in) :: author, creation_date, institution, description
 
         ! Get ncio version for writing
         write(history,"(a,f4.2)") "Dataset generated using ncio v", NCIO_VERSION
@@ -812,7 +812,6 @@ contains
         call nc_check( nf90_create(filename, nf90_clobber, ncid) )
         call nc_check( nf90_close(ncid) )
 
-        if (present(conventions)) call nc_write_attr_global(filename, 'conventions', conventions)
         if (present(author)) call nc_write_attr_global(filename, 'author', author)
         if (present(creation_date)) call nc_write_attr_global(filename, 'creation_date', creation_date)
         if (present(institution)) call nc_write_attr_global(filename, 'institution', institution)
