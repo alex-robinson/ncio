@@ -363,8 +363,14 @@ contains
             allocate(v%count(size(count)))
             v%count = count 
         else 
+            if (.not. ndims .eq. size(size_in)) then 
+                write(*,"(a)") "nc_read:: ","Warning: "// &
+                "Variable dimensions in the file do not match those being read in."
+                write(*,*) trim(filename)//": ",trim(name)
+            end if 
             allocate(v%count(ndims))
-            do i = 1, ndims
+            v%count = 1 
+            do i = 1, size(size_in)
               v%count(i) = size_in(i)
             end do
         end if 
