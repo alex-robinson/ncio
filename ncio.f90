@@ -108,10 +108,10 @@ contains
         integer, allocatable :: size_var(:)
 
         ! netCDF needed counters, array, and names of dims
-        integer :: ncid, stat, ncount, nvar 
+        integer :: ncid, stat, ncount, nvar, RecordDimID
 
         ! Additional helper variables
-        integer :: i, j, k, m, ndims
+        integer :: i, j, k, m, ndims, dimid
         double precision :: actual_range(2)
 
         ! Initialize ncvar type
@@ -138,6 +138,7 @@ contains
         ! and get attributes if variable already exist
         call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
         call nc_get_att(ncid,v)    
+        call nc_check( nf90_inquire(ncid, unlimitedDimID=RecordDimID) ) ! Get Unlimited dimension ID if any
         call nc_check( nf90_close(ncid) )
 
         ! Determine number of dims in file from arguments
@@ -256,8 +257,21 @@ contains
             write(*,*) "count: ",count 
             stop
         end if 
+
+        ! Open the file
+        call nc_check( nf90_open(filename, nf90_write, ncid) )
+
         do i = 1, ndims
-            size_var(i) = nc_size(filename,v%dims(i))
+
+            call nc_check( nf90_inq_dimid(ncid, v%dims(i), dimid) )
+
+            ! If unlimited dimension, the size does not matter
+            if (dimid .eq. RecordDimID) then
+                cycle
+            endif
+
+            call nc_check( nf90_inquire_dimension(ncid, dimid, len=size_var(i)) )
+
             if (v%count(i) .gt. size_var(i)) then 
                 write(*,*) "ncio:: error: "// &
                            "count exceeds this dimension length."
@@ -268,9 +282,6 @@ contains
                 stop 
             end if 
         end do 
-
-        ! Open the file
-        call nc_check( nf90_open(filename, nf90_write, ncid) )
 
         ! Define / update the netCDF variable for the data.
         call nc_check( nf90_redef(ncid) )
@@ -388,7 +399,7 @@ contains
 
             ! Check whether a variable is associated with this dimension
             stat = nf90_inq_varid(ncid, trim(name), varid) 
-            if ( varid .ne. NF90_NOERR) continue ! if dimension is not defined as variable, skip it
+            if ( varid .ne. NF90_NOERR) cycle ! if dimension is not defined as variable, skip it
 
             ! Update some variable info based on further default cases
             select case(trim(name))

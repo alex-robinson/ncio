@@ -11,6 +11,9 @@ usage:
 	@echo " make clean      : cleans object and executable files"
 	@echo ""
 
+LIB=/usr/lib
+INC=/usr/include
+
 objdir = .obj
 
 ifort ?= 0
@@ -24,8 +27,8 @@ endif
 
 ifeq ($(ifort),1)
 	## IFORT OPTIONS ##
-	FLAGS        = -module $(objdir) -L$(objdir) -I/home/robinson/apps/netcdf/netcdf/include
-	LFLAGS		 = -L/home/robinson/apps/netcdf/netcdf/lib -lnetcdf
+	FLAGS        = -module $(objdir) -L$(objdir) -I$(INC)
+	LFLAGS		 = -L$(LIB) -lnetcdf
 
 	ifeq ($(debug), 1)
 	    DFLAGS   = -C -traceback -ftrapuv -fpe0 -check all -vec-report0
@@ -35,8 +38,8 @@ ifeq ($(ifort),1)
 	endif
 else
 	## GFORTRAN OPTIONS ##
-	FLAGS        = -I$(objdir) -J$(objdir) -I/opt/local/include
-	LFLAGS		 = -L/opt/local/lib -lnetcdff -lnetcdf
+	FLAGS        = -I$(objdir) -J$(objdir) -I$(INC)
+	LFLAGS		 = -L$(LIB) -lnetcdff -lnetcdf
 
 	ifeq ($(debug), 1)
 	    DFLAGS   = -w -p -ggdb -ffpe-trap=invalid,zero,overflow,underflow -fbacktrace -fcheck=all
@@ -49,19 +52,16 @@ endif
 $(objdir)/ncio.o: ncio.f90
 	$(FC) $(DFLAGS) $(FLAGS) -c -o $@ $<
 
+## Share library 
+$(objdir)/ncio.so: ncio.f90
+	$(FC) -c -shared -fPIC $(DFLAGS) $(FLAGS) -o ncio.so $<
+
 ## Complete programs
 
 test: $(objdir)/ncio.o
 	$(FC) $(DFLAGS) $(FLAGS) -o test_ncio.x $^ test_ncio.f90 $(LFLAGS)
 	@echo " "
 	@echo "    test_ncio.x is ready."
-	@echo " "
-
-f2py: ncio.f90
-	$(FC) -shared -fPIC $(DFLAGS) $(FLAGS) -o libncio.so $^ $(LFLAGS)
-	f2py -m ncio --opt=-O2 -L. -lncio libncio.so
-	@echo " "
-	@echo "    ncio.pyc is ready."
 	@echo " "
 
 clean:
