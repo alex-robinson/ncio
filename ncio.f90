@@ -349,7 +349,11 @@ contains
         integer :: i
 
         ! Open the file. 
-        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        stat = nf90_open(filename, nf90_nowrite, ncid) 
+        if (stat .ne. NF90_NOERR) then
+            write(*, *) "ncio :: error when opening file for reading, no such file or directory? :: ",trim(filename)
+            stop
+        endif
 
         ! TO DO: Add check to make sure variable exists !!!!
         ! Exit if not!
@@ -955,11 +959,15 @@ contains
         implicit none
 
         integer :: nc_size
-        integer :: ncid, dimid, dimlen
+        integer :: ncid, dimid, dimlen, stat
         character (len=*) :: filename, name
 
         ! Open the file. 
-        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        stat = nf90_open(filename, nf90_nowrite, ncid) 
+        if (stat .ne. NF90_NOERR) then
+            write(*, *) "ncio :: error when opening file for reading, no such file or directory? :: ",trim(filename)
+            stop
+        endif
 
         !if ( name == "Time" .or. name == "time" ) then
         !    call nc_check( nf90_inquire(ncid, unlimitedDimId = dimid) )
@@ -988,7 +996,7 @@ contains
         implicit none 
 
         character(len=*) :: filename
-        integer :: ncid
+        integer :: ncid, status
         character(len=1024) :: history
         character(len=*), optional, intent(in) :: author, creation_date, institution, description
 
@@ -996,7 +1004,11 @@ contains
         write(history,"(a,f4.2)") "Dataset generated using ncio v", NCIO_VERSION
 
         ! Create the new empty file and close it (necessary to avoid errors with dim vars)
-        call nc_check( nf90_create(filename, nf90_clobber, ncid) )
+        status = nf90_create(filename, nf90_clobber, ncid) 
+        if (status .ne. NF90_NOERR) then
+            write(*, *) "ncio :: error when creating file, no such file or directory? :: ",trim(filename)
+            stop
+        endif
         call nc_check( nf90_close(ncid) )
 
         if (present(author))        call nc_write_attr(filename, 'author', author)
@@ -3293,7 +3305,11 @@ contains
         str_len = len_trim(string) 
 
         ! Open the file
-        call nc_check( nf90_open(filename, nf90_write, ncid) )
+        stat = nf90_open(filename, nf90_write, ncid)
+        if (stat .ne. NF90_NOERR) then
+            write(*, *) "ncio :: error when opening file for writing, no such file or directory? :: ",trim(filename)
+            stop
+        endif
 
         ! Define / update the netCDF variable for the data.
         call nc_check( nf90_redef(ncid) )
