@@ -982,7 +982,7 @@ contains
         character(len=*), optional, intent(in) :: author, creation_date, institution, description
 
         ! Get ncio version for writing
-        write(history,"(a,f4.2)") "Dataset generated using ncio v", NCIO_VERSION
+        write(history,"(a,f5.2)") "Dataset generated using ncio v", NCIO_VERSION
 
         ! Create the new empty file and close it (necessary to avoid errors with dim vars)
         call nc_check( nf90_create(filename, nf90_clobber, ncid) )
