@@ -1004,7 +1004,7 @@ contains
         write(history,"(a,f5.2)") "Dataset generated using ncio v", NCIO_VERSION
 
         ! Create the new empty file and close it (necessary to avoid errors with dim vars)
-        status = nf90_create(filename, nf90_clobber, ncid) 
+        status = nf90_create(trim(adjustl(filename)), nf90_clobber, ncid) 
         if (status .ne. NF90_NOERR) then
             write(*, *) "ncio :: error when creating file, no such file or directory? :: ",trim(filename)
             stop
