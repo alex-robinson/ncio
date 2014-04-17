@@ -11,8 +11,6 @@ usage:
 	@echo " make clean      : cleans object and executable files"
 	@echo ""
 
-LIB=/usr/lib
-INC=/usr/include
 
 objdir = .obj
 
@@ -21,8 +19,14 @@ debug ?= 0
 
 ifeq ($(ifort),1)
     FC = ifort 
+    LIB = /iplex/01/home/robinson/apps/netcdf/netcdf/lib
+    INC = /iplex/01/home/robinson/apps/netcdf/netcdf/include
 else
     FC = gfortran
+    #LIB = /usr/lib
+    #INC = /usr/include
+    LIB = /opt/local/lib
+    INC = /opt/local/include
 endif 
 
 ifeq ($(ifort),1)
