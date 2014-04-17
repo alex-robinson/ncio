@@ -126,10 +126,10 @@ contains
         integer, allocatable :: size_var(:)
 
         ! netCDF needed counters, array, and names of dims
-        integer :: ncid, stat, ncount, nvar 
+        integer :: ncid, stat, ncount, nvar, RecordDimID
 
         ! Additional helper variables
-        integer :: i, j, k, m, ndims
+        integer :: i, j, k, m, ndims, dimid
         double precision :: actual_range(2)
 
         ! Initialize ncvar type
@@ -156,6 +156,7 @@ contains
         ! and get attributes if variable already exist
         call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
         call nc_get_att(ncid,v)    
+        call nc_check( nf90_inquire(ncid, unlimitedDimID=RecordDimID) ) ! Get Unlimited dimension ID if any
         call nc_check( nf90_close(ncid) )
 
         ! Determine number of dims in file from arguments
@@ -274,8 +275,21 @@ contains
             write(*,*) "count: ",count 
             stop
         end if 
+
+        ! Open the file
+        call nc_check( nf90_open(filename, nf90_write, ncid) )
+
         do i = 1, ndims
-            size_var(i) = nc_size(filename,v%dims(i))
+
+            call nc_check( nf90_inq_dimid(ncid, v%dims(i), dimid) )
+
+            ! If unlimited dimension, the size does not matter
+            if (dimid .eq. RecordDimID) then
+                cycle
+            endif
+
+            call nc_check( nf90_inquire_dimension(ncid, dimid, len=size_var(i)) )
+
             if (v%count(i) .gt. size_var(i)) then 
                 write(*,*) "ncio:: error: "// &
                            "count exceeds this dimension length."
@@ -286,9 +300,6 @@ contains
                 stop 
             end if 
         end do 
-
-        ! Open the file
-        call nc_check( nf90_open(filename, nf90_write, ncid) )
 
         ! Define / update the netCDF variable for the data.
         call nc_check( nf90_redef(ncid) )
@@ -338,7 +349,11 @@ contains
         integer :: i
 
         ! Open the file. 
-        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        stat = nf90_open(filename, nf90_nowrite, ncid) 
+        if (stat .ne. NF90_NOERR) then
+            write(*, *) "ncio :: error when opening file for reading, no such file or directory? :: ",trim(filename)
+            stop
+        endif
 
         ! TO DO: Add check to make sure variable exists !!!!
         ! Exit if not!
@@ -504,7 +519,7 @@ contains
 
             ! Check whether a variable is associated with this dimension
             stat = nf90_inq_varid(ncid, trim(name), varid) 
-            if ( varid .ne. NF90_NOERR) continue ! if dimension is not defined as variable, skip it
+            if ( varid .ne. NF90_NOERR) cycle ! if dimension is not defined as variable, skip it
 
             ! Update some variable info based on further default cases
             select case(trim(name))
@@ -944,11 +959,15 @@ contains
         implicit none
 
         integer :: nc_size
-        integer :: ncid, dimid, dimlen
+        integer :: ncid, dimid, dimlen, stat
         character (len=*) :: filename, name
 
         ! Open the file. 
-        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        stat = nf90_open(filename, nf90_nowrite, ncid) 
+        if (stat .ne. NF90_NOERR) then
+            write(*, *) "ncio :: error when opening file for reading, no such file or directory? :: ",trim(filename)
+            stop
+        endif
 
         !if ( name == "Time" .or. name == "time" ) then
         !    call nc_check( nf90_inquire(ncid, unlimitedDimId = dimid) )
@@ -977,7 +996,7 @@ contains
         implicit none 
 
         character(len=*) :: filename
-        integer :: ncid
+        integer :: ncid, status
         character(len=1024) :: history
         character(len=*), optional, intent(in) :: author, creation_date, institution, description
 
@@ -985,7 +1004,11 @@ contains
         write(history,"(a,f5.2)") "Dataset generated using ncio v", NCIO_VERSION
 
         ! Create the new empty file and close it (necessary to avoid errors with dim vars)
-        call nc_check( nf90_create(filename, nf90_clobber, ncid) )
+        status = nf90_create(filename, nf90_clobber, ncid) 
+        if (status .ne. NF90_NOERR) then
+            write(*, *) "ncio :: error when creating file, no such file or directory? :: ",trim(filename)
+            stop
+        endif
         call nc_check( nf90_close(ncid) )
 
         if (present(author))        call nc_write_attr(filename, 'author', author)
@@ -3282,7 +3305,11 @@ contains
         str_len = len_trim(string) 
 
         ! Open the file
-        call nc_check( nf90_open(filename, nf90_write, ncid) )
+        stat = nf90_open(filename, nf90_write, ncid)
+        if (stat .ne. NF90_NOERR) then
+            write(*, *) "ncio :: error when opening file for writing, no such file or directory? :: ",trim(filename)
+            stop
+        endif
 
         ! Define / update the netCDF variable for the data.
         call nc_check( nf90_redef(ncid) )
