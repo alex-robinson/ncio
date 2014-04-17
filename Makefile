@@ -19,8 +19,8 @@ debug ?= 0
 
 ifeq ($(ifort),1)
     FC = ifort 
-    LIB = /iplex/01/home/robinson/apps/netcdf/netcdf/lib
-    INC = /iplex/01/home/robinson/apps/netcdf/netcdf/include
+    LIB = /home/robinson/apps/netcdf/netcdf/lib
+    INC = /home/robinson/apps/netcdf/netcdf/include
 else
     FC = gfortran
     #LIB = /usr/lib
