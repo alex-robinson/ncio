@@ -837,8 +837,6 @@ contains
         ! Get the current variable's id, if it exists
         stat = nf90_inq_varid(ncid, trim(v%name), v%varid)
 
-        write(*,*) "nc_get_att: ",trim(v%name), stat, noerr 
-        
         ! If variable exists, get attributes from file
         if ( stat .eq. noerr ) then
           
@@ -850,8 +848,6 @@ contains
             ! Re-allocate dimnames for current variable
             if (allocated(v%dims)) deallocate(v%dims); allocate(v%dims(ndims))
             if (allocated(v%dlen)) deallocate(v%dlen); allocate(v%dlen(ndims))
-
-            write(*,*) "v%dlen:", allocated(v%dlen)
 
             ! Loop over dimensions and get the dimension names
             do i = 1, ndims
