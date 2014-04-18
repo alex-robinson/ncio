@@ -848,7 +848,9 @@ contains
             ! Re-allocate dimnames for current variable
             if (allocated(v%dims)) deallocate(v%dims); allocate(v%dims(ndims))
             if (allocated(v%dlen)) deallocate(v%dlen); allocate(v%dlen(ndims))
-
+            
+            write(*,*) "v%dlen:", allocated(v%dlen)
+            
             ! Loop over dimensions and get the dimension names
             do i = 1, ndims
                 call nc_check ( nf90_inquire_dimension(ncid,dimids(i),name=v%dims(i),len=v%dlen(i)) )
@@ -3351,8 +3353,6 @@ contains
         call nc_get_att(ncid,v) 
 
         ! Read the string from the netcdf file
-        write(*,*) "v%dlen:", allocated(v%dlen)
-        write(*,*) "string: ",string(1:v%dlen(1))
         call nc_check( nf90_get_var(ncid, v%varid, string(1:v%dlen(1))) )
 
         ! Close the file. This causes netCDF to flush all buffers and make
