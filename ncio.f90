@@ -475,7 +475,7 @@ contains
         if ( present(xtype)) v%xtype = trim(xtype)
 
         ! Deallocate all arrays
-        if (allocated(v%dim)) deallocate(v%dim)
+        if (allocated(v%dim))  deallocate(v%dim)
         if (allocated(v%dims)) deallocate(v%dims)
         if (allocated(v%dlen)) deallocate(v%dlen)
 
@@ -3351,6 +3351,8 @@ contains
         call nc_get_att(ncid,v) 
 
         ! Read the string from the netcdf file
+        write(*,*) "v%dlen:", allocated(v%dlen)
+        write(*,*) "string: ",string(1:v%dlen(1))
         call nc_check( nf90_get_var(ncid, v%varid, string(1:v%dlen(1))) )
 
         ! Close the file. This causes netCDF to flush all buffers and make
