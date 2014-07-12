@@ -13,9 +13,9 @@ col.axis = "grey50"
 xlim     = range(times$nloops)
 ylim     = range(times$netcdf,times$ncio)
 
-col = c("grey20","blue")
-pch = c(15,20)
-pt.cex = c(1,1.5)
+col = c("grey20","blue","cyan")
+pch = c(15,20,20)
+pt.cex = c(1,1.5,1.5)
 
 myfigure("./","compare_ncio",date=TRUE,asp=2.2,pointsize=10,type="pdf")
 par(plt=c(0.1,0.48,0.14,0.95),
@@ -32,8 +32,11 @@ lines(times$nloops,times$netcdf,col=col[1])
 points(times$nloops,times$ncio,col=col[2],pch=pch[2],cex=pt.cex[2])
 lines(times$nloops,times$ncio,col=col[2])
 
+points(times$nloops,times$ncio2,col=col[3],pch=pch[3],cex=pt.cex[3])
+lines(times$nloops,times$ncio2,col=col[3])
+
 legend("topleft",bty="n",inset=0.02,col=col,pch=pch,lwd=1,pt.cex=pt.cex,
-       c("Native NetCDF","NCIO"))
+       c("Native NetCDF","NCIO","NCIO-beta"))
 
 box(col=col.axis)
 
@@ -52,6 +55,9 @@ mtext(side=2,line=2.1,las=0,"Relative run time")
 
 points(times$nloops,times$ncio/times$netcdf,col=col[2],pch=pch[2],cex=pt.cex[2])
 lines(times$nloops,times$ncio/times$netcdf,col=col[2])
+
+points(times$nloops,times$ncio2/times$netcdf,col=col[3],pch=pch[3],cex=pt.cex[3])
+lines(times$nloops,times$ncio2/times$netcdf,col=col[3])
 
 box(col=col.axis)
 

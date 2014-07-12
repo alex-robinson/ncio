@@ -152,12 +152,11 @@ contains
             v%missing_value = missing_value_double
         end if 
 
-        ! Open the file in nowrite mode
+        ! Open the file in write mode,
         ! and get attributes if variable already exist
-        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        call nc_check( nf90_open(filename, nf90_write, ncid) )
         call nc_get_att(ncid,v)    
         call nc_check( nf90_inquire(ncid, unlimitedDimID=RecordDimID) ) ! Get Unlimited dimension ID if any
-        call nc_check( nf90_close(ncid) )
 
         ! Determine number of dims in file from arguments
         if (present(dims)) then
@@ -228,7 +227,6 @@ contains
             v%count(1:size(size_in)) = size_in 
         end if 
 
-
         ! Reset or initialize the actual range of the variable
         actual_range = [minval(dat),maxval(dat)]
 !         if (trim(v%dims(ndims)) == "time") then
@@ -239,7 +237,7 @@ contains
                 v%actual_range = actual_range
             end if
 !         end if
-
+        
         ! Modify the variable according to scale and offset (if working with real or double data)
         if (trim(v%xtype) .eq. "NF90_FLOAT" .or. trim(v%xtype) .eq. "NF90_DOUBLE") then
             if (v%missing_set) then
@@ -277,7 +275,7 @@ contains
         end if 
 
         ! Open the file
-        call nc_check( nf90_open(filename, nf90_write, ncid) )
+!         call nc_check( nf90_open(filename, nf90_write, ncid) )
 
         do i = 1, ndims
 
