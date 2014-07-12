@@ -68,6 +68,12 @@ test: $(objdir)/ncio.o
 	@echo "    test_ncio.x is ready."
 	@echo " "
 
+compare: $(objdir)/ncio.o
+	$(FC) $(DFLAGS) $(FLAGS) -o pres_temp_4D_wr.x $^ pres_temp_4D_wr_compare.f90 $(LFLAGS)
+	@echo " "
+	@echo "    pres_temp_4D_wr.x is ready."
+	@echo " "
+
 clean:
 	rm -f test_ncio.x $(objdir)/*.o $(objdir)/*.mod
 

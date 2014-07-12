@@ -30,7 +30,7 @@ module ncio
     interface nc_write
         module procedure    nc_write_int_pt, &
                             nc_write_int_1D, nc_write_int_2D, &
-                            nc_write_int_3D , nc_write_int_4D  
+                            nc_write_int_3D, nc_write_int_4D  
         module procedure    nc_write_double_pt, &
                             nc_write_double_1D, nc_write_double_2D, &
                             nc_write_double_3D, nc_write_double_4D, &
@@ -45,8 +45,8 @@ module ncio
         ! Note: character writing and reading do not 
         ! follow the conventions of the other data types
         module procedure    nc_write_internal_char, &
-                            nc_write_char_1D, &
-                            nc_write_char_2D, nc_write_char_3D, nc_write_char_4D   ! Dummy procedures
+                            nc_write_char_1D, nc_write_char_2D, &
+                            nc_write_char_3D, nc_write_char_4D   ! Dummy procedures
     
     end interface  
 
@@ -88,11 +88,11 @@ module ncio
         module procedure    nc_read_attr_global, nc_read_attr_variable
     end interface 
     
-    private 
+    private
+    public :: nc_read, nc_read_attr  
     public :: nc_create, nc_write_map, nc_write_dim
-    public :: nc_write_attr, nc_read_attr
-    public :: nc_write, nc_read, nc_size 
-    public :: nc4_write_internal 
+    public :: nc_write, nc_write_attr, nc_size
+
     public :: nc_write_attr_std_dim
 
 contains
