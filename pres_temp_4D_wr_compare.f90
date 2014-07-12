@@ -76,14 +76,13 @@ program pres_temp_4D_wr
   ! Arguments
   integer :: nargs
   character (len=20) :: arg 
-  logical :: write_netcdf 
+  character (len=20) :: write_netcdf 
 
   real (8) :: dtime1, dtime2
   integer  :: q, nloops 
 
   nargs = command_argument_count()
-  write_netcdf = .TRUE. 
-  arg = "netcdf"
+  write_netcdf = "netcdf"
   nloops = 1 
 
   if (nargs .gt. 0 .and. nargs .ne. 2) then 
@@ -92,8 +91,7 @@ program pres_temp_4D_wr
   end if 
 
   if (nargs .gt. 0) then 
-    call get_command_argument(nargs-1, arg)
-    if (trim(arg) == "ncio") write_netcdf = .FALSE. 
+    call get_command_argument(nargs-1, write_netcdf)
     call get_command_argument(nargs, arg)
     read(arg,*) nloops 
   end if 
@@ -120,7 +118,7 @@ program pres_temp_4D_wr
 
   call cpu_time(dtime1)           ! get current time in seconds   
   
-  if (write_netcdf) then 
+  if (trim(write_netcdf) .eq. "netcdf") then 
 
   ! Create the file. 
   call check( nf90_create(FILE_NAME, nf90_clobber, ncid) )
@@ -197,8 +195,7 @@ program pres_temp_4D_wr
   print *,"*** SUCCESS writing example file ", FILE_NAME, "!"
   print *,"25 lines of code."
 
-  else 
-
+  else if (trim(write_netcdf) .eq. "ncio") then 
 
   call nc_create(FILE_NAME1)
   call nc_write_dim(FILE_NAME1,LAT_NAME,x=lats,units=LAT_UNITS)
@@ -220,6 +217,35 @@ program pres_temp_4D_wr
   print *,"*** SUCCESS writing example file ", FILE_NAME1, "! [NCIO]"
   print *,"7 lines of code."
   
+  else if (trim(write_netcdf) .eq. "ncio2") then 
+
+  call nc_create(FILE_NAME1)
+  call nc_write_dim(FILE_NAME1,LAT_NAME,x=lats,units=LAT_UNITS)
+  call nc_write_dim(FILE_NAME1,LON_NAME,x=lons,units=LON_UNITS)
+  call nc_write_dim(FILE_NAME1,LVL_NAME,x=1.0,nx=NLVLS)
+  call nc_write_dim(FILE_NAME1,REC_NAME,x=1.0,nx=2,unlimited=.TRUE.)
+
+  call nc_open(FILE_NAME1,ncid)
+
+  do q = 1, nloops
+
+    do rec = 1, NRECS
+      call nc_write(FILE_NAME1,PRES_NAME,pres_out,ncid=ncid,units=PRES_UNITS,dim1="longitude",dim2="latitude",&
+                    dim3="level",dim4="time",start=[1,1,1,rec],count=[NLONS,NLATS,NLVLS,1])
+      call nc_write(FILE_NAME1,TEMP_NAME,temp_out,ncid=ncid,units=TEMP_UNITS,dim1="longitude",dim2="latitude",&
+                    dim3="level",dim4="time",start=[1,1,1,rec],count=[NLONS,NLATS,NLVLS,1])
+    end do 
+
+  end do 
+
+  call nc_close(ncid) 
+
+  print *,"*** SUCCESS writing example file ", FILE_NAME1, "! [NCIO]"
+  print *,"7 lines of code."
+  
+  else
+    write(*,*) "Writing option not recognized: ",trim(write_netcdf)
+    stop 
   end if 
 
   call cpu_time(dtime2)           ! get current time in seconds   

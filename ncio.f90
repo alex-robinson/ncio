@@ -91,6 +91,7 @@ module ncio
     private
     public :: nc_read, nc_read_attr  
     public :: nc_create, nc_write_map, nc_write_dim
+    public :: nc_open, nc_close 
     public :: nc_write, nc_write_attr, nc_size
 
     public :: nc_write_attr_std_dim
@@ -102,9 +103,54 @@ contains
 !   INTERNAL WRITE/READ FUNCTIONS
 !
 ! =================================
+    
+    subroutine nc4_write_internal_filename(filename,name,dat,xtype,size_in,&
+                                  dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                  start,count,long_name,standard_name,grid_mapping,units, &
+                                  missing_value_int,missing_value_float,missing_value_double)
+
+        implicit none 
+
+        type(ncvar) :: v
+
+        double precision :: dat(:)
+        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        integer, optional :: start(:), count(:)
+
+        character (len=*) :: filename, name, xtype
+        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
+        integer,          optional :: missing_value_int
+        real(4),          optional :: missing_value_float
+        double precision, optional :: missing_value_double
+        integer :: size_in(:)
+        integer, allocatable :: size_var(:)
+
+        ! netCDF needed counters, array, and names of dims
+        integer :: ncid, stat, ncount, nvar, RecordDimID
+
+        ! Additional helper variables
+        integer :: i, j, k, m, ndims, dimid
+        double precision :: actual_range(2)
+
+        ! Open the file, obtain the ncid
+        call nc_open(filename,ncid,writable=.TRUE.)
+
+        ! Write to file using the ncid 
+        call nc4_write_internal(filename,name,dat,xtype,size_in,&
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                start,count,long_name,standard_name,grid_mapping,units, &
+                                missing_value_int,missing_value_float,missing_value_double)
+
+        ! Close the file
+        call nc_close(ncid)
+
+        return 
+
+    end subroutine nc4_write_internal_filename
+
 
     subroutine nc4_write_internal(filename,name,dat,xtype,size_in,&
-                                  dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                  ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                   start,count,long_name,standard_name,grid_mapping,units, &
                                   missing_value_int,missing_value_float,missing_value_double)
                         
@@ -125,8 +171,11 @@ contains
         integer :: size_in(:)
         integer, allocatable :: size_var(:)
 
+        integer, optional :: ncid 
+        integer :: nc_id 
+
         ! netCDF needed counters, array, and names of dims
-        integer :: ncid, stat, ncount, nvar, RecordDimID
+        integer :: stat, ncount, nvar, RecordDimID
 
         ! Additional helper variables
         integer :: i, j, k, m, ndims, dimid
@@ -154,9 +203,13 @@ contains
 
         ! Open the file in write mode,
         ! and get attributes if variable already exist
-        call nc_check( nf90_open(filename, nf90_write, ncid) )
-        call nc_get_att(ncid,v)    
-        call nc_check( nf90_inquire(ncid, unlimitedDimID=RecordDimID) ) ! Get Unlimited dimension ID if any
+        if (present(ncid)) then 
+            nc_id = ncid 
+        else
+            call nc_check( nf90_open(filename, nf90_write, nc_id) )
+        end if 
+        call nc_get_att(nc_id,v)    
+        call nc_check( nf90_inquire(nc_id, unlimitedDimID=RecordDimID) ) ! Get Unlimited dimension ID if any
 
         ! Determine number of dims in file from arguments
         if (present(dims)) then
@@ -209,7 +262,7 @@ contains
 
         nvar = 1
         do i = 1, ndims
-            size_var(i) = nc_size(filename,v%dims(i))
+            size_var(i) = nc_size(filename,v%dims(i),ncid=nc_id)
             nvar = nvar*size_var(i)
         end do
 
@@ -275,18 +328,18 @@ contains
         end if 
 
         ! Open the file
-!         call nc_check( nf90_open(filename, nf90_write, ncid) )
+!         call nc_check( nf90_open(filename, nf90_write, nc_id) )
 
         do i = 1, ndims
 
-            call nc_check( nf90_inq_dimid(ncid, v%dims(i), dimid) )
+            call nc_check( nf90_inq_dimid(nc_id, v%dims(i), dimid) )
 
             ! If unlimited dimension, the size does not matter
             if (dimid .eq. RecordDimID) then
                 cycle
             endif
 
-            call nc_check( nf90_inquire_dimension(ncid, dimid, len=size_var(i)) )
+            call nc_check( nf90_inquire_dimension(nc_id, dimid, len=size_var(i)) )
 
             if (v%count(i) .gt. size_var(i)) then 
                 write(*,*) "ncio:: error: "// &
@@ -300,17 +353,17 @@ contains
         end do 
 
         ! Define / update the netCDF variable for the data.
-        call nc_check( nf90_redef(ncid) )
-        call nc_put_att(ncid, v)
-        call nc_check( nf90_enddef(ncid) )
+        call nc_check( nf90_redef(nc_id) )
+        call nc_put_att(nc_id, v)
+        call nc_check( nf90_enddef(nc_id) )
         
         ! Write the data to the netcdf file
         ! Note: NF90 converts dat to proper type (int, real, dble) and shape
-        call nc_check( nf90_put_var(ncid, v%varid, dat,v%start,v%count) )
+        call nc_check( nf90_put_var(nc_id, v%varid, dat,v%start,v%count) )
 
         ! Close the file. This causes netCDF to flush all buffers and make
         ! sure your data are really written to disk.
-        call nc_check( nf90_close(ncid) )
+        if (.not. present(ncid)) call nc_check( nf90_close(nc_id) )
 
 !         write(*,"(a,a,a14)") "ncio:: nc_write:: ",trim(filename)//" : ",trim(v%name)
         
@@ -419,6 +472,42 @@ contains
 
     end subroutine nc4_read_internal_numeric
 
+    ! Open a netcdf file and return a valid ncid
+    subroutine nc_open(filename,ncid,writable)
+
+        implicit none 
+
+        character(len=*) filename 
+        logical, optional :: writable 
+        logical :: is_writable 
+        integer :: ncid 
+
+        is_writable = .TRUE. 
+        if (present(writable)) is_writable = writable
+
+        if (is_writable) then 
+            call nc_check( nf90_open(filename, nf90_write, ncid) )
+        else 
+            call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        end if 
+
+        return 
+
+    end subroutine nc_open 
+
+    ! Close a netcdf file returning the ncid=0
+    subroutine nc_close(ncid)
+
+        implicit none 
+
+        integer :: ncid 
+        call nc_check( nf90_close(ncid) )
+
+        ncid = 0 
+
+        return 
+
+    end subroutine nc_close 
 
     !! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     !! Subroutine :  nc_v_init
@@ -952,20 +1041,27 @@ contains
     end subroutine nc_get_att_double 
 
     ! Return the size of a dimension in netcdf file
-    function nc_size(filename,name)
+    function nc_size(filename,name,ncid)
 
         implicit none
 
         integer :: nc_size
-        integer :: ncid, dimid, dimlen, stat
+        integer :: dimid, dimlen, stat
         character (len=*) :: filename, name
 
+        integer, optional :: ncid 
+        integer :: nc_id 
+
         ! Open the file. 
-        stat = nf90_open(filename, nf90_nowrite, ncid) 
-        if (stat .ne. NF90_NOERR) then
-            write(*, *) "ncio :: error when opening file for reading, no such file or directory? :: ",trim(filename)
-            stop
-        endif
+        if (present(ncid)) then 
+            nc_id = ncid
+        else
+            stat = nf90_open(filename, nf90_nowrite, ncid) 
+            if (stat .ne. NF90_NOERR) then
+                write(*, *) "ncio :: error when opening file for reading, no such file or directory? :: ",trim(filename)
+                stop
+            endif
+        end if 
 
         !if ( name == "Time" .or. name == "time" ) then
         !    call nc_check( nf90_inquire(ncid, unlimitedDimId = dimid) )
@@ -976,7 +1072,8 @@ contains
 
         ! Get the dimension length and close the file
         call nc_check( nf90_inquire_dimension(ncid, dimid, len=dimlen) )
-        call nc_check( nf90_close(ncid) )
+        
+        if (.not. present(ncid)) call nc_check( nf90_close(ncid) )
 
         nc_size = dimlen
 
@@ -1470,7 +1567,7 @@ contains
     !! @param standard_name NetCDF attribute specifying the CF convention standard name of the variable (optional)
     !! @param grid_mapping name of the grid this variable is mapped on (optional)
     !! @param units NetCDF attribute of the units of the variable (optional)
-    subroutine nc_write_int_pt(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_int_pt(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1480,14 +1577,14 @@ contains
         integer, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid 
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
 
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dble([dat]),"NF90_INT",shape([dat]), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_int=missing_value)
 
@@ -1495,7 +1592,7 @@ contains
 
     end subroutine nc_write_int_pt
 
-    subroutine nc_write_int_1D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_int_1D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1505,7 +1602,7 @@ contains
         integer, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -1515,7 +1612,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_int=missing_value)
 
@@ -1523,7 +1620,7 @@ contains
 
     end subroutine nc_write_int_1D
 
-    subroutine nc_write_int_2D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_int_2D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1533,7 +1630,7 @@ contains
         integer, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -1543,7 +1640,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_int=missing_value)
 
@@ -1551,7 +1648,7 @@ contains
 
     end subroutine nc_write_int_2D
 
-    subroutine nc_write_int_3D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_int_3D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1561,7 +1658,7 @@ contains
         integer, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
 
@@ -1572,7 +1669,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_int=missing_value)
 
@@ -1580,7 +1677,7 @@ contains
 
     end subroutine nc_write_int_3D
 
-    subroutine nc_write_int_4D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_int_4D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1590,7 +1687,7 @@ contains
         integer, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -1600,7 +1697,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_int=missing_value)
 
@@ -1608,7 +1705,7 @@ contains
 
     end subroutine nc_write_int_4D
 
-    subroutine nc_write_int_5D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_int_5D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1618,7 +1715,7 @@ contains
         integer, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -1628,7 +1725,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_int=missing_value)
 
@@ -1636,7 +1733,7 @@ contains
 
     end subroutine nc_write_int_5D
 
-    subroutine nc_write_int_6D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_int_6D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1646,7 +1743,7 @@ contains
         integer, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -1656,7 +1753,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_int=missing_value)
 
@@ -1670,7 +1767,7 @@ contains
 !
 ! ================================
     
-    subroutine nc_write_double_pt(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_double_pt(filename,name,ncid,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1680,14 +1777,14 @@ contains
         double precision, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
 
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dble([dat]),"NF90_DOUBLE",shape([dat]), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
 
@@ -1695,7 +1792,7 @@ contains
 
     end subroutine nc_write_double_pt
 
-    subroutine nc_write_double_1D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_double_1D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1705,7 +1802,7 @@ contains
         double precision, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -1715,7 +1812,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_DOUBLE",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
 
@@ -1723,7 +1820,7 @@ contains
 
     end subroutine nc_write_double_1D
 
-    subroutine nc_write_double_2D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_double_2D(filename,name,ncid,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1733,7 +1830,7 @@ contains
         double precision, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -1743,7 +1840,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_DOUBLE",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
 
@@ -1751,7 +1848,7 @@ contains
 
     end subroutine nc_write_double_2D
 
-    subroutine nc_write_double_3D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_double_3D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1761,7 +1858,7 @@ contains
         double precision, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
 
@@ -1772,7 +1869,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_DOUBLE",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
 
@@ -1780,7 +1877,7 @@ contains
 
     end subroutine nc_write_double_3D
 
-    subroutine nc_write_double_4D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_double_4D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1790,7 +1887,7 @@ contains
         double precision, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -1800,7 +1897,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_DOUBLE",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
 
@@ -1808,7 +1905,7 @@ contains
 
     end subroutine nc_write_double_4D
 
-    subroutine nc_write_double_5D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_double_5D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1818,7 +1915,7 @@ contains
         double precision, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -1828,7 +1925,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_DOUBLE",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
 
@@ -1836,7 +1933,7 @@ contains
 
     end subroutine nc_write_double_5D
 
-    subroutine nc_write_double_6D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_double_6D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1846,7 +1943,7 @@ contains
         double precision, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -1856,7 +1953,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_DOUBLE",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_double=missing_value)
 
@@ -1870,7 +1967,7 @@ contains
 !
 ! ================================
     
-    subroutine nc_write_float_pt(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_float_pt(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1880,14 +1977,14 @@ contains
         real(4), optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
 
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dble([dat]),"NF90_FLOAT",shape([dat]), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_float=missing_value)
 
@@ -1895,7 +1992,7 @@ contains
 
     end subroutine nc_write_float_pt
 
-    subroutine nc_write_float_1D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_float_1D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1905,7 +2002,7 @@ contains
         real(4), optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -1915,7 +2012,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_FLOAT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_float=missing_value)
 
@@ -1923,7 +2020,7 @@ contains
 
     end subroutine nc_write_float_1D
 
-    subroutine nc_write_float_2D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_float_2D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1933,7 +2030,7 @@ contains
         real(4), optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -1943,7 +2040,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_FLOAT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_float=missing_value)
 
@@ -1951,7 +2048,7 @@ contains
 
     end subroutine nc_write_float_2D
 
-    subroutine nc_write_float_3D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_float_3D(filename,name,dat,dims,ncid,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1961,7 +2058,7 @@ contains
         real(4), optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
 
@@ -1972,7 +2069,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_FLOAT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_float=missing_value)
 
@@ -1980,7 +2077,7 @@ contains
 
     end subroutine nc_write_float_3D
 
-    subroutine nc_write_float_4D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_float_4D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1990,7 +2087,7 @@ contains
         real(4), optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -2000,7 +2097,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_FLOAT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_float=missing_value)
 
@@ -2008,7 +2105,7 @@ contains
 
     end subroutine nc_write_float_4D
 
-    subroutine nc_write_float_5D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_float_5D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -2018,7 +2115,7 @@ contains
         real(4), optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -2028,7 +2125,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_FLOAT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_float=missing_value)
 
@@ -2036,7 +2133,7 @@ contains
 
     end subroutine nc_write_float_5D
 
-    subroutine nc_write_float_6D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_float_6D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -2046,7 +2143,7 @@ contains
         real(4), optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -2056,7 +2153,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_FLOAT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units, &
                                 missing_value_float=missing_value)
 
@@ -2070,7 +2167,7 @@ contains
     !
     ! ================================
 
-    subroutine nc_write_logical_pt(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_logical_pt(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
         implicit none 
@@ -2079,7 +2176,7 @@ contains
         logical :: dat
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         integer :: dati
@@ -2089,14 +2186,14 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dble([dati]),"NF90_INT",shape([dat]), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_pt
 
-    subroutine nc_write_logical_1D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_logical_1D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
         implicit none 
@@ -2105,7 +2202,7 @@ contains
         logical :: dat(:)
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -2118,14 +2215,14 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_1D
 
-    subroutine nc_write_logical_2D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_logical_2D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
         implicit none 
@@ -2134,7 +2231,7 @@ contains
         logical :: dat(:,:)
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -2147,14 +2244,14 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_2D
 
-    subroutine nc_write_logical_3D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_logical_3D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
         implicit none 
@@ -2163,7 +2260,7 @@ contains
         logical :: dat(:,:,:)
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -2176,14 +2273,14 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_3D
 
-    subroutine nc_write_logical_4D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_logical_4D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
         implicit none 
@@ -2192,7 +2289,7 @@ contains
         logical :: dat(:,:,:,:)
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -2205,14 +2302,14 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_4D
 
-    subroutine nc_write_logical_5D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_logical_5D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units)
 
         implicit none 
@@ -2221,7 +2318,7 @@ contains
         logical :: dat(:,:,:,:,:)
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -2235,14 +2332,14 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units)
 
         return
 
     end subroutine nc_write_logical_5D
 
-    subroutine nc_write_logical_6D(filename,name,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_logical_6D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
         implicit none 
@@ -2251,7 +2348,7 @@ contains
         logical :: dat(:,:,:,:,:,:)
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:)
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         double precision, allocatable :: dat1D(:) 
@@ -2265,7 +2362,7 @@ contains
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dat1D,"NF90_INT",shape(dat), &
-                                dims,dim1,dim2,dim3,dim4,dim5,dim6, &
+                                ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                 start,count,long_name,standard_name,grid_mapping,units)
 
         return

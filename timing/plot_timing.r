@@ -41,7 +41,7 @@ legend("topleft",bty="n",inset=0.02,col=col,pch=pch,lwd=1,pt.cex=pt.cex,
 box(col=col.axis)
 
 xlim     = range(times$nloops)
-ylim     = range(5,times$ncio/times$netcdf)
+ylim     = range(4,times$ncio/times$netcdf)
 
 x.at     = c(1,10,100,1000,10000)
 y.at     = c(5,10,20,50,100,200)
