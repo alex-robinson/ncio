@@ -241,7 +241,7 @@ program pres_temp_4D_wr
   call nc_close(ncid) 
 
   print *,"*** SUCCESS writing example file ", FILE_NAME1, "! [NCIO]"
-  print *,"7 lines of code."
+  print *,"9 lines of code."
   
   else
     write(*,*) "Writing option not recognized: ",trim(write_netcdf)
