@@ -3,8 +3,8 @@
 source("functions.r")
 
 ## Load timing comparison: netcdf vs ncio
-times = read.table("compare_timing.txt",header=TRUE)
-
+times  = read.table("compare_timing.txt",header=TRUE)
+timesb = read.table("compare_timing_10x.txt",header=TRUE)
 
 
 ## Plot timing comparison ##
@@ -58,6 +58,13 @@ lines(times$nloops,times$ncio/times$netcdf,col=col[2])
 
 points(times$nloops,times$ncio_ncid/times$netcdf,col=col[3],pch=pch[3],cex=pt.cex[3])
 lines(times$nloops,times$ncio_ncid/times$netcdf,col=col[3])
+
+points(timesb$nloops,timesb$ncio/timesb$netcdf,col=col[2],pch=pch[2],cex=pt.cex[2])
+lines(timesb$nloops,timesb$ncio/timesb$netcdf,col=col[2],lty=2)
+
+points(timesb$nloops,timesb$ncio_ncid/timesb$netcdf,col=col[3],pch=pch[3],cex=pt.cex[3])
+lines(timesb$nloops,timesb$ncio_ncid/timesb$netcdf,col=col[3],lty=2)
+
 
 box(col=col.axis)
 
