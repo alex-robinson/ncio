@@ -25,7 +25,7 @@ program pres_temp_4D_wr
   ! We are writing 4D data, a 2 x 6 x 12 lvl-lat-lon grid, with 2
   ! timesteps of data.
   integer, parameter :: NDIMS = 4, NRECS = 2
-  integer, parameter :: NLVLS = 2, NLATS = 60, NLONS = 120
+  integer, parameter :: NLVLS = 2, NLATS = 6, NLONS = 12
   character (len = *), parameter :: LVL_NAME = "level"
   character (len = *), parameter :: LAT_NAME = "latitude"
   character (len = *), parameter :: LON_NAME = "longitude"
