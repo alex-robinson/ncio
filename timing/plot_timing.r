@@ -35,6 +35,17 @@ lines(times$nloops,times$ncio,col=col[2])
 points(times$nloops,times$ncio_ncid,col=col[3],pch=pch[3],cex=pt.cex[3])
 lines(times$nloops,times$ncio_ncid,col=col[3])
 
+# ## 10x-10x larger array ##
+
+# points(timesb$nloops,timesb$netcdf,col=col[1],pch=pch[1],cex=pt.cex[1])
+# lines(timesb$nloops,timesb$netcdf,col=col[1],lty=2)
+
+# points(timesb$nloops,timesb$ncio,col=col[2],pch=pch[2],cex=pt.cex[2])
+# lines(timesb$nloops,timesb$ncio,col=col[2],lty=2)
+
+# points(timesb$nloops,timesb$ncio_ncid,col=col[3],pch=pch[3],cex=pt.cex[3])
+# lines(timesb$nloops,timesb$ncio_ncid,col=col[3],lty=2)
+
 legend("topleft",bty="n",inset=0.02,col=col,pch=pch,lwd=1,pt.cex=pt.cex,
        c("Native NetCDF","NCIO","NCIO-ncid"))
 
