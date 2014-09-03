@@ -32,19 +32,19 @@ lines(times$nloops,times$netcdf,col=col[1])
 points(times$nloops,times$ncio,col=col[2],pch=pch[2],cex=pt.cex[2])
 lines(times$nloops,times$ncio,col=col[2])
 
-points(times$nloops,times$ncio2,col=col[3],pch=pch[3],cex=pt.cex[3])
-lines(times$nloops,times$ncio2,col=col[3])
+points(times$nloops,times$ncio_ncid,col=col[3],pch=pch[3],cex=pt.cex[3])
+lines(times$nloops,times$ncio_ncid,col=col[3])
 
 legend("topleft",bty="n",inset=0.02,col=col,pch=pch,lwd=1,pt.cex=pt.cex,
-       c("Native NetCDF","NCIO","NCIO-beta"))
+       c("Native NetCDF","NCIO","NCIO-ncid"))
 
 box(col=col.axis)
 
 xlim     = range(times$nloops)
-ylim     = range(4,times$ncio/times$netcdf)
+ylim     = range(2,times$ncio/times$netcdf)
 
 x.at     = c(1,10,100,1000,10000)
-y.at     = c(5,10,20,50,100,200)
+y.at     = c(2,5,10,20,50,100,200)
 
 par(new=TRUE,plt=c(0.60,0.98,0.14,0.95))
 
@@ -56,8 +56,8 @@ mtext(side=2,line=2.1,las=0,"Relative run time")
 points(times$nloops,times$ncio/times$netcdf,col=col[2],pch=pch[2],cex=pt.cex[2])
 lines(times$nloops,times$ncio/times$netcdf,col=col[2])
 
-points(times$nloops,times$ncio2/times$netcdf,col=col[3],pch=pch[3],cex=pt.cex[3])
-lines(times$nloops,times$ncio2/times$netcdf,col=col[3])
+points(times$nloops,times$ncio_ncid/times$netcdf,col=col[3],pch=pch[3],cex=pt.cex[3])
+lines(times$nloops,times$ncio_ncid/times$netcdf,col=col[3])
 
 box(col=col.axis)
 

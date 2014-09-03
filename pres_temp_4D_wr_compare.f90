@@ -1,19 +1,15 @@
-! This is part of the netCDF package.
-! Copyright 2006 University Corporation for Atmospheric Research/Unidata.
-! See COPYRIGHT file for conditions of use.
+
+! This program compares native netcdf writing speeds to ncio
+! based on the example program provided in the netCDF tutorial:
+! pres_temp_4D_wr.f90
+
+! *Provide the number of writing loops as a command line argument
 
 ! This is an example program which writes some 4D pressure and
 ! temperatures. It is intended to illustrate the use of the netCDF
-! fortran 90 API. The companion program pres_temp_4D_rd.f shows how
-! to read the netCDF data file created by this program.
-
+! fortran 90 API.
 ! This program is part of the netCDF tutorial:
 ! http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-tutorial
-
-! Full documentation of the netCDF Fortran 90 API can be found at:
-! http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90
-
-! $Id: pres_temp_4D_wr.f90,v 1.7 2007/01/24 19:32:10 russ Exp $
 
 program pres_temp_4D_wr
   use netcdf
@@ -29,7 +25,7 @@ program pres_temp_4D_wr
   ! We are writing 4D data, a 2 x 6 x 12 lvl-lat-lon grid, with 2
   ! timesteps of data.
   integer, parameter :: NDIMS = 4, NRECS = 2
-  integer, parameter :: NLVLS = 2, NLATS = 6, NLONS = 12
+  integer, parameter :: NLVLS = 2, NLATS = 60, NLONS = 120
   character (len = *), parameter :: LVL_NAME = "level"
   character (len = *), parameter :: LAT_NAME = "latitude"
   character (len = *), parameter :: LON_NAME = "longitude"
@@ -79,23 +75,17 @@ program pres_temp_4D_wr
   character (len=20) :: write_netcdf 
 
   real (8) :: dtime1, dtime2
+  real (8) :: time_netcdf, time_ncio, time_ncio2
   integer  :: q, nloops 
 
-  nargs = command_argument_count()
-  write_netcdf = "netcdf"
   nloops = 1 
-
-  if (nargs .gt. 0 .and. nargs .ne. 2) then 
-    write(*,*) "Expecting 2 arguments: nloops and write_netcdf."
-    stop 
-  end if 
-
+  nargs = command_argument_count()
   if (nargs .gt. 0) then 
-    call get_command_argument(nargs-1, write_netcdf)
     call get_command_argument(nargs, arg)
     read(arg,*) nloops 
-  end if 
-  ! ## end NCIO additional code ## 
+  end if  
+
+  write(*,*) "Testing ncio writing speeds, nloops = ",nloops 
 
   ! Create pretend data. If this wasn't an example program, we would
   ! have some real data to write, for example, model output.
@@ -116,10 +106,10 @@ program pres_temp_4D_wr
      end do
   end do
 
+  ! ## SECTION 1: native netcdf ##
+
   call cpu_time(dtime1)           ! get current time in seconds   
   
-  if (trim(write_netcdf) .eq. "netcdf") then 
-
   ! Create the file. 
   call check( nf90_create(FILE_NAME, nf90_clobber, ncid) )
   
@@ -192,10 +182,15 @@ program pres_temp_4D_wr
   ! sure your data are really written to disk.
   call check( nf90_close(ncid) )
   
+  call cpu_time(dtime2)           ! get current time in seconds  
+  time_netcdf = dtime2 - dtime1 
+
   print *,"*** SUCCESS writing example file ", FILE_NAME, "!"
   print *,"25 lines of code."
 
-  else if (trim(write_netcdf) .eq. "ncio") then 
+  ! ## SECTION 2: ncio ##
+
+  call cpu_time(dtime1)           ! get current time in seconds  
 
   call nc_create(FILE_NAME1)
   call nc_write_dim(FILE_NAME1,LAT_NAME,x=lats,units=LAT_UNITS)
@@ -214,10 +209,15 @@ program pres_temp_4D_wr
 
   end do 
 
+  call cpu_time(dtime2)           ! get current time in seconds  
+  time_ncio = dtime2 - dtime1 
+
   print *,"*** SUCCESS writing example file ", FILE_NAME1, "! [NCIO]"
   print *,"7 lines of code."
   
-  else if (trim(write_netcdf) .eq. "ncio2") then 
+  ! ## SECTION 3: ncio using ncid option ##
+
+  call cpu_time(dtime1)           ! get current time in seconds  
 
   call nc_create(FILE_NAME1)
   call nc_write_dim(FILE_NAME1,LAT_NAME,x=lats,units=LAT_UNITS)
@@ -240,16 +240,14 @@ program pres_temp_4D_wr
 
   call nc_close(ncid) 
 
-  print *,"*** SUCCESS writing example file ", FILE_NAME1, "! [NCIO]"
+  call cpu_time(dtime2)           ! get current time in seconds  
+  time_ncio2 = dtime2 - dtime1 
+
+  print *,"*** SUCCESS writing example file ", FILE_NAME1, "! [NCIO-ncid]"
   print *,"9 lines of code."
   
-  else
-    write(*,*) "Writing option not recognized: ",trim(write_netcdf)
-    stop 
-  end if 
-
-  call cpu_time(dtime2)           ! get current time in seconds   
-  write(*,"(a,g18.3,1x,a1)") "Calculation time: ",dtime2-dtime1, "s"
+  write(*,"(a25,a10,3a18)") "","nloops","native","ncio","ncio_ncid"
+  write(*,"(a25,i10,3f18.4)") "Calculation times (s): ",nloops, time_netcdf, time_ncio, time_ncio2
     
 
 contains
