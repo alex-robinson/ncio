@@ -1752,7 +1752,7 @@ contains
 !
 ! ================================
     
-    subroutine nc_write_double_pt(filename,name,ncid,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_double_pt(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
@@ -1805,7 +1805,7 @@ contains
 
     end subroutine nc_write_double_1D
 
-    subroutine nc_write_double_2D(filename,name,ncid,dat,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
+    subroutine nc_write_double_2D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
         implicit none 
