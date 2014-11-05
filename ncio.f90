@@ -10,6 +10,7 @@ module ncio
     integer, parameter :: NC_STRLEN_MAX = 10000
     character(len=2)   :: NC_STR_SEP = "; "
     double precision, parameter :: NC_TOL = 1d-7
+    double precision, parameter :: NC_LIM = 1d25
 
     character(len=NC_STRLEN), parameter :: NC_CHARDIM = "strlen"
 
@@ -410,6 +411,15 @@ contains
             if (v%scale_factor .ne. 1.d0 .and. v%add_offset .ne. 0.d0) &
               dat = dat*v%scale_factor + v%add_offset
         end if
+
+        ! Also eliminate crazy values (in case they are not handled by missing_value for some reason)
+        ! Fill with user-desired missing value 
+        if (present(missing_value_int)) &
+            where( dabs(dat) .ge. NC_LIM ) dat = dble(missing_value_int)
+        if (present(missing_value_float)) &
+            where( dabs(dat) .ge. NC_LIM ) dat = dble(missing_value_float)
+        if (present(missing_value_double)) &
+            where( dabs(dat) .ge. NC_LIM ) dat = dble(missing_value_double)
 
 !         write(*,"(a,a,a)") "ncio:: nc_read:: ",trim(filename)//" : ",trim(v%name)
 
