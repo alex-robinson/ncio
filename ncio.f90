@@ -286,9 +286,7 @@ contains
             call nc_check( nf90_inq_dimid(nc_id, v%dims(i), dimid) )
 
             ! If unlimited dimension, the size does not matter
-            if (dimid .eq. RecordDimID) then
-                cycle
-            endif
+            if (dimid .eq. RecordDimID) cycle
 
             call nc_check( nf90_inquire_dimension(nc_id, dimid, len=size_var(i)) )
 
@@ -307,7 +305,7 @@ contains
         call nc_check( nf90_redef(nc_id) )
         call nc_put_att(nc_id, v)
         call nc_check( nf90_enddef(nc_id) )
-        
+
         ! Write the data to the netcdf file
         ! Note: NF90 converts dat to proper type (int, real, dble) and shape
         call nc_check( nf90_put_var(nc_id, v%varid, dat,v%start,v%count) )
@@ -783,7 +781,7 @@ contains
                 ! Determine ids of dimensions
                 allocate(dimids(ndims))
                 do i = 1, ndims
-                    call nc_check ( nf90_inq_varid(ncid, trim(v%dims(i)), dimids(i)) )
+                    call nc_check ( nf90_inq_dimid(ncid, v%dims(i), dimids(i)) )
                 end do
             end if
 
