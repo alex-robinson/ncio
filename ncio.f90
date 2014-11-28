@@ -265,6 +265,13 @@ contains
             end if
 !         end if
         
+        ! Check if the variable gave us reasonable values
+        if (maxval(dabs(v%actual_range)) .gt. 1d98) then 
+            write(*,*) "ncio:: nc_write:: warning: actual range too high,&
+                            & variable may not be defined: "//trim(v%name)
+            v%actual_range = [0.d0,0.d0]
+        end if
+
         ! Modify the variable according to scale and offset (if working with real or double data)
         if (trim(v%xtype) .eq. "NF90_FLOAT" .or. trim(v%xtype) .eq. "NF90_DOUBLE") then
             if (v%missing_set) then
