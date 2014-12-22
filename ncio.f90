@@ -118,6 +118,7 @@ module ncio
     public :: nc_write, nc_write_attr, nc_size
 
     public :: nc_write_attr_std_dim
+    public :: nc_variables, nc_dimensions
 
 contains
 
@@ -1091,6 +1092,56 @@ contains
 
     end function nc_size
 
+    !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    ! Return an array of variables present in the netCDF file
+    !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    function nc_variables(filename) result(names)
+      character(len=*) :: filename
+      character (len=NC_STRLEN), allocatable :: names(:)
+      integer, parameter :: nmax = 99
+      integer :: ncid,i, varids(nmax), nvar,j
+      logical :: isvar(nmax)
+      character (len=NC_STRLEN) :: names_tmp(nmax)
+      integer :: ndims ! TODO: introduce a filter on the number of dimensions ?
+      call nc_open(filename, ncid)
+      do i =1,nmax
+        isvar(i) = nf90_inquire_variable(ncid, i, ndims=ndims, name=names_tmp(i)) == nf90_noerr
+      enddo
+      nvar = count(isvar)
+      allocate(names(nvar))
+      j = 0
+      do i=1,nmax
+        if (isvar(i)) then
+          j = j+1
+          names(j) = names_tmp(i)
+        endif
+      enddo
+      call nc_close(ncid)
+    end function nc_variables
+
+    function nc_dimensions(filename) result(names)
+      character(len=*) :: filename
+      character (len=NC_STRLEN), allocatable :: names(:)
+      integer, parameter :: nmax = 99
+      integer :: ncid,i, ndim,j
+      logical :: isdim(nmax)
+      character (len=NC_STRLEN) :: names_tmp(nmax)
+      call nc_open(filename, ncid)
+      do i =1,nmax
+        isdim(i) = nf90_inquire_dimension(ncid, i, name=names_tmp(i)) == nf90_noerr
+      enddo
+      ndim = count(isdim)
+      allocate(names(ndim))
+      j = 0
+      do i=1,nmax
+        if (isdim(i)) then
+          j = j+1
+          names(j) = names_tmp(i)
+        endif
+      enddo
+      call nc_close(ncid)
+    end function nc_dimensions
+
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ! Subroutine :  n c _ c r e a t e
     ! Author     :  Alex Robinson
@@ -1101,7 +1152,8 @@ contains
         implicit none 
 
         character(len=*) :: filename
-        integer :: ncid, status
+        integer :: ncid
+        integer :: status
         character(len=1024) :: history
         character(len=*), optional, intent(in) :: author, creation_date, institution, description
 
