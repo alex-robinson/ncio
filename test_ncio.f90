@@ -1,184 +1,144 @@
+
+
 program test
 
     use ncio 
 
     implicit none
 
-    integer :: t
+    character(len=256) :: filename
 
-    character(len=256) :: fnm, fnm_in, fnm_out, mapping
+    integer :: nx, ny, nz, nt 
 
-    integer :: nx, ny, nk
-    double precision, allocatable, dimension(:,:) :: lon,lat,zs, dist
-    integer, allocatable, dimension(:,:) :: mask 
-    double precision, allocatable, dimension(:,:,:) :: vx
-    double precision, allocatable, dimension(:,:,:,:) :: vx4D 
-    double precision, allocatable, dimension(:,:,:,:,:,:) :: vx6D 
-    logical, allocatable, dimension(:,:) :: masklogic
-    character(len=256), allocatable, dimension(:,:) :: char2D
+    double precision, allocatable :: x(:), y(:), z(:), time(:) 
+
+    integer,            allocatable :: i3D(:,:,:)
+    real,               allocatable :: r3D(:,:,:)
+    double precision,   allocatable :: d3D(:,:,:)
+    logical,            allocatable :: l3d(:,:,:)
+    character(len=256), allocatable :: c2D(:,:)
+    
+    integer :: i, j, k, t, testval 
     character(len=256) :: testchar
 
-    integer :: tmp(5) 
-    double precision :: tmpd 
+    ! Define array sizes and allocate arrays
+    nx = 8
+    ny = 10
+    nz =  6
+    nt =  4
 
-    integer :: distdim(3)
+    allocate(i3D(nx,ny,nz))
+    allocate(r3D(nx,ny,nz))
+    allocate(d3D(nx,ny,nz))
+    allocate(l3D(nx,ny,nz))
+    allocate(c2D(nx,ny))
 
-    integer :: i, j 
+    ! Fill in arrays with checkerboard patterns
+    do i = 1, nx 
+        do j = 1, ny 
+            do k = 1, nz
+                testval = mod(i+j+k,2) 
 
-    nx = 76
-    ny = 141 
-    nk = 5
-    allocate( lon(nx,ny))
-    allocate( lat(nx,ny))
-    allocate(  zs(nx,ny))
-    allocate(mask(nx,ny))
-    allocate(  vx(nx,ny,nk))
-    allocate(  vx4D(nx,ny,nk,1))
-    allocate(masklogic(nx,ny))
-    allocate(char2D(nx,ny))
-
-    allocate(vx6D(nx,ny,nk,1,2,3))
-
-    ! Write a map array like in coordinates package
-    distdim = [28,28,10]
-    allocate(dist(distdim(1)*distdim(2),distdim(3)))
-    dist = 0.d0
-    do i =1, distdim(3)
-        dist(:,i) = dble(i)
-    end do
-
-    ! Load data
-    fnm_in = "topo.20km.nc"
-    call nc_read(fnm_in,"lon",lon)
-    call nc_read(fnm_in,"lat",lat)
-    call nc_read(fnm_in,"mask",mask)
-
-    fnm_out = "out_ncio.nc"
-    mapping = "stereographic"
-
-    ! Create the netcdf file and the dimension variables
-    call nc_create(fnm_out)
-    call nc_write_attr(fnm_out,"title","Greenland simulation")
-    call nc_write_attr(fnm_out,"institution", &
-                       "Universidad Complutense de Madrid; Potsdam Institute for Climate Impact Research")
-
-    call nc_read_attr(fnm_out, "institution", testchar)
-    write(*,*) "Institution: ", trim(testchar)
-    
-    call nc_write_dim(fnm_out,"xc",x=-800.d0, dx=20d0,nx=nx,units="kilometers")
-    call nc_write_dim(fnm_out,"yc",x=-3400.d0,dx=20d0,nx=ny,units="kilometers")
-    call nc_write_dim(fnm_out,"time",x=[0.d0,5.d0,100.d0],units="years",calendar="360_day", unlimited=.TRUE.)
-    call nc_write_dim(fnm_out,"parameter",x=1,units="none")
-    call nc_write_dim(fnm_out,"kc",x=1,nx=nk,units="none")
-    call nc_write_dim(fnm_out,"d4",x=1,nx=1,units="none")
-    call nc_write_dim(fnm_out,"d5",x=1,nx=2,units="none")
-    call nc_write_dim(fnm_out,"d6",x=1,nx=3,units="none")
-
-    call nc_write_dim(fnm_out,"xcd",x=1,nx=distdim(1),units="none")
-    call nc_write_dim(fnm_out,"ycd",x=1,nx=distdim(2),units="none")
-    call nc_write_dim(fnm_out,"zcd",x=1,nx=distdim(3),units="none")
-    call nc_write_dim(fnm_out,"xcd1",x=1,nx=distdim(1)*distdim(2),units="none")
-
-    call nc_write_map(fnm_out,mapping,lambda=-39.d0,phi=90.d0,x_e=0.d0,y_n=0.d0) 
-
-    call nc_write(fnm_out,"dist",dist,dim1="xcd",dim2="ycd",dim3="zcd") !,start=[1,1,1],count=[28,28,10])
-
-
-    ! Writing a parameter value
-    call nc_write(fnm_out,"p1",[15],dim1="parameter")
-    call nc_write(fnm_out,"p1",20,dim1="parameter")
-
-    ! Write some integers with missing data 
-    call nc_write(fnm_out,"test1",[1,2,3,999,5],dim1="kc",missing_value=999)
-    call nc_read(fnm_out,"test1",tmp,missing_value=-99)
-    write(*,*) "test1 min/max: ",minval(tmp),maxval(tmp)
-    
-    call nc_read(fnm_out,"p1",mask(15,15))
-    write(*,*) "mask(15,15)=",mask(15,15)
-
-    ! Update time 
-    call nc_write(fnm_out,"time",[15.d0],dim1="time",start=[2])
-
-    write (*,*) "TIME DIMENSION SIZE", nc_size(fnm_out, "time")
-
-    ! Writing a 2D mask and some slices
-    !mask = 0
-    call nc_write(fnm_out,"m2",mask,         dim1="xc",dim2="yc",grid_mapping=mapping,units="none")
-    call nc_write(fnm_out,"m2",mask(:,1)*0+2,dim1="xc",dim2="yc")
-    call nc_write(fnm_out,"m2",mask(1,:)*0+3,dim1="xc",dim2="yc",start=[10,1],count=[1,ny])
-
-    ! Write some non-standard variable attribute
-    call nc_write_attr(fnm_out, "m2", "desc", "This is the mask")
-    call nc_read_attr(fnm_out, "m2", "desc", testchar)
-    write(*,*) "m2 desc: ", trim(testchar)
-
-    ! Write a double array
-    call nc_write(fnm_out,"lon",lon,dim1="xc",dim2="yc",grid_mapping=mapping)
-    call nc_write(fnm_out,"lat",lat,dim1="xc",dim2="yc",grid_mapping=mapping)
-
-    vx(:,:,1) = 1.d0 
-    vx(:,:,2) = 2.d0  
-    vx(:,:,3) = 3.d0
-    vx(:,:,4) = -1.d0
-
-    ! Write 2D time slices
-    do i = 1, 3
-        call nc_write(fnm_out,"m3",mask*0+i,dim1="xc",dim2="yc",dim3="time",start=[1,1,i],&
-                      grid_mapping=mapping,units="none")
-!         call nc_write(fnm_out,"m3d",mask*0+i+0.1*dble(i),dim1="xc",dim2="yc",dim3="time",start=[1,1,i],&
-!                       grid_mapping=mapping,units="none")
-        call nc_write(fnm_out,"m3d",vx(:,:,4),dim1="xc",dim2="yc",dim3="time",start=[1,1,i],&
-                      grid_mapping=mapping,units="none")
+                i3D(i,j,k) = testval 
+                r3D(i,j,k) = real(testval)
+                d3D(i,j,k) = dble(testval)
+                l3D(i,j,k) = testval .eq. 0 
+            end do 
+        end do 
     end do 
 
-    ! Write a 3D array
-    call nc_write(fnm_out,"vx",vx,dim1="xc",dim2="yc",dim3="kc",grid_mapping=mapping)
-    vx(:,:,3) = 6.d0
-    call nc_write(fnm_out,"vx",vx,dims=["xc","yc","kc"],grid_mapping=mapping)
-
-    ! Write a 4D array 
-    call nc_write(fnm_out,"vx4D",vx4D,dim1="xc",dim2="yc",dim3="kc",dim4="time",grid_mapping=mapping)
-    call nc_write(fnm_out,"vx4Dr",real(vx4D),dim1="xc",dim2="yc",dim3="kc",dim4="time",grid_mapping=mapping)
-
-    ! Read a 4D array 
-    call nc_read(fnm_out,"vx4D",vx4D)
-
-    ! Write a 6D array 
-    vx6D = 66.d0
-    write(*,*) "Writing 6D!"
-    call nc_write(fnm_out,"vx6D",vx6D,dim1="xc",dim2="yc",dim3="kc",dim4="d4",dim5="d5",dim6="d6", &
-                  grid_mapping=mapping)
-
-    write(*,*) "Reading 6D!"
-    call nc_read(fnm_out,"vx6D",vx6D)
-    
-    ! Write a logical 2D array
-    masklogic = .FALSE.
-    masklogic(20:30,20:30) = .TRUE.
-    call nc_write(fnm_out,"m2l",masklogic,dim1="xc",dim2="yc",grid_mapping=mapping)
-
-    ! Read a logical 2D array
-    call nc_read(fnm_out,"m2l",masklogic)
-
-    !! Testing for character arrays
-    char2D(:,:) = trim(fnm_out)
-
-    ! Write some strings
-    call nc_write(fnm_out,"All the king's men!","test")
-    call nc_write(fnm_out,"char1D",char2D(1:5,1))
-    call nc_write(fnm_out,"char2D",char2D(1:2,:))
-    
-    ! Make sure I can read the strings back
-    call nc_read(fnm_out,"char1D",char2D(1,1))
-    write(*,*) "My var: ",trim(char2D(1,1))
-    char2D(:,:) = ""
-    call nc_read(fnm_out,"char1D",char2D(1:5,1))
-    do i = 1,5
-        write(*,*) trim(char2D(i,1))
-    end do 
-
-    ! Write attributes on recognized standard dimensions
-    call nc_write_attr_std_dim(fnm_out)
+    ! Fill in character array with words 
+    c2D = "testing" 
 
     write(*,*)
-end program
+    write(*,*) "====== WRITING ======"
+    write(*,*)
+
+    ! Create test output file 
+    filename = "out_ncio.nc"
+
+    ! Create the netcdf file, write global attributes
+    call nc_create(filename)
+    call nc_write_attr(filename,"title","Checkerboard output")
+    call nc_write_attr(filename,"institution", &
+                       "Universidad Complutense de Madrid; Potsdam Institute for Climate Impact Research")
+
+    ! Write a projection map (not used) centered at [-39E,90N] and no easting or northing offset
+    call nc_write_map(filename,"polar stereographic",lambda=-39.d0,phi=90.d0,x_e=0.d0,y_n=0.d0) 
+
+    ! Write the dimensions (p, x, y, z, time), defined inline
+    call nc_write_dim(filename,"p",x=1,units="-")
+    call nc_write_dim(filename,"x",x=1.d0,dx=1.d0,nx=nx,units="kilometers")
+    call nc_write_dim(filename,"y",x=1.d0,dx=1.d0,nx=ny,units="kilometers")
+    call nc_write_dim(filename,"z",x=1.d0,dx=2.d0,nx=nz,units="meters")
+    call nc_write_dim(filename,"time",x=[0.d0,5.d0,100.d0,150.d0], &
+                      units="years",calendar="360_day", unlimited=.TRUE.)
+    
+    ! Test writing: integers
+    call nc_write(filename,"ip", [1],dim1="p")
+    call nc_write(filename,"i1D",i3D(:,1,1),dim1="x")
+    call nc_write(filename,"i2D",i3D(:,:,1),dim1="x",dim2="y")
+    call nc_write(filename,"i3D",i3D(:,:,:),dim1="x",dim2="y",dim3="z")
+
+    ! Test writing: integer time slices 
+    do k = 1, nt 
+        call nc_write(filename,"i2Dt",i3D(:,:,1)+k,dim1="x",dim2="y",dim3="time", &
+                      start=[1,1,k],count=[nx,ny,1])
+    end do 
+    
+    ! Test writing: overwrite values in range x=[3:5] with -1 
+    call nc_write(filename,"i2Dt",i3D(3:5,:,1:nt)*0-1,dim1="x",dim2="y",dim3="time", &
+                      start=[3,1,1],count=[3,ny,nt])
+
+    ! Test writing: real
+    call nc_write(filename,"rp", [1.0],dim1="p")
+    call nc_write(filename,"r1D",r3D(:,1,1),dim1="x")
+    call nc_write(filename,"r2D",r3D(:,:,1),dim1="x",dim2="y")
+    call nc_write(filename,"r3D",r3D(:,:,:),dims=["x","y","z"])
+
+    ! Test writing: double precision
+    call nc_write(filename,"dp", [1.0],dim1="p")
+    call nc_write(filename,"d1D",r3D(:,1,1),dim1="x")
+    call nc_write(filename,"d2D",r3D(:,:,1),dim1="x",dim2="y")
+    call nc_write(filename,"d3D",r3D(:,:,:),dims=["x","y","z"])
+
+    ! Test writing: logical
+    call nc_write(filename,"lp", [.TRUE.],dim1="p")
+    call nc_write(filename,"l1D",l3D(:,1,1),dim1="x")
+    call nc_write(filename,"l2D",l3D(:,:,1),dim1="x",dim2="y")
+    call nc_write(filename,"l3D",l3D(:,:,:),dims=["x","y","z"])
+
+    ! Test writing: Character strings 
+    call nc_write(filename,"c1D",c2D(:,1))
+    call nc_write(filename,"c2D",c2D)  ! Should give a warning, since 2D char arrays are not supported!
+
+    write(*,*)
+    write(*,*) "====== READING ======"
+    write(*,*)
+
+    ! Read in netcdf information and print to screen 
+    ! to confirm it matches original data
+    call nc_read_attr(filename, "title", testchar)
+    write(*,*) "Title: ", trim(testchar)
+    
+    call nc_read_attr(filename, "institution", testchar)
+    write(*,*) "Institution: ", trim(testchar)
+    
+    allocate(x(nx),y(ny),z(nz),time(nt))
+    call nc_read(filename, "x",x)
+    call nc_read(filename, "y",y)
+    call nc_read(filename, "z",z)
+    call nc_read(filename, "time",time)
+    
+    write(*,"(a10,100f8.1)") "x:    ", x 
+    write(*,"(a10,100f8.1)") "y:    ", y
+    write(*,"(a10,100f8.1)") "z:    ", z  
+    write(*,"(a10,100f8.1)") "time: ", time 
+
+    ! Read 1D character array back in 
+    c2D(:,1) = "X"
+    call nc_read(filename,"c1D",c2D(:,1))
+    write(*,"(a10,100a10)") "c1D: ", c2D(:,1)
+
+
+end program 
