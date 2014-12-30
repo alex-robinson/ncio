@@ -69,7 +69,7 @@ test: $(objdir)/ncio.o
 	@echo " "
 
 test-extra: $(objdir)/ncio.o
-	$(FC) $(DFLAGS) $(FLAGS) -o test_ncio2.x $^ test_ncio2.f90 $(LFLAGS)
+	$(FC) $(DFLAGS) $(FLAGS) -o test_ncio2.x $^ extra/test_ncio2.f90 $(LFLAGS)
 	@echo " "
 	@echo "    test_ncio2.x is ready."
 	@echo " "
