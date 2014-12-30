@@ -140,5 +140,8 @@ program test
     call nc_read(filename,"c1D",c2D(:,1))
     write(*,"(a10,100a10)") "c1D: ", c2D(:,1)
 
+    write(*,*)
+    write(*,*) "====== DONE ======"
+    write(*,*)
 
 end program 
