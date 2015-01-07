@@ -46,7 +46,7 @@ else
 	LFLAGS		 = -L$(LIB) -lnetcdff -lnetcdf
 
 	ifeq ($(debug), 1)
-	    DFLAGS   = -w -p -ggdb -ffpe-trap=invalid,zero,overflow,underflow -fbacktrace -fcheck=all
+	    DFLAGS   = -w -g -p -ggdb -ffpe-trap=invalid,zero,overflow,underflow -fbacktrace -fcheck=all
 	else
 	    DFLAGS   = -O3
 	endif

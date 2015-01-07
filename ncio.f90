@@ -1145,7 +1145,7 @@ contains
         call nc_check( nf90_enddef(nc_id) )
         if (.not.present(ncid)) call nc_check( nf90_close(nc_id) )
 
-        write(*,"(a,a)") "ncio:: nc_write_attr_global:: ", &
+        write(*,"(a,a)") "ncio:: nc_write_attr:: ", &
                               trim(filename)//" : "//trim(name)//" = "//trim(value)
         
         return
