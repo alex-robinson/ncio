@@ -97,10 +97,10 @@ program test
     call nc_write(filename,"r3D",r3D(:,:,:),dims=["x","y","z"])
 
     ! Test writing: double precision
-    call nc_write(filename,"dp", [1.0],dim1="p")
-    call nc_write(filename,"d1D",r3D(:,1,1),dim1="x")
-    call nc_write(filename,"d2D",r3D(:,:,1),dim1="x",dim2="y")
-    call nc_write(filename,"d3D",r3D(:,:,:),dims=["x","y","z"])
+    call nc_write(filename,"dp", [1.d0],dim1="p")
+    call nc_write(filename,"d1D",d3D(:,1,1),dim1="x")
+    call nc_write(filename,"d2D",d3D(:,:,1),dim1="x",dim2="y")
+    call nc_write(filename,"d3D",d3D(:,:,:),dims=["x","y","z"])
 
     ! Test writing: logical
     call nc_write(filename,"lp", [.TRUE.],dim1="p")
