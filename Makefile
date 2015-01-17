@@ -14,41 +14,38 @@ usage:
 
 objdir = .obj
 
+# Command-line options at make call
 ifort ?= 0
 debug ?= 0 
 
-ifeq ($(ifort),1)
+## GFORTRAN OPTIONS (default) ##
+FC = gfortran
+#LIB = /usr/lib
+#INC = /usr/include
+LIB = /opt/local/lib
+INC = /opt/local/include
+
+FLAGS  = -I$(objdir) -J$(objdir) -I$(INC)
+LFLAGS = -L$(LIB) -lnetcdff -lnetcdf
+
+DFLAGS = -O3
+ifeq ($(debug), 1)
+    DFLAGS   = -w -g -p -ggdb -ffpe-trap=invalid,zero,overflow,underflow -fbacktrace -fcheck=all
+endif
+
+ifeq ($(ifort),1) 
+	## IFORT OPTIONS ##
     FC = ifort 
     LIB = /home/robinson/apps/netcdf/netcdf/lib
     INC = /home/robinson/apps/netcdf/netcdf/include
-else
-    FC = gfortran
-    #LIB = /usr/lib
-    #INC = /usr/include
-    LIB = /opt/local/lib
-    INC = /opt/local/include
-endif 
 
-ifeq ($(ifort),1)
-	## IFORT OPTIONS ##
 	FLAGS        = -module $(objdir) -L$(objdir) -I$(INC)
 	LFLAGS		 = -L$(LIB) -lnetcdf
 
+	DFLAGS   = -vec-report0 -O3
 	ifeq ($(debug), 1)
 	    DFLAGS   = -C -traceback -ftrapuv -fpe0 -check all -vec-report0
 	    # -w 
-	else
-	    DFLAGS   = -vec-report0 -O3
-	endif
-else
-	## GFORTRAN OPTIONS ##
-	FLAGS        = -I$(objdir) -J$(objdir) -I$(INC)
-	LFLAGS		 = -L$(LIB) -lnetcdff -lnetcdf
-
-	ifeq ($(debug), 1)
-	    DFLAGS   = -w -g -p -ggdb -ffpe-trap=invalid,zero,overflow,underflow -fbacktrace -fcheck=all
-	else
-	    DFLAGS   = -O3
 	endif
 endif
 
