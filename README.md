@@ -44,15 +44,14 @@ Below are the public functions available through the ncio module:
 
 ```fortran
 nc_read
-nc_read_attr
 nc_size
+nc_read_attr
 
 nc_create
 nc_write_attr
 nc_write_map
 nc_write_dim
 nc_write
-
 ```
 
 The first two are useful for reading variable attributes and data from an existing NetCDF file. The remaining functions are used for creating and writing to NetCDF files. 
@@ -70,6 +69,16 @@ missing value   Value to assign to missing data read from the file (optional)
 ```
 
 ```fortran
+function nc_size(filename,name,[ncid]) result(size)
+```
+```
+filename        name of the NetCDF data file to read from
+name			   name of the dimension variable in NetCDF file of which to determine size
+size	          Integer size (length) of the dimension variable returned from the function
+ncid            File ID for a file that remains open for various NCIO calls (optional)
+```
+
+```fortran
 subroutine nc_read_attr(filename,[varname],name,value)
 ```
 ```
@@ -77,5 +86,26 @@ filename        name of the NetCDF data file to read from
 varname         name of the variable of interest (optional, if not given global a global attribute is expected).
 name            name of the variable or global attribute to be read
 value           character value of the attribute read from the file
+ncid            File ID for a file that remains open for various NCIO calls (optional)
 ```
 
+```fortran
+subroutine nc_create(filename,[author],[creation\_date],[institution],[description])
+```
+```
+filename	      name of the NetCDF file to be created
+author          name of the author of the file (optional)
+creation_date   date of the file creation, string format (optional)
+institution	   name of the author's institution (optional)
+```
+
+```fortran
+subroutine nc_write_attr(filename,[varname],name,value,[ncid])
+```
+```
+filename	      name of the NetCDF file in which to write attribute
+varname	      name of the variable in which to write the attribute (optional)
+name   			name of the attribute to be written
+value      	   value of the attribute to be written
+ncid	    	   File ID for a file that remains open for various NCIO calls (optional)
+```
