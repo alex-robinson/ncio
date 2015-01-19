@@ -40,7 +40,7 @@ The comparison program can run multiple loops to test timing. In the above examp
 
 **The NCIO API is properly documented in the GMDD manuscript found [here](http://www.geosci-model-dev.net/), however a summary of the public functions available through the ncio module can be found below:
 
-```fortran
+```
 nc_read
 nc_size
 nc_read_attr
@@ -50,6 +50,9 @@ nc_write_attr
 nc_write_map
 nc_write_dim
 nc_write
+
+nc_open
+nc_close
 ```
 
 The first two are useful for reading variable attributes and data from an existing NetCDF file. The remaining functions are used for creating and writing to NetCDF files. 
