@@ -36,11 +36,9 @@ This program is identical to the example code provided by Unidata [pres_temp_4D_
 
 The comparison program can run multiple loops to test timing. In the above example, the first program call will run through the program and calculate the timing for 1 iteration, the second program call will calculate the timing for 10 iterations. A timing table is output at the end of the program. 
 
-## NCIO API (documentation under construction)
+## NCIO API documentation
 
-**The NCIO API is properly documented in the GMDD manuscript found [here](http://www.geosci-model-dev.net/).
-
-Below are the public functions available through the ncio module:
+**The NCIO API is properly documented in the GMDD manuscript found [here](http://www.geosci-model-dev.net/), however a summary of the public functions available through the ncio module can be found below:
 
 ```fortran
 nc_read
