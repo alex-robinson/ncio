@@ -117,6 +117,7 @@ module ncio
     public :: nc_open, nc_close 
     public :: nc_write, nc_write_attr, nc_size
 
+    public :: nc_ndims, nc_dimnames
     public :: nc_write_attr_std_dim
 
 contains
@@ -1090,6 +1091,58 @@ contains
         return
 
     end function nc_size
+
+    ! Return the dimension names of a given variable in a given file
+    function nc_ndims(filename,name) result(ndims)
+
+        implicit none
+
+        integer :: nc_size
+        integer :: dimlen, stat
+        character (len=*) :: filename, name
+        integer :: ndims
+        integer :: nc_id, varid
+
+        ! Open the file
+        call nc_check_open(filename, mode=nf90_nowrite, nc_id=nc_id)
+
+        call nc_check( nf90_inq_varid(nc_id, name, varid) )
+        call nc_check( nf90_inquire_variable(nc_id, varid, ndims=ndims) )
+
+        ! Close the file
+        call nc_check( nf90_close(nc_id) )
+
+        return
+
+    end function nc_ndims 
+
+    ! Return the dimension names of a given variable in a given file
+    function nc_dimnames(filename,name,ndims) result(names)
+
+        implicit none
+
+        character (len=*),  intent(IN)  :: filename, name
+        character (len=32) :: names(ndims)
+        integer :: nc_id, varid, ndims
+        integer :: dimids(ndims)
+        integer :: q 
+
+        ! Open the file
+        call nc_check_open(filename, mode=nf90_nowrite, nc_id=nc_id)
+        call nc_check( nf90_inq_varid(nc_id, name, varid) )
+        call nc_check( nf90_inquire_variable(nc_id, varid, dimids=dimids) )
+
+        ! Get the dimension length and close the file
+        do q = 1, size(dimids)
+            call nc_check( nf90_inquire_dimension(nc_id, dimids(q), name=names(q)) )
+        end do 
+
+        ! Close the file
+        call nc_check( nf90_close(nc_id) )
+
+        return
+
+    end function nc_dimnames
 
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ! Subroutine :  n c _ c r e a t e
