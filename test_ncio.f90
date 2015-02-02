@@ -21,6 +21,10 @@ program test
     integer :: i, j, k, t, testval 
     character(len=256) :: testchar
 
+    integer :: ndims
+    character(len=32), allocatable :: dimnames(:)
+    integer, allocatable :: dimlens(:)
+
     ! Define array sizes and allocate arrays
     nx = 8
     ny = 10
@@ -143,5 +147,14 @@ program test
     write(*,*)
     write(*,*) "====== DONE ======"
     write(*,*)
+
+!     ndims = nc_ndims(filename,"d3D")
+!     allocate(dimnames(ndims))
+!     dimnames = nc_dimnames(filename,"d3D",ndims)
+    
+    call nc_dims(filename,"d3D",dimnames,dimlens)
+!     write(*,*) "ndims= ", ndims
+    write(*,*) "dimnames= ", dimnames
+    write(*,*) "dimlens=  ", dimlens 
 
 end program 
