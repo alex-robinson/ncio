@@ -408,6 +408,7 @@ contains
             if (.not. ndims .eq. size(size_in)) then
                 write(*,"(a)") "nc_read:: ","Warning: "// &
                 "Variable dimensions in the file do not match those being read in."
+                write(*,"('  ndim = ', i2, ', size(size_in) = ', i2)") ndims, size(size_in)
                 write(*,*) trim(filename)//": ",trim(name)
             end if
             allocate(v%count(ndims))
