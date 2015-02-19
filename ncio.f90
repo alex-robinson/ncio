@@ -256,15 +256,18 @@ contains
         end if
 
         ! Reset or initialize the actual range of the variable
-        actual_range = [minval(dat),maxval(dat)]
-!         if (trim(v%dims(ndims)) == "time") then
-            if (v%start(ndims) .ne. 1) then
-                v%actual_range(1) = min(v%actual_range(1),actual_range(1))
-                v%actual_range(2) = max(v%actual_range(2),actual_range(2))
-            else
-                v%actual_range = actual_range
-            end if
-!         end if
+        if (v%missing_set) then
+            actual_range = [minval(dat,mask=dabs(dat-v%missing_value) .gt. NC_TOL), &
+                            maxval(dat,mask=dabs(dat-v%missing_value) .gt. NC_TOL)]
+        else 
+            actual_range = [minval(dat),maxval(dat)]
+        end if 
+        if (v%start(ndims) .ne. 1) then
+            v%actual_range(1) = min(v%actual_range(1),actual_range(1))
+            v%actual_range(2) = max(v%actual_range(2),actual_range(2))
+        else
+            v%actual_range = actual_range
+        end if
 
         ! Check if the variable gave us reasonable values
         if (maxval(dabs(v%actual_range)) .gt. 1d98) then
@@ -283,16 +286,6 @@ contains
             end if
         end if
 
-        ! Summarize what we'll do (diagnostics!!)
-!         call nc_print_attr(v)
-!         write(*,*) "ubound(dat): ",ubound(dat)
-!         write(*,*) "size(dat):   ",size(dat)
-!         write(*,*) "dat range:",minval(dat),maxval(dat)
-!         write(*,*) "start:",v%start
-!         write(*,*) "count:",v%count
-!         write(*,*) "size_in:",size_in
-!         write(*,*) "shape dat:",shape(dat)
-
         ! Make sure count size makes sense
         ncount = 1
         do i = 1, ndims
@@ -302,15 +295,12 @@ contains
             write(*,*) "ncio:: error: "// &
                        "The input variable size does not match the count of values to write to file."
             write(*,*) trim(filename)//": "//trim(v%name)
-            write(*,*) "Size of variable: ",size(dat)
-            write(*,*) "Size of count:    ",ncount
-            write(*,*) "start: ",start
-            write(*,*) "count: ",count
-            stop
+            write(*,*) "Size of variable, count: ",size(dat), ncount
+            write(*,*) "  start: ",start
+            write(*,*) "  count: ",count
+            write(*,*) "v%count: ",v%count
+            stop 
         end if
-
-        ! Open the file
-!         call nc_check( nf90_open(filename, nf90_write, nc_id) )
 
         do i = 1, ndims
 
@@ -1258,18 +1248,22 @@ contains
 
         character(len=*), intent(in) :: filename, name
         character(len=*), intent(out) :: value
+        character(len=512) :: value0 
         integer, intent(in), optional :: ncid
-        integer :: nc_id
+        integer :: nc_id, stat
+
+        ! Define error value 
+        value = "None"
 
         ! Open the file again and set for redefinition
         call nc_check_open(filename, ncid, nf90_nowrite, nc_id)
-        call nc_check( nf90_get_att(nc_id, NF90_GLOBAL,trim(name), value) )
+        stat = nf90_get_att(nc_id, NF90_GLOBAL,trim(name), value0)
+        if (stat .eq. NF90_NOERR) value = value0 
         if (.not.present(ncid)) call nc_check( nf90_close(nc_id) )
 
         return
 
     end subroutine nc_read_attr_global
-
 
     subroutine nc_write_attr_variable(filename,varname,name,value, ncid)
 
@@ -1299,18 +1293,24 @@ contains
 
     end subroutine nc_write_attr_variable
 
-    subroutine nc_read_attr_variable(filename,varname,name,value, ncid)
+    subroutine nc_read_attr_variable(filename,varname,name,value,ncid)
 
         implicit none
 
         character(len=*), intent(in) :: filename, varname, name
         character(len=*), intent(out) :: value
+        character(len=512) :: value0 
+
         integer :: nc_id, varid, stat
         integer, optional :: ncid
 
+        ! Define error value 
+        value = "None"
+        
         call nc_check_open(filename, ncid, nf90_nowrite, nc_id)
         stat = nf90_inq_varid(nc_id, trim(varname), varid)
-        call nc_check( nf90_get_att(nc_id, varid ,trim(name), value) )
+        stat = nf90_get_att(nc_id, varid ,trim(name), value0)
+        if (stat .eq. NF90_NOERR) value = value0 
         if (.not.present(ncid)) call nc_check( nf90_close(nc_id) )
 
         return
