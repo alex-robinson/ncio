@@ -352,7 +352,7 @@ contains
 
         implicit none
 
-        integer :: nc_id, stat, ndims, ndat, dim_in, n1
+        integer :: nc_id, v_id, stat, ndims, ndat, dim_in, n1
         integer, optional    :: start(:), count(:), ncid
 
         character (len=*) :: filename, name, xtype
@@ -372,8 +372,8 @@ contains
         ! Open the file.
         call nc_check_open(filename, ncid, nf90_nowrite, nc_id)
 
-        ! TO DO: Add check to make sure variable exists !!!!
-        ! Exit if not!
+        ! Check to make sure variable exists !!!!
+        call nc_check( nf90_inq_varid(nc_id, trim(name), v_id) )
 
         ! Initialize the netcdf variable info and load attributes
         call nc_v_init(v,name)
