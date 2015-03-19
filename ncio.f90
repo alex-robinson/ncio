@@ -103,12 +103,18 @@ module ncio
         module procedure    nc_write_dim_float_pt, nc_write_dim_float_1D
     end interface
 
-    interface nc_write_attr 
-        module procedure    nc_write_attr_global, nc_write_attr_variable
+    interface nc_read_attr 
+        module procedure    nc_read_attr_variable_char, nc_read_attr_variable_int
+        module procedure    nc_read_attr_variable_sp, nc_read_attr_variable_dp
+        module procedure    nc_read_attr_global_char, nc_read_attr_global_int
+        module procedure    nc_read_attr_global_sp, nc_read_attr_global_dp
     end interface 
 
-    interface nc_read_attr 
-        module procedure    nc_read_attr_global, nc_read_attr_variable
+    interface nc_write_attr 
+        module procedure    nc_write_attr_variable_char, nc_write_attr_variable_int
+        module procedure    nc_write_attr_variable_sp, nc_write_attr_variable_dp
+        module procedure    nc_write_attr_global_char, nc_write_attr_global_int
+        module procedure    nc_write_attr_global_sp, nc_write_attr_global_dp
     end interface 
     
     private
@@ -1179,95 +1185,176 @@ contains
 
     end subroutine nc_create
 
-    subroutine nc_write_attr_global(filename,name,value,ncid)
-
-        implicit none 
-
-        character(len=*) :: filename, name, value 
-        integer :: nc_id
-        integer, optional, intent(in) :: ncid
-
-        ! Open the file again and set for redefinition
-        call nc_check_open(filename, ncid, nf90_write, nc_id)
-        call nc_check( nf90_redef(nc_id) )
-
-        call nc_check( nf90_put_att(nc_id, NF90_GLOBAL,trim(name),trim(value)) )
-
-        ! End define mode and close the file.
-        call nc_check( nf90_enddef(nc_id) )
-        if (.not.present(ncid)) call nc_check( nf90_close(nc_id) )
-
-        write(*,"(a,a)") "ncio:: nc_write_attr_global:: ", &
-                              trim(filename)//" : "//trim(name)//" = "//trim(value)
-        
-        return
-
-    end subroutine nc_write_attr_global
-
-    subroutine nc_read_attr_global(filename,name,value, ncid)
-
-        implicit none 
-
-        character(len=*), intent(in) :: filename, name
-        character(len=*), intent(out) :: value 
-        integer, intent(in), optional :: ncid
-        integer :: nc_id
-
-        ! Open the file again and set for redefinition
-        call nc_check_open(filename, ncid, nf90_nowrite, nc_id)
-        call nc_check( nf90_get_att(nc_id, NF90_GLOBAL,trim(name), value) )
-        if (.not.present(ncid)) call nc_check( nf90_close(nc_id) )
-        
-        return
-
-    end subroutine nc_read_attr_global
-
-
-    subroutine nc_write_attr_variable(filename,varname,name,value, ncid)
-
-        implicit none 
-
-        character(len=*) :: filename, varname, name, value 
-        integer :: nc_id, varid, stat
-        integer, parameter :: noerr = NF90_NOERR
-        integer, intent(in), optional :: ncid
-
-        ! Open the file again and set for redefinition
-        call nc_check_open(filename, ncid, nf90_write, nc_id)
-        call nc_check( nf90_redef(nc_id) )
-
-        ! Inquire variable id and put attribute name
-        stat = nf90_inq_varid(nc_id, trim(varname), varid)
-        call nc_check( nf90_put_att(nc_id, varid,trim(name),trim(value)) )
-
-        ! End define mode and close the file.
-        call nc_check( nf90_enddef(nc_id) )
-        if (.not.present(ncid)) call nc_check( nf90_close(nc_id) )
-
-        write(*,"(a,a)") "ncio:: nc_write_attr:: ", &
-                              trim(filename)//", "//trim(varname)//" : "//trim(name)//" = "//trim(value)
-        
-        return
-
-    end subroutine nc_write_attr_variable
-
-    subroutine nc_read_attr_variable(filename,varname,name,value, ncid)
-
-        implicit none 
-
+    ! ++++++++++++++++++++++++++++++++++++++++++++++++++
+    ! READ / WRITE ATTRIBUTES
+    ! ++++++++++++++++++++++++++++++++++++++++++++++++++
+    subroutine nc_read_attr_variable_char(filename, varname, name, value)
         character(len=*), intent(in) :: filename, varname, name
-        character(len=*), intent(out) :: value 
-        integer :: nc_id, varid, stat
-        integer, optional :: ncid
+        character(len=*), intent(out) :: value
+        integer :: ncid, varid
+        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        call nc_check( nf90_inq_varid(ncid, trim(varname), varid) )
+        call nc_check( nf90_get_att(ncid, varid, trim(name), value) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
 
-        call nc_check_open(filename, ncid, nf90_nowrite, nc_id)
-        stat = nf90_inq_varid(nc_id, trim(varname), varid)
-        call nc_check( nf90_get_att(nc_id, varid ,trim(name), value) )
-        if (.not.present(ncid)) call nc_check( nf90_close(nc_id) )
-        
-        return
+    subroutine nc_read_attr_variable_int(filename, varname, name, value)
+        character(len=*), intent(in) :: filename, varname, name
+        integer, intent(out) :: value
+        integer :: ncid, varid
+        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        call nc_check( nf90_inq_varid(ncid, trim(varname), varid) )
+        call nc_check( nf90_get_att(ncid, varid, trim(name), value) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
 
-    end subroutine nc_read_attr_variable
+    subroutine nc_read_attr_variable_sp(filename, varname, name, value)
+        character(len=*), intent(in) :: filename, varname, name
+        real, intent(out) :: value
+        integer :: ncid, varid
+        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        call nc_check( nf90_inq_varid(ncid, trim(varname), varid) )
+        call nc_check( nf90_get_att(ncid, varid, trim(name), value) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
+
+    subroutine nc_read_attr_variable_dp(filename, varname, name, value)
+        character(len=*), intent(in) :: filename, varname, name
+        double precision, intent(out) :: value
+        integer :: ncid, varid
+        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        call nc_check( nf90_inq_varid(ncid, trim(varname), varid) )
+        call nc_check( nf90_get_att(ncid, varid, trim(name), value) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
+
+    subroutine nc_read_attr_global_char(filename, name, value)
+        character(len=*), intent(in) :: filename, name
+        character(len=*), intent(out) :: value
+        integer :: ncid, varid
+        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        call nc_check( nf90_get_att(ncid, NF90_GLOBAL, trim(name), value) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
+
+    subroutine nc_read_attr_global_int(filename, name, value)
+        character(len=*), intent(in) :: filename, name
+        integer, intent(out) :: value
+        integer :: ncid, varid
+        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        call nc_check( nf90_get_att(ncid, NF90_GLOBAL, trim(name), value) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
+
+    subroutine nc_read_attr_global_sp(filename, name, value)
+        character(len=*), intent(in) :: filename, name
+        real, intent(out) :: value
+        integer :: ncid, varid
+        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        call nc_check( nf90_get_att(ncid, NF90_GLOBAL, trim(name), value) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
+
+    subroutine nc_read_attr_global_dp(filename, name, value)
+        character(len=*), intent(in) :: filename, name
+        double precision, intent(out) :: value
+        integer :: ncid, varid
+        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        call nc_check( nf90_get_att(ncid, NF90_GLOBAL, trim(name), value) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
+
+    subroutine nc_write_attr_variable_char(filename, varname, name, value)
+        character(len=*), intent(in) :: filename, varname, name
+        character(len=*), intent(in) :: value
+        integer :: ncid, varid
+        call nc_check( nf90_open(filename, nf90_write, ncid) )
+        call nc_check( nf90_inq_varid(ncid, trim(varname), varid) )
+        call nc_check( nf90_redef(ncid) )
+        call nc_check( nf90_put_att(ncid, varid, trim(name), value) )
+        call nc_check( nf90_enddef(ncid) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
+
+    subroutine nc_write_attr_variable_int(filename, varname, name, value)
+        character(len=*), intent(in) :: filename, varname, name
+        integer, intent(in) :: value
+        integer :: ncid, varid
+        call nc_check( nf90_open(filename, nf90_write, ncid) )
+        call nc_check( nf90_redef(ncid) )
+        call nc_check( nf90_inq_varid(ncid, trim(varname), varid) )
+        call nc_check( nf90_put_att(ncid, varid, trim(name), value) )
+        call nc_check( nf90_enddef(ncid) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
+
+    subroutine nc_write_attr_variable_sp(filename, varname, name, value)
+        character(len=*), intent(in) :: filename, varname, name
+        real, intent(in) :: value
+        integer :: ncid, varid
+        call nc_check( nf90_open(filename, nf90_write, ncid) )
+        call nc_check( nf90_redef(ncid) )
+        call nc_check( nf90_inq_varid(ncid, trim(varname), varid) )
+        call nc_check( nf90_put_att(ncid, varid, trim(name), value) )
+        call nc_check( nf90_enddef(ncid) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
+
+    subroutine nc_write_attr_variable_dp(filename, varname, name, value)
+        character(len=*), intent(in) :: filename, varname, name
+        double precision, intent(in) :: value
+        integer :: ncid, varid
+        call nc_check( nf90_open(filename, nf90_write, ncid) )
+        call nc_check( nf90_redef(ncid) )
+        call nc_check( nf90_inq_varid(ncid, trim(varname), varid) )
+        call nc_check( nf90_put_att(ncid, varid, trim(name), value) )
+        call nc_check( nf90_enddef(ncid) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
+
+    subroutine nc_write_attr_global_char(filename, name, value)
+        character(len=*), intent(in) :: filename, name
+        character(len=*), intent(in) :: value
+        integer :: ncid
+        call nc_check( nf90_open(filename, nf90_write, ncid) )
+        call nc_check( nf90_redef(ncid) )
+        call nc_check( nf90_put_att(ncid, NF90_GLOBAL, trim(name), value) )
+        call nc_check( nf90_enddef(ncid) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
+
+    subroutine nc_write_attr_global_int(filename, name, value)
+        character(len=*), intent(in) :: filename, name
+        integer, intent(in) :: value
+        integer :: ncid
+        call nc_check( nf90_open(filename, nf90_write, ncid) )
+        call nc_check( nf90_redef(ncid) )
+        call nc_check( nf90_put_att(ncid, NF90_GLOBAL, trim(name), value) )
+        call nc_check( nf90_enddef(ncid) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
+
+    subroutine nc_write_attr_global_sp(filename, name, value)
+        character(len=*), intent(in) :: filename, name
+        real, intent(in) :: value
+        integer :: ncid
+        call nc_check( nf90_open(filename, nf90_write, ncid) )
+        call nc_check( nf90_redef(ncid) )
+        call nc_check( nf90_put_att(ncid, NF90_GLOBAL, trim(name), value) )
+        call nc_check( nf90_enddef(ncid) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
+
+    subroutine nc_write_attr_global_dp(filename, name, value)
+        character(len=*), intent(in) :: filename, name
+        double precision, intent(in) :: value
+        integer :: ncid
+        call nc_check( nf90_open(filename, nf90_write, ncid) )
+        call nc_check( nf90_redef(ncid) )
+        call nc_check( nf90_put_att(ncid, NF90_GLOBAL, trim(name), value) )
+        call nc_check( nf90_enddef(ncid) )
+        call nc_check( nf90_close(ncid) )
+    end subroutine
 
     subroutine nc_write_map(filename,name,lambda,phi,x_e,y_n, ncid)
 
