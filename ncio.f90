@@ -116,6 +116,11 @@ module ncio
         module procedure    nc_write_attr_global_char, nc_write_attr_global_int
         module procedure    nc_write_attr_global_sp, nc_write_attr_global_dp
     end interface 
+
+    interface nc_exists_attr 
+        module procedure    nc_exists_attr_global, nc_exists_attr_variable
+    end interface 
+    
     
     private
     public :: nc_read, nc_read_attr  
@@ -125,6 +130,7 @@ module ncio
 
     public :: nc_write_attr_std_dim
     public :: nc_variables, nc_dimensions
+    public :: nc_exists_var, nc_exists_attr
 
 contains
 
@@ -3653,5 +3659,36 @@ contains
 
         return 
     end function str_to_num 
+
+    ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    ! Check for existence of variables or attributes
+    ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    function nc_exists_attr_global(filename, attname) result(exists)
+        character(len=*), intent(IN) :: filename, attname
+        integer :: ncid
+        logical :: exists
+        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        exists = nf90_inquire_attribute(ncid, NF90_GLOBAL, trim(attname)) == NF90_NOERR
+        call nc_check( nf90_close(ncid) )
+    end function
+
+    function nc_exists_attr_variable(filename, varname, attname) result(exists)
+        character(len=*), intent(IN) :: filename, varname, attname
+        integer :: ncid, varid
+        logical :: exists
+        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        call nc_check( nf90_inq_varid(ncid, trim(varname), varid) )
+        exists = nf90_inquire_attribute(ncid, varid, trim(attname)) == NF90_NOERR
+        call nc_check( nf90_close(ncid) )
+    end function
+
+    function nc_exists_var(filename, attname) result(exists)
+        character(len=*), intent(IN) :: filename, attname
+        integer :: stat, n, ncid, varid
+        logical :: exists
+        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        exists = nf90_inq_varid(ncid, trim(attname), varid) == NF90_NOERR
+        call nc_check( nf90_close(ncid) )
+    end function
 
 end module ncio
