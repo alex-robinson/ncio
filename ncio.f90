@@ -1317,15 +1317,17 @@ contains
 
     end subroutine nc_read_attr_variable
 
-    subroutine nc_write_map(filename,name,lambda,phi,x_e,y_n, ncid)
-
+    subroutine nc_write_map(filename,name,lambda,phi,alpha,x_e,y_n, ncid)
+        ! CF map conventions can be found here:
+        ! http://cfconventions.org/Data/cf-conventions/cf-conventions-1.6/build/cf-conventions.html#appendix-grid-mappings
+        
         implicit none
 
         character(len=*) :: filename, name
 
         integer :: nc_id, varid, stat
         integer, intent(in), optional :: ncid
-        double precision, optional :: lambda, phi, x_e, y_n
+        double precision, optional :: lambda, phi, alpha, x_e, y_n
 
         integer, parameter :: noerr = NF90_NOERR
 
@@ -1349,6 +1351,8 @@ contains
                 case("stereographic")
                     call nc_check( nf90_put_att(nc_id,varid, "longitude_of_projection_origin", lambda) )
                     call nc_check( nf90_put_att(nc_id,varid, "latitude_of_projection_origin", phi) )
+                    if (present(alpha)) &
+                    call nc_check( nf90_put_att(nc_id,varid, "angle_of_oblique_tangent", alpha) )
                     call nc_check( nf90_put_att(nc_id,varid, "scale_factor_at_projection_origin", 1.d0) )
                     call nc_check( nf90_put_att(nc_id,varid, "false_easting",  x_e) )
                     call nc_check( nf90_put_att(nc_id,varid, "false_northing", y_n) )
@@ -1356,6 +1360,8 @@ contains
                 case("polar_stereographic")
                     call nc_check( nf90_put_att(nc_id,varid, "straight_vertical_longitude_from_pole", lambda) )
                     call nc_check( nf90_put_att(nc_id,varid, "latitude_of_projection_origin", phi) )
+                    if (present(alpha)) &
+                    call nc_check( nf90_put_att(nc_id,varid, "angle_of_oblique_tangent", alpha) )
                     call nc_check( nf90_put_att(nc_id,varid, "scale_factor_at_projection_origin", 1.d0) )
                     call nc_check( nf90_put_att(nc_id,varid, "false_easting",  x_e) )
                     call nc_check( nf90_put_att(nc_id,varid, "false_northing", y_n) )
