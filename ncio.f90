@@ -28,7 +28,7 @@ module ncio
 
     double precision, parameter :: NCIO_VERSION = 0.2d0
 
-    integer, parameter :: NC_STRLEN = 256 
+    integer, parameter :: NC_STRLEN = 256
     integer, parameter :: NC_STRLEN_MAX = 10000
     character(len=2)   :: NC_STR_SEP = "; "
     double precision, parameter :: NC_TOL = 1d-7
@@ -53,7 +53,7 @@ module ncio
     interface nc_write
         module procedure    nc_write_int_pt, &
                             nc_write_int_1D, nc_write_int_2D, &
-                            nc_write_int_3D, nc_write_int_4D  
+                            nc_write_int_3D, nc_write_int_4D
         module procedure    nc_write_double_pt, &
                             nc_write_double_1D, nc_write_double_2D, &
                             nc_write_double_3D, nc_write_double_4D, &
@@ -64,34 +64,34 @@ module ncio
         module procedure    nc_write_logical_pt, &
                             nc_write_logical_1D, nc_write_logical_2D, &
                             nc_write_logical_3D, nc_write_logical_4D
-        
-        ! Note: character writing and reading do not 
+
+        ! Note: character writing and reading do not
         ! follow the conventions of the other data types
         module procedure    nc_write_internal_char, &
                             nc_write_char_1D, nc_write_char_2D, &
                             nc_write_char_3D, nc_write_char_4D   ! Dummy procedures
-    
-    end interface  
 
-    interface nc_read 
+    end interface
+
+    interface nc_read
         module procedure    nc_read_int_pt, &
                             nc_read_int_1D, nc_read_int_2D, &
                             nc_read_int_3D, nc_read_int_4D, &
-                            nc_read_int_5D, nc_read_int_6D 
+                            nc_read_int_5D, nc_read_int_6D
         module procedure    nc_read_double_pt, &
                             nc_read_double_1D, nc_read_double_2D, &
                             nc_read_double_3D, nc_read_double_4D, &
-                            nc_read_double_5D, nc_read_double_6D 
+                            nc_read_double_5D, nc_read_double_6D
         module procedure    nc_read_float_pt, &
                             nc_read_float_1D, nc_read_float_2D, &
                             nc_read_float_3D, nc_read_float_4D, &
-                            nc_read_float_5D, nc_read_float_6D  
+                            nc_read_float_5D, nc_read_float_6D
         module procedure    nc_read_logical_pt, &
                             nc_read_logical_1D, nc_read_logical_2D, &
                             nc_read_logical_3D, nc_read_logical_4D, &
-                            nc_read_logical_5D, nc_read_logical_6D                    
+                            nc_read_logical_5D, nc_read_logical_6D
 
-        ! Note: character writing and reading do not 
+        ! Note: character writing and reading do not
         ! follow the conventions of the other data types
         module procedure    nc_read_internal_char, &
                             nc_read_char_1D
@@ -120,14 +120,14 @@ module ncio
     interface nc_exists_attr 
         module procedure    nc_exists_attr_global, nc_exists_attr_variable
     end interface 
-    
-    
+
     private
-    public :: nc_read, nc_read_attr  
+    public :: nc_read, nc_read_attr
     public :: nc_create, nc_write_map, nc_write_dim
-    public :: nc_open, nc_close 
+    public :: nc_open, nc_close
     public :: nc_write, nc_write_attr, nc_size
 
+    public :: nc_shape, nc_ndims
     public :: nc_write_attr_std_dim
     public :: nc_variables, nc_dimensions
     public :: nc_exists_var, nc_exists_attr
@@ -139,14 +139,14 @@ contains
 !   INTERNAL WRITE/READ FUNCTIONS
 !
 ! =================================
-    
+
     subroutine nc4_write_internal(filename,name,dat,xtype,size_in,&
                                   ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6, &
                                   start,count,long_name,standard_name,grid_mapping,units, &
                                   missing_value_int,missing_value_float,missing_value_double)
-                        
 
-        implicit none 
+
+        implicit none
 
         type(ncvar) :: v
 
@@ -162,8 +162,8 @@ contains
         integer :: size_in(:)
         integer, allocatable :: size_var(:)
 
-        integer, optional :: ncid 
-        integer :: nc_id 
+        integer, optional :: ncid
+        integer :: nc_id
 
         ! netCDF needed counters, array, and names of dims
         integer :: stat, ncount, nvar, RecordDimID
@@ -181,21 +181,21 @@ contains
         if ( present(grid_mapping) )  v%grid_mapping  = trim(grid_mapping)
         if ( present(units) )         v%units         = trim(units)
 
-        if (present(missing_value_int)) then 
+        if (present(missing_value_int)) then
             v%missing_set = .TRUE.
             v%missing_value = dble(missing_value_int)
-        else if (present(missing_value_float)) then 
+        else if (present(missing_value_float)) then
             v%missing_set = .TRUE.
             v%missing_value = dble(missing_value_float)
-        else if (present(missing_value_double)) then 
+        else if (present(missing_value_double)) then
             v%missing_set = .TRUE.
             v%missing_value = missing_value_double
-        end if 
+        end if
 
         ! Open the file in write mode from filename or ncid
         call nc_check_open(filename, ncid, nf90_write, nc_id)
         ! and get attributes if variable already exist
-        call nc_get_att(nc_id,v)    
+        call nc_get_att(nc_id,v)
         call nc_check( nf90_inquire(nc_id, unlimitedDimID=RecordDimID) ) ! Get Unlimited dimension ID if any
 
         ! Determine number of dims in file from arguments
@@ -214,7 +214,7 @@ contains
             if (present(dim4)) ndims = 4
             if (present(dim5)) ndims = 5
             if (present(dim6)) ndims = 6
-        end if 
+        end if
 
         ! Allocate dimensions of variable on file
         if (allocated(v%dims)) deallocate(v%dims)
@@ -222,9 +222,9 @@ contains
         if (present(dims)) then
             do i = 1, ndims
                 v%dims(i) = trim(dims(i))
-            end do 
+            end do
         else
-            do i = 1, ndims 
+            do i = 1, ndims
                 select case(i)
                     case(1)
                         v%dims(i) = trim(dim1)
@@ -258,28 +258,31 @@ contains
         v%count = 1
         if (present(count)) then
             ! Assign argument as count
-            v%count = count   
+            v%count = count
         else if (size(dat) .eq. nvar) then
             ! Assign count from size of variable on file
-            v%count = size_var 
+            v%count = size_var
         else
             ! Assign count from input dimension size
-            v%count(1:size(size_in)) = size_in 
-        end if 
+            v%count(1:size(size_in)) = size_in
+        end if
 
         ! Reset or initialize the actual range of the variable
-        actual_range = [minval(dat),maxval(dat)]
-!         if (trim(v%dims(ndims)) == "time") then
-            if (v%start(ndims) .ne. 1) then
-                v%actual_range(1) = min(v%actual_range(1),actual_range(1))
-                v%actual_range(2) = max(v%actual_range(2),actual_range(2))
-            else
-                v%actual_range = actual_range
-            end if
-!         end if
-        
+        if (v%missing_set) then
+            actual_range = [minval(dat,mask=dabs(dat-v%missing_value) .gt. NC_TOL), &
+                            maxval(dat,mask=dabs(dat-v%missing_value) .gt. NC_TOL)]
+        else 
+            actual_range = [minval(dat),maxval(dat)]
+        end if 
+        if (v%start(ndims) .ne. 1) then
+            v%actual_range(1) = min(v%actual_range(1),actual_range(1))
+            v%actual_range(2) = max(v%actual_range(2),actual_range(2))
+        else
+            v%actual_range = actual_range
+        end if
+
         ! Check if the variable gave us reasonable values
-        if (maxval(dabs(v%actual_range)) .gt. 1d98) then 
+        if (maxval(dabs(v%actual_range)) .gt. 1d98) then
             write(*,*) "ncio:: nc_write:: warning: actual range too high,&
                             & variable may not be defined: "//trim(v%name)
             v%actual_range = [0.d0,0.d0]
@@ -289,40 +292,27 @@ contains
         if (trim(v%xtype) .eq. "NF90_FLOAT" .or. trim(v%xtype) .eq. "NF90_DOUBLE") then
             if (v%missing_set) then
                 where( dabs(dat-v%missing_value) .gt. NC_TOL ) dat = (dat-v%add_offset)/v%scale_factor
-            else    
+            else
                 ! Apply the scalar and offset if available
                 dat = (dat-v%add_offset)/v%scale_factor
             end if
         end if
-        
-        ! Summarize what we'll do (diagnostics!!)  
-!         call nc_print_attr(v)
-!         write(*,*) "ubound(dat): ",ubound(dat)
-!         write(*,*) "size(dat):   ",size(dat)
-!         write(*,*) "dat range:",minval(dat),maxval(dat)
-!         write(*,*) "start:",v%start 
-!         write(*,*) "count:",v%count 
-!         write(*,*) "size_in:",size_in 
-!         write(*,*) "shape dat:",shape(dat)
 
         ! Make sure count size makes sense
         ncount = 1
-        do i = 1, ndims 
+        do i = 1, ndims
             ncount = ncount*v%count(i)
-        end do 
+        end do
         if (size(dat) .ne. ncount) then
             write(*,*) "ncio:: error: "// &
                        "The input variable size does not match the count of values to write to file."
             write(*,*) trim(filename)//": "//trim(v%name)
-            write(*,*) "Size of variable: ",size(dat)
-            write(*,*) "Size of count:    ",ncount 
-            write(*,*) "start: ",start 
-            write(*,*) "count: ",count 
-            stop
-        end if 
-
-        ! Open the file
-!         call nc_check( nf90_open(filename, nf90_write, nc_id) )
+            write(*,*) "Size of variable, count: ",size(dat), ncount
+            write(*,*) "  start: ",start
+            write(*,*) "  count: ",count
+            write(*,*) "v%count: ",v%count
+            stop 
+        end if
 
         do i = 1, ndims
 
@@ -333,16 +323,16 @@ contains
 
             call nc_check( nf90_inquire_dimension(nc_id, dimid, len=size_var(i)) )
 
-            if (v%count(i) .gt. size_var(i)) then 
+            if (v%count(i) .gt. size_var(i)) then
                 write(*,*) "ncio:: error: "// &
                            "count exceeds this dimension length."
                 write(*,*) trim(filename)//": "//trim(v%name)
                 write(*,*) "Dimension exceeded: ",trim(v%dims(i)), size_var(i)," < ",v%count(i)
                 write(*,*) "Are the data values a different shape than the file dimensions?"
                 write(*,*) "   In that case, specify start+count as arguments."
-                stop 
-            end if 
-        end do 
+                stop
+            end if
+        end do
 
         ! Define / update the netCDF variable for the data.
         call nc_check( nf90_redef(nc_id) )
@@ -358,8 +348,8 @@ contains
         if (.not. present(ncid)) call nc_check( nf90_close(nc_id) )
 
 !         write(*,"(a,a,a14)") "ncio:: nc_write:: ",trim(filename)//" : ",trim(v%name)
-        
-        return 
+
+        return
 
     end subroutine nc4_write_internal
 
@@ -374,7 +364,7 @@ contains
 
         implicit none
 
-        integer :: nc_id, stat, ndims, ndat, dim_in, n1
+        integer :: nc_id, v_id, stat, ndims, ndat, dim_in, n1
         integer, optional    :: start(:), count(:), ncid
 
         character (len=*) :: filename, name, xtype
@@ -391,43 +381,44 @@ contains
         character (len=NC_STRLEN) :: tmpstr
         integer :: i
 
-        ! Open the file. 
+        ! Open the file.
         call nc_check_open(filename, ncid, nf90_nowrite, nc_id)
 
-        ! TO DO: Add check to make sure variable exists !!!!
-        ! Exit if not!
+        ! Check to make sure variable exists !!!!
+        call nc_check( nf90_inq_varid(nc_id, trim(name), v_id) )
 
         ! Initialize the netcdf variable info and load attributes
         call nc_v_init(v,name)
         call nc_get_att(nc_id,v,readmeta=.TRUE.)
-        v%xtype = trim(xtype) 
+        v%xtype = trim(xtype)
 
         ! Get variable dimension
         ndims = size(v%dims)
 
         if (present(start)) then
             allocate(v%start(size(start)))
-            v%start = start 
-        else 
+            v%start = start
+        else
             allocate(v%start(ndims))
             v%start(:) = 1
-        end if 
+        end if
 
         if (present(count)) then
             allocate(v%count(size(count)))
-            v%count = count 
-        else 
-            if (.not. ndims .eq. size(size_in)) then 
+            v%count = count
+        else
+            if (.not. ndims .eq. size(size_in)) then
                 write(*,"(a)") "nc_read:: ","Warning: "// &
                 "Variable dimensions in the file do not match those being read in."
+                write(*,"('  ndim = ', i2, ', size(size_in) = ', i2)") ndims, size(size_in)
                 write(*,*) trim(filename)//": ",trim(name)
-            end if 
+            end if
             allocate(v%count(ndims))
-            v%count = 1 
+            v%count = 1
             do i = 1, size(size_in)
               v%count(i) = size_in(i)
             end do
-        end if 
+        end if
 
         ! Read the variable data from the file
         ! (NF90 converts dat to proper type (int, real, dble)
@@ -436,11 +427,11 @@ contains
         ! Close the file. This frees up any internal netCDF resources
         ! associated with the file.
         if (.not. present(ncid)) call nc_check( nf90_close(nc_id) )
-        
+
         if (v%missing_set) then
             where( dabs(dat-v%missing_value) .gt. NC_TOL ) dat = dat*v%scale_factor + v%add_offset
 
-            ! Fill with user-desired missing value 
+            ! Fill with user-desired missing value
             if (present(missing_value_int)) &
                 where( dabs(dat-v%missing_value) .le. NC_TOL ) dat = dble(missing_value_int)
             if (present(missing_value_float)) &
@@ -448,14 +439,14 @@ contains
             if (present(missing_value_double)) &
                 where( dabs(dat-v%missing_value) .le. NC_TOL ) dat = dble(missing_value_double)
 
-        else    
+        else
             ! Apply the scalar and offset if available
             if (v%scale_factor .ne. 1.d0 .and. v%add_offset .ne. 0.d0) &
               dat = dat*v%scale_factor + v%add_offset
         end if
 
         ! Also eliminate crazy values (in case they are not handled by missing_value for some reason)
-        ! Fill with user-desired missing value 
+        ! Fill with user-desired missing value
         if (present(missing_value_int)) &
             where( dabs(dat) .ge. NC_LIM ) dat = dble(missing_value_int)
         if (present(missing_value_float)) &
@@ -472,39 +463,39 @@ contains
     ! Open a netcdf file and return a valid ncid
     subroutine nc_open(filename,ncid,writable)
 
-        implicit none 
+        implicit none
 
-        character(len=*) filename 
-        logical, optional :: writable 
-        logical :: is_writable 
-        integer :: ncid 
+        character(len=*) filename
+        logical, optional :: writable
+        logical :: is_writable
+        integer :: ncid
 
-        is_writable = .TRUE. 
+        is_writable = .TRUE.
         if (present(writable)) is_writable = writable
 
-        if (is_writable) then 
+        if (is_writable) then
             call nc_check( nf90_open(filename, nf90_write, ncid) )
-        else 
+        else
             call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
-        end if 
+        end if
 
-        return 
+        return
 
-    end subroutine nc_open 
+    end subroutine nc_open
 
     ! Close a netcdf file returning the ncid=0
     subroutine nc_close(ncid)
 
-        implicit none 
+        implicit none
 
-        integer :: ncid 
+        integer :: ncid
         call nc_check( nf90_close(ncid) )
 
-        ncid = 0 
+        ncid = 0
 
-        return 
+        return
 
-    end subroutine nc_close 
+    end subroutine nc_close
 
     !! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     !! Subroutine :  nc_v_init
@@ -520,10 +511,10 @@ contains
 
         character(len=*) :: name
         character(len=*), optional :: xtype
-        integer,          optional :: ndims_in 
+        integer,          optional :: ndims_in
         character(len=*), optional :: long_name, standard_name
         character(len=*), optional :: grid_mapping, units, axis, calendar
-        logical, optional :: coord 
+        logical, optional :: coord
 
         integer :: i
 
@@ -543,11 +534,11 @@ contains
         v%FillValue_set = .FALSE.
 
         v%xtype = "NF90_DOUBLE"
-        v%coord = .FALSE. 
+        v%coord = .FALSE.
 
         v%grid_mapping  = ""
 
-        ! If args are present, reassign these variables        
+        ! If args are present, reassign these variables
         if ( present(long_name) )     v%long_name      = trim(long_name)
         if ( present(grid_mapping) )  v%grid_mapping   = trim(grid_mapping)
         if ( present(units) )         v%units          = trim(units)
@@ -555,7 +546,7 @@ contains
         if ( present(calendar) .and. trim(name) == "time" )  &
                                       v%calendar       = trim(calendar)
 
-        if ( present(coord)) v%coord = coord 
+        if ( present(coord)) v%coord = coord
         if ( present(xtype)) v%xtype = trim(xtype)
 
         ! Deallocate all arrays
@@ -565,16 +556,16 @@ contains
 
         do i = 1, 4
             v%dims_in(i) = ""
-        end do 
-        v%ndims_in = 0 
-        if (present(ndims_in)) v%ndims_in = ndims_in 
+        end do
+        v%ndims_in = 0
+        if (present(ndims_in)) v%ndims_in = ndims_in
 
         return
 
     end subroutine nc_v_init
 
     !
-    ! Write attributes for standard dimensions found in a netCDF file 
+    ! Write attributes for standard dimensions found in a netCDF file
     ! (if attribute not already defined)
     !
     subroutine nc_write_attr_std_dim(filename, ncid)
@@ -597,13 +588,13 @@ contains
 
             ! Check whether a dimension corresponds to this ID
             ! exit loop if not
-            stat = nf90_inquire_dimension(nc_id,i,name=name) 
+            stat = nf90_inquire_dimension(nc_id,i,name=name)
             if ( stat .ne. NF90_NOERR) then
                 exit
             endif
 
             ! Check whether a variable is associated with this dimension
-            stat = nf90_inq_varid(nc_id, trim(name), varid) 
+            stat = nf90_inq_varid(nc_id, trim(name), varid)
             if ( varid .ne. NF90_NOERR) cycle ! if dimension is not defined as variable, skip it
 
             ! Update some variable info based on further default cases
@@ -661,7 +652,7 @@ contains
 
         ! Try to retrieve attribute
         stat = nf90_get_att(ncid, varid, name, tmpstr)
-    
+
         ! Write new attribute only if not already defined
         if ( stat .ne. NF90_NOERR) then
             call nc_check( nf90_put_att(ncid, varid, name, value) )
@@ -682,12 +673,12 @@ contains
         integer, intent ( in) :: status
         integer, intent (out), optional :: stat
 
-        if(status /= nf90_noerr .and. (.not. present(stat)) ) then 
+        if(status /= nf90_noerr .and. (.not. present(stat)) ) then
             write(*,*) "ncio:: error: "//trim(nf90_strerror(status))
             stop "stopped by ncio."
         end if
 
-        if (present(stat)) then 
+        if (present(stat)) then
             stat = 0
             if(status /= nf90_noerr) stat = -1
         end if
@@ -711,7 +702,7 @@ contains
 
         nc_check_att = noerr
 
-        if(status /= nf90_noerr) then 
+        if(status /= nf90_noerr) then
             if (trim(nf90_strerror(status)) .eq. "NetCDF: Attribute not found") then
                 nc_check_att = -1
             else
@@ -720,7 +711,7 @@ contains
             end if
         end if
 
-        return 
+        return
 
     end function nc_check_att
 
@@ -733,30 +724,30 @@ contains
 
         character(len=*), optional, intent ( in) :: filename
         integer, optional, intent ( in) :: ncid
-        integer, intent (in) :: mode   
+        integer, intent (in) :: mode
         integer, intent (out) :: nc_id
 
         integer stat
 
-        ! Open the file. 
-        if (present(ncid)) then 
+        ! Open the file.
+        if (present(ncid)) then
           nc_id = ncid
         else
           if (.not. present(filename)) then
                 write(*, *) "ncio :: neither filename nor ncid provided, stop"
                 stop
           endif
-          stat = nf90_open(filename, mode, nc_id) 
+          stat = nf90_open(filename, mode, nc_id)
           if (stat .ne. NF90_NOERR) then
               write(*, *) "ncio :: error when opening file, no such file or directory? :: ",trim(filename)
               stop
           endif
-        end if 
+        end if
 
         return
 
     end subroutine nc_check_open
-  
+
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ! Subroutine :  a t t r _ p r i n t
     ! Author     :  Alex Robinson
@@ -767,12 +758,12 @@ contains
         implicit none
 
         type(ncvar) :: v
-        integer :: i 
+        integer :: i
         character(len=512) :: dims_char
 
         write(dims_char,*) (trim(v%dims(i))//"  ", i=1,size(v%dims))
 
-        write(*,*) 
+        write(*,*)
         write(*,*) "nc_print_attr::"
         write(*,"(10x,a20,a1,2x,a)") "name", ":",trim(v%name)
         write(*,"(10x,a20,a1,2x,a)") "xtype",":",trim(v%xtype)
@@ -820,15 +811,15 @@ contains
 
         ! Define the variable if it doesn't exist
         if ( stat .ne. noerr ) then
-            
+
             ! Check if it's a dimension (coordinate) variable or a data variable
             ! Get the dimension ids for the variable to be defined
-            if ( v%coord ) then    
+            if ( v%coord ) then
                 ! This is a coordinate variable (ie, a dimension defintion)
                 ! Only one dimid needed (that of current variable)
                 allocate(dimids(1))
-                dimids(1) = v%dimid 
-            else 
+                dimids(1) = v%dimid
+            else
                 ! This is a data variable
                 ! Determine ids of dimensions
                 allocate(dimids(ndims))
@@ -849,15 +840,15 @@ contains
                     call nc_check( nf90_def_var(ncid,name=trim(v%name),xtype=NF90_CHAR,dimids=dimids,varid=v%varid) )
                 case DEFAULT
                     write(*,*) "nc_put_att:: Error, wrong xtype defined:"//trim(v%xtype)
-                    stop 
-            end select 
+                    stop
+            end select
 
             if (trim(v%xtype) .ne. "NF90_CHAR") then
-                    
-                    if (v%scale_factor .ne. 1.d0 .and. v%add_offset .ne. 0.d0) then 
+
+                    if (v%scale_factor .ne. 1.d0 .and. v%add_offset .ne. 0.d0) then
                         call nc_check( nf90_put_att(ncid, v%varid, "scale_factor", v%scale_factor) )
                         call nc_check( nf90_put_att(ncid, v%varid, "add_offset",   v%add_offset) )
-                    end if 
+                    end if
 
                     if (v%missing_set) then
                         select case(trim(v%xtype))
@@ -867,8 +858,8 @@ contains
                                 call nc_check( nf90_put_att(ncid, v%varid, "missing_value", real(v%missing_value)) )
                             case("NF90_DOUBLE")
                                 call nc_check( nf90_put_att(ncid, v%varid, "missing_value", v%missing_value) )
-                        end select 
-                    end if 
+                        end select
+                    end if
 
                     if (v%FillValue_set) then
                         select case(trim(v%xtype))
@@ -878,12 +869,12 @@ contains
                                 call nc_check( nf90_put_att(ncid, v%varid, "FillValue", real(v%FillValue)) )
                             case("NF90_DOUBLE")
                                 call nc_check( nf90_put_att(ncid, v%varid, "FillValue", v%FillValue) )
-                        end select 
-                    end if 
+                        end select
+                    end if
 
             end if
 
-            ! Add additional variable attributes 
+            ! Add additional variable attributes
 
             if (trim(v%long_name) .ne. "") &
                 call nc_check( nf90_put_att(ncid, v%varid, "long_name",     trim(v%long_name)) )
@@ -917,14 +908,14 @@ contains
                     v%actual_range = (/ 0.d0, 0.d0 /)
                 case DEFAULT
                     write(*,*) "nc_put_att:: Error, wrong xtype defined:"//trim(v%xtype)
-                    stop 
-            end select 
-        end if 
+                    stop
+            end select
+        end if
 
         return
 
     end subroutine nc_put_att
-  
+
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ! Subroutine :  g e t _ a t t
     ! Author     :  Alex Robinson
@@ -936,7 +927,7 @@ contains
 
         integer :: ncid, stat, i
         double precision :: tmp, tmp2(2)
-        integer :: tmpi, tmpi2(2) 
+        integer :: tmpi, tmpi2(2)
 
         character(len=NC_STRLEN) :: tmpstr
         type(ncvar) :: v
@@ -946,18 +937,18 @@ contains
 
         integer, parameter :: noerr = NF90_NOERR
 
-        logical, optional :: readmeta 
-        logical :: read_meta 
+        logical, optional :: readmeta
+        logical :: read_meta
 
-        read_meta = .TRUE. 
-        if (present(readmeta)) read_meta = readmeta 
+        read_meta = .TRUE.
+        if (present(readmeta)) read_meta = readmeta
 
         ! Get the current variable's id, if it exists
         stat = nf90_inq_varid(ncid, trim(v%name), v%varid)
 
         ! If variable exists, get attributes from file
         if ( stat .eq. noerr ) then
-          
+
             ! Get number of dimensions and dimids
             call nc_check ( nf90_inquire_variable(ncid, v%varid, ndims=ndims) )
             if (allocated(dimids)) deallocate(dimids); allocate(dimids(ndims))
@@ -972,7 +963,7 @@ contains
                 call nc_check ( nf90_inquire_dimension(ncid,dimids(i),name=v%dims(i),len=v%dlen(i)) )
             end do
 
-            if ( read_meta ) then 
+            if ( read_meta ) then
                 stat = nc_check_att( nf90_get_att(ncid, v%varid, "units", tmpstr) )
                 if (stat .eq. noerr) v%units = trim(tmpstr)
 
@@ -1004,7 +995,7 @@ contains
                         if (stat .eq. noerr) v%add_offset = dble(tmpi)
 
                         call nc_get_att_double(ncid,v%varid,"missing_value",v%missing_value,stat)
-                        if (stat .eq. noerr) v%missing_set = .TRUE. 
+                        if (stat .eq. noerr) v%missing_set = .TRUE.
 
                         stat = nc_check_att( nf90_get_att(ncid, v%varid, "FillValue", tmpi) )
                         if (stat .eq. noerr) then
@@ -1024,7 +1015,7 @@ contains
                         if (stat .eq. noerr) v%add_offset = tmp
 
                         call nc_get_att_double(ncid,v%varid,"missing_value",v%missing_value,stat)
-                        if (stat .eq. noerr) v%missing_set = .TRUE. 
+                        if (stat .eq. noerr) v%missing_set = .TRUE.
 
                         stat = nc_check_att( nf90_get_att(ncid, v%varid, "FillValue", tmp) )
                         if (stat .eq. noerr) then
@@ -1033,7 +1024,7 @@ contains
                         end if
 
                 end select
-            end if 
+            end if
 
         end if
 
@@ -1043,13 +1034,13 @@ contains
 
     subroutine nc_get_att_double(ncid,varid,name,val,stat)
 
-        implicit none 
+        implicit none
 
-        integer :: ncid, varid 
-        character(len=*) :: name  
-        double precision :: val 
-        integer :: stat, xtype, len 
-        character(len=256) :: val_s 
+        integer :: ncid, varid
+        character(len=*) :: name
+        double precision :: val
+        integer :: stat, xtype, len
+        character(len=256) :: val_s
 
         integer, parameter :: noerr = NF90_NOERR
 
@@ -1057,19 +1048,19 @@ contains
         if (stat .eq. noerr) then
 
             select case(xtype)
-                case(NF90_INT,NF90_FLOAT,NF90_DOUBLE,NF90_SHORT) 
+                case(NF90_INT,NF90_FLOAT,NF90_DOUBLE,NF90_SHORT)
                     stat = nf90_get_att(ncid, varid, trim(name), val)
                 case(NF90_CHAR)
                     stat = nf90_get_att(ncid, varid, trim(name), val_s(1:len))
-                    val = str_to_num(val_s(1:len)) 
+                    val = str_to_num(val_s(1:len))
                 case DEFAULT
                     write(*,*) "GET_ATT: "//trim(name)//": ",xtype, len
             end select
 
-        end if 
+        end if
 
         return
-    end subroutine nc_get_att_double 
+    end subroutine nc_get_att_double
 
     ! Return the size of a dimension in netcdf file
     function nc_size(filename,name,ncid)
@@ -1080,8 +1071,8 @@ contains
         integer :: dimid, dimlen, stat
         character (len=*) :: filename, name
 
-        integer, optional :: ncid 
-        integer :: nc_id 
+        integer, optional :: ncid
+        integer :: nc_id
 
         ! Open the file if needed
         call nc_check_open(filename, ncid, nf90_nowrite, nc_id)
@@ -1095,7 +1086,7 @@ contains
 
         ! Get the dimension length and close the file
         call nc_check( nf90_inquire_dimension(nc_id, dimid, len=dimlen) )
-        
+
         if (.not. present(ncid)) call nc_check( nf90_close(nc_id) )
 
         nc_size = dimlen
@@ -1131,28 +1122,103 @@ contains
       call nc_close(ncid)
     end function nc_variables
 
-    function nc_dimensions(filename) result(names)
-      character(len=*) :: filename
-      character (len=NC_STRLEN), allocatable :: names(:)
-      integer, parameter :: nmax = 99
-      integer :: ncid,i, ndim,j
-      logical :: isdim(nmax)
-      character (len=NC_STRLEN) :: names_tmp(nmax)
-      call nc_open(filename, ncid)
-      do i =1,nmax
-        isdim(i) = nf90_inquire_dimension(ncid, i, name=names_tmp(i)) == nf90_noerr
-      enddo
-      ndim = count(isdim)
-      allocate(names(ndim))
-      j = 0
-      do i=1,nmax
-        if (isdim(i)) then
-          j = j+1
-          names(j) = names_tmp(i)
-        endif
-      enddo
-      call nc_close(ncid)
+    ! Return the number of dimensions of a variable
+    function nc_ndims(filename,name) result(ndims)
+
+        implicit none
+
+        integer :: nc_size
+        integer :: dimlen, stat
+        character (len=*) :: filename, name
+        integer :: ndims
+        integer :: nc_id, varid
+
+        ! Open the file
+        call nc_check_open(filename, mode=nf90_nowrite, nc_id=nc_id)
+
+        call nc_check( nf90_inq_varid(nc_id, name, varid) )
+        call nc_check( nf90_inquire_variable(nc_id, varid, ndims=ndims) )
+
+        ! Close the file
+        call nc_check( nf90_close(nc_id) )
+
+        return
+
+    end function nc_ndims
+
+    ! Return the dimension names of a given variable in a given file
+    function nc_dimensions(filename,name,ndims) result(names)
+
+        implicit none
+
+        character (len=*),  intent(IN)  :: filename, name
+        character (len=32) :: names(ndims)
+        integer :: nc_id, varid, ndims
+        integer :: dimids(ndims)
+        integer :: q
+
+        ! Open the file
+        call nc_check_open(filename, mode=nf90_nowrite, nc_id=nc_id)
+        call nc_check( nf90_inq_varid(nc_id, name, varid) )
+        call nc_check( nf90_inquire_variable(nc_id, varid, dimids=dimids) )
+
+        ! Get the dimension length and close the file
+        do q = 1, size(dimids)
+            call nc_check( nf90_inquire_dimension(nc_id, dimids(q), name=names(q)) )
+        end do
+
+        ! Close the file
+        call nc_check( nf90_close(nc_id) )
+
+        return
+
     end function nc_dimensions
+
+    ! Return variable shape
+    subroutine nc_shape(filename,name,names,dims)
+
+        implicit none
+
+        character (len=*),  intent(IN)  :: filename, name
+        character (len=*), allocatable :: names(:)
+        integer, allocatable, optional :: dims(:)
+        integer, allocatable :: dimids(:), dims0(:)
+        integer :: nc_id, varid, ndims, q
+
+        ! Deallocate input arrays
+        if (allocated(names))   deallocate(names)
+        if (allocated(dimids))  deallocate(dimids)
+        if (allocated(dims0))   deallocate(dims0)
+
+        ! Open the file
+        call nc_check_open(filename, mode=nf90_nowrite, nc_id=nc_id)
+        call nc_check( nf90_inq_varid(nc_id, name, varid) )
+        call nc_check( nf90_inquire_variable(nc_id, varid, ndims=ndims) )
+
+        ! Allocate dim arrays
+        allocate(names(ndims),dimids(ndims),dims0(ndims))
+
+        ! First get dimids
+        call nc_check( nf90_inquire_variable(nc_id, varid, dimids=dimids) )
+
+        ! Get the dimension name and length
+        do q = 1, size(dimids)
+            call nc_check( nf90_inquire_dimension(nc_id, dimids(q), name=names(q), len=dims0(q)) )
+        end do
+
+        ! Close the file
+        call nc_check( nf90_close(nc_id) )
+
+        ! Also return dim lengths if desired
+        if (present(dims)) then
+            if (allocated(dims))    deallocate(dims)
+            allocate(dims(ndims))
+            dims = dims0
+        end if
+
+        return
+
+    end subroutine nc_shape
 
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ! Subroutine :  n c _ c r e a t e
@@ -1161,7 +1227,7 @@ contains
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     subroutine nc_create(filename, author, creation_date, institution, description)
 
-        implicit none 
+        implicit none
 
         character(len=*) :: filename
         integer :: ncid
@@ -1173,7 +1239,7 @@ contains
         write(history,"(a,f5.2)") "Dataset generated using ncio v", NCIO_VERSION
 
         ! Create the new empty file and close it (necessary to avoid errors with dim vars)
-        status = nf90_create(trim(adjustl(filename)), nf90_clobber, ncid) 
+        status = nf90_create(trim(adjustl(filename)), nf90_clobber, ncid)
         if (status .ne. NF90_NOERR) then
             write(*, *) "ncio :: error when creating file, no such file or directory? :: ",trim(filename)
             stop
@@ -1186,7 +1252,7 @@ contains
         if (present(description))   call nc_write_attr(filename, 'description', description)
 
         write(*,"(a,a)") "ncio:: nc_create   :: ",trim(filename)
-        
+
         return
 
     end subroutine nc_create
@@ -1362,22 +1428,24 @@ contains
         call nc_check( nf90_close(ncid) )
     end subroutine
 
-    subroutine nc_write_map(filename,name,lambda,phi,x_e,y_n, ncid)
-
-        implicit none 
+    subroutine nc_write_map(filename,name,lambda,phi,alpha,x_e,y_n, ncid)
+        ! CF map conventions can be found here:
+        ! http://cfconventions.org/Data/cf-conventions/cf-conventions-1.6/build/cf-conventions.html#appendix-grid-mappings
+        
+        implicit none
 
         character(len=*) :: filename, name
 
         integer :: nc_id, varid, stat
         integer, intent(in), optional :: ncid
-        double precision, optional :: lambda, phi, x_e, y_n
+        double precision, optional :: lambda, phi, alpha, x_e, y_n
 
         integer, parameter :: noerr = NF90_NOERR
 
         ! Open the file, set for redefinition
         call nc_check_open(filename, ncid, nf90_write, nc_id)
         call nc_check( nf90_redef(nc_id) )
-        
+
         ! Check if grid mapping has been defined in this file
         ! (if not, define it according to input arguments)
         stat = nf90_inq_varid(nc_id, trim(name), varid)
@@ -1394,6 +1462,8 @@ contains
                 case("stereographic")
                     call nc_check( nf90_put_att(nc_id,varid, "longitude_of_projection_origin", lambda) )
                     call nc_check( nf90_put_att(nc_id,varid, "latitude_of_projection_origin", phi) )
+                    if (present(alpha)) &
+                    call nc_check( nf90_put_att(nc_id,varid, "angle_of_oblique_tangent", alpha) )
                     call nc_check( nf90_put_att(nc_id,varid, "scale_factor_at_projection_origin", 1.d0) )
                     call nc_check( nf90_put_att(nc_id,varid, "false_easting",  x_e) )
                     call nc_check( nf90_put_att(nc_id,varid, "false_northing", y_n) )
@@ -1401,6 +1471,8 @@ contains
                 case("polar_stereographic")
                     call nc_check( nf90_put_att(nc_id,varid, "straight_vertical_longitude_from_pole", lambda) )
                     call nc_check( nf90_put_att(nc_id,varid, "latitude_of_projection_origin", phi) )
+                    if (present(alpha)) &
+                    call nc_check( nf90_put_att(nc_id,varid, "angle_of_oblique_tangent", alpha) )
                     call nc_check( nf90_put_att(nc_id,varid, "scale_factor_at_projection_origin", 1.d0) )
                     call nc_check( nf90_put_att(nc_id,varid, "false_easting",  x_e) )
                     call nc_check( nf90_put_att(nc_id,varid, "false_northing", y_n) )
@@ -1411,23 +1483,23 @@ contains
             end select
 
             write(*,"(a,a,a)") "ncio:: nc_write_map:: ",trim(filename)//" : ",trim(name)
-        
-        end if 
+
+        end if
 
         ! Close the file
         if (.not.present(ncid)) call nc_check( nf90_close(nc_id) )
 
-        return 
+        return
 
     end subroutine nc_write_map
 
     !> Write an integer value (one point) dimension to a NetCDF file.
     !! @param filename name of the NetCDF file in which to define dimension
     !! @param name name of the dimension to be defined in NetCDF file
-    !! @param x Fortran data type (point or vector) specifying values of dimension. 
+    !! @param x Fortran data type (point or vector) specifying values of dimension.
     !! If nx is present and size(x)==1, x specifies the starting point of the dimension variable
     !! @param dx distance between each dimension value (optional)
-    !! @param nx length of dimension variable (optional) 
+    !! @param nx length of dimension variable (optional)
     !! @param long_name NetCDF attribute, a long descriptive name of the variable (optional)
     !! @param standard_name NetCDF attribute specifying the CF convention standard name of the variable (optional)
     !! @param units NetCDF attribute of the units of the variable (optional)
@@ -1446,7 +1518,7 @@ contains
         integer, optional :: dx
         integer, optional :: nx
         double precision, allocatable :: xvec(:)
-        double precision :: dx_tmp 
+        double precision :: dx_tmp
 
         character(len=*):: filename, name
         character(len=*), optional :: long_name, standard_name, units, axis
@@ -1458,12 +1530,12 @@ contains
             allocate(xvec(nx))
             dx_tmp = 1.d0
             if (present(dx)) dx_tmp = dble(dx)
-            do i = 1, nx 
-                xvec(i) = x + (i-1)*dx_tmp 
-            end do 
+            do i = 1, nx
+                xvec(i) = x + (i-1)*dx_tmp
+            end do
         else
             allocate(xvec(1))
-            xvec(1) = x 
+            xvec(1) = x
         end if
 
         call nc_write_dim_internal(filename,name,"NF90_INT",xvec, &
@@ -1485,7 +1557,7 @@ contains
         integer :: x(:)
         character(len=*):: filename, name
         character(len=*), optional :: long_name, standard_name, units, axis
-        character(len=*), optional :: calendar 
+        character(len=*), optional :: calendar
 
         logical, optional :: unlimited
 
@@ -1495,7 +1567,7 @@ contains
 
         return
 
-    end subroutine nc_write_dim_int_1D 
+    end subroutine nc_write_dim_int_1D
 
     subroutine nc_write_dim_double_pt(filename,name,x,dx,nx, &
                                      long_name,standard_name,units,axis,calendar,unlimited,ncid)
@@ -1509,7 +1581,7 @@ contains
         double precision, optional :: dx
         integer, optional :: nx
         double precision, allocatable :: xvec(:)
-        double precision :: dx_tmp 
+        double precision :: dx_tmp
 
         character(len=*):: filename, name
         character(len=*), optional :: long_name, standard_name, units, axis
@@ -1519,13 +1591,13 @@ contains
         if (present(nx)) then
             allocate(xvec(nx))
             dx_tmp = 1.d0
-            if (present(dx)) dx_tmp = dx 
-            do i = 1, nx 
-                xvec(i) = x + (i-1)*dx_tmp 
-            end do 
+            if (present(dx)) dx_tmp = dx
+            do i = 1, nx
+                xvec(i) = x + (i-1)*dx_tmp
+            end do
         else
             allocate(xvec(1))
-            xvec(1) = x 
+            xvec(1) = x
         end if
 
         call nc_write_dim_internal(filename,name,"NF90_DOUBLE",xvec, &
@@ -1570,7 +1642,7 @@ contains
         real(4), optional :: dx
         integer, optional :: nx
         double precision, allocatable :: xvec(:)
-        double precision :: dx_tmp 
+        double precision :: dx_tmp
 
         character(len=*):: filename, name
         character(len=*), optional :: long_name, standard_name, units, axis
@@ -1581,13 +1653,13 @@ contains
         if (present(nx)) then
             allocate(xvec(nx))
             dx_tmp = 1.d0
-            if (present(dx)) dx_tmp = dble(dx) 
-            do i = 1, nx 
-                xvec(i) = x + (i-1)*dx_tmp 
-            end do 
+            if (present(dx)) dx_tmp = dble(dx)
+            do i = 1, nx
+                xvec(i) = x + (i-1)*dx_tmp
+            end do
         else
             allocate(xvec(1))
-            xvec(1) = x 
+            xvec(1) = x
         end if
 
         call nc_write_dim_internal(filename,name,"NF90_FLOAT",xvec, &
@@ -1610,7 +1682,7 @@ contains
         character(len=*):: filename, name
         character(len=*), optional :: long_name, standard_name, units, axis
         character(len=*), optional :: calendar
- 
+
         logical, optional :: unlimited
 
         call nc_write_dim_internal(filename,name,"NF90_FLOAT",x=dble(x), &
@@ -1647,7 +1719,7 @@ contains
         character(len=*), optional :: calendar
         character(len=14) :: tmpchar
 
-        logical, optional :: unlimited  
+        logical, optional :: unlimited
         logical :: unlimited_i
 
         type(ncvar) :: v
@@ -1666,7 +1738,7 @@ contains
         if ( present(standard_name) ) v%standard_name = trim(standard_name)
         if ( present(units) )         v%units         = trim(units)
         if ( present(axis) )          v%axis          = trim(axis)
-        if ( present(calendar) )      v%calendar      = trim(calendar) 
+        if ( present(calendar) )      v%calendar      = trim(calendar)
         if ( present(unlimited) )      unlimited_i    = unlimited
 
         !! Clear the variable dim vector and store/generate appropriate values
@@ -1701,7 +1773,7 @@ contains
         ! End define mode.
         call nc_check( nf90_enddef(nc_id) )
 
-        ! Put the variable's values in the file 
+        ! Put the variable's values in the file
         call nc_check( nf90_put_var(nc_id, v%varid, v%dim) )
 
         ! Close the file
@@ -1709,17 +1781,17 @@ contains
 
         tmpchar = trim(v%name)
         write(*,"(a,a,a14,i6)") "ncio:: nc_write_dim:: ",trim(filename)//" : ",adjustl(tmpchar),size(v%dim)
-        
+
         return
 
     end subroutine nc_write_dim_internal
 
 ! ================================
 !
-!      INTEGERS 
+!      INTEGERS
 !
 ! ================================
-    
+
     !> Write an integer value (one point) to a NetCDF file.
     !! @param filename name of the NetCDF file in which to write data
     !! @param dat Fortran data type of data to be written
@@ -1737,14 +1809,14 @@ contains
     subroutine nc_write_int_pt(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         integer :: dat
         integer, optional :: missing_value
 
         character (len=*) :: filename, name
-        integer, optional :: start(:), count(:),ncid 
+        integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
 
@@ -1762,7 +1834,7 @@ contains
     subroutine nc_write_int_1D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         integer :: dat(:)
@@ -1772,7 +1844,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -1790,7 +1862,7 @@ contains
     subroutine nc_write_int_2D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         integer :: dat(:,:)
@@ -1800,7 +1872,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -1818,7 +1890,7 @@ contains
     subroutine nc_write_int_3D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         integer :: dat(:,:,:)
@@ -1829,7 +1901,7 @@ contains
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
 
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -1847,7 +1919,7 @@ contains
     subroutine nc_write_int_4D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         integer :: dat(:,:,:,:)
@@ -1857,7 +1929,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -1875,7 +1947,7 @@ contains
     subroutine nc_write_int_5D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         integer :: dat(:,:,:,:,:)
@@ -1885,7 +1957,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -1903,7 +1975,7 @@ contains
     subroutine nc_write_int_6D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         integer :: dat(:,:,:,:,:,:)
@@ -1913,7 +1985,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -1930,14 +2002,14 @@ contains
 
 ! ================================
 !
-!      DOUBLES 
+!      DOUBLES
 !
 ! ================================
-    
+
     subroutine nc_write_double_pt(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         double precision :: dat
@@ -1962,7 +2034,7 @@ contains
     subroutine nc_write_double_1D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         double precision :: dat(:)
@@ -1972,7 +2044,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -1990,7 +2062,7 @@ contains
     subroutine nc_write_double_2D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         double precision :: dat(:,:)
@@ -2000,7 +2072,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -2018,7 +2090,7 @@ contains
     subroutine nc_write_double_3D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         double precision :: dat(:,:,:)
@@ -2029,7 +2101,7 @@ contains
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
 
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -2047,7 +2119,7 @@ contains
     subroutine nc_write_double_4D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         double precision :: dat(:,:,:,:)
@@ -2057,7 +2129,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -2075,7 +2147,7 @@ contains
     subroutine nc_write_double_5D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         double precision :: dat(:,:,:,:,:)
@@ -2085,7 +2157,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -2103,7 +2175,7 @@ contains
     subroutine nc_write_double_6D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         double precision :: dat(:,:,:,:,:,:)
@@ -2113,7 +2185,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -2130,14 +2202,14 @@ contains
 
 ! ================================
 !
-!      FLOATS 
+!      FLOATS
 !
 ! ================================
-    
+
     subroutine nc_write_float_pt(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         real(4) :: dat
@@ -2162,7 +2234,7 @@ contains
     subroutine nc_write_float_1D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         real(4) :: dat(:)
@@ -2172,7 +2244,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -2190,7 +2262,7 @@ contains
     subroutine nc_write_float_2D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         real(4) :: dat(:,:)
@@ -2200,7 +2272,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -2218,7 +2290,7 @@ contains
     subroutine nc_write_float_3D(filename,name,dat,dims,ncid,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         real(4) :: dat(:,:,:)
@@ -2229,7 +2301,7 @@ contains
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
 
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -2247,7 +2319,7 @@ contains
     subroutine nc_write_float_4D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         real(4) :: dat(:,:,:,:)
@@ -2257,7 +2329,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -2275,7 +2347,7 @@ contains
     subroutine nc_write_float_5D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         real(4) :: dat(:,:,:,:,:)
@@ -2285,7 +2357,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -2303,7 +2375,7 @@ contains
     subroutine nc_write_float_6D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units,missing_value)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         real(4) :: dat(:,:,:,:,:,:)
@@ -2313,7 +2385,7 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
 
         allocate(dat1D(size(dat)))
         dat1D = pack(dble(dat),.TRUE.)    ! Pack here to avoid segmentation faults!
@@ -2337,7 +2409,7 @@ contains
     subroutine nc_write_logical_pt(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         logical :: dat
@@ -2347,9 +2419,9 @@ contains
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
         integer :: dati
-         
+
         dati = 0
-        if (dat) dati = 1  
+        if (dat) dati = 1
 
         ! Finally call the internal writing routine
         call nc4_write_internal(filename,name,dble([dati]),"NF90_INT",shape([dat]), &
@@ -2363,7 +2435,7 @@ contains
     subroutine nc_write_logical_1D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         logical :: dat(:)
@@ -2372,12 +2444,12 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
-        integer, allocatable :: dati(:) 
-        
+        double precision, allocatable :: dat1D(:)
+        integer, allocatable :: dati(:)
+
         allocate(dati(size(dat)),dat1D(size(dat)))
         dati = 0
-        where (dat) dati = 1 
+        where (dat) dati = 1
         dat1D = pack(dble(dati),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
@@ -2392,7 +2464,7 @@ contains
     subroutine nc_write_logical_2D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         logical :: dat(:,:)
@@ -2401,12 +2473,12 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
         integer, allocatable :: dati(:,:)
 
         allocate(dati(size(dat,1),size(dat,2)),dat1D(size(dat)))
         dati = 0
-        where (dat) dati = 1 
+        where (dat) dati = 1
         dat1D = pack(dble(dati),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
@@ -2421,7 +2493,7 @@ contains
     subroutine nc_write_logical_3D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         logical :: dat(:,:,:)
@@ -2430,12 +2502,12 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
         integer, allocatable :: dati(:,:,:)
 
         allocate(dati(size(dat,1),size(dat,2),size(dat,3)),dat1D(size(dat)))
         dati = 0
-        where (dat) dati = 1 
+        where (dat) dati = 1
         dat1D = pack(dble(dati),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
@@ -2450,7 +2522,7 @@ contains
     subroutine nc_write_logical_4D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         logical :: dat(:,:,:,:)
@@ -2459,12 +2531,12 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
         integer, allocatable :: dati(:,:,:,:)
 
         allocate(dati(size(dat,1),size(dat,2),size(dat,3),size(dat,4)),dat1D(size(dat)))
         dati = 0
-        where (dat) dati = 1 
+        where (dat) dati = 1
         dat1D = pack(dble(dati),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
@@ -2479,7 +2551,7 @@ contains
     subroutine nc_write_logical_5D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                   long_name,standard_name,grid_mapping,units)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         logical :: dat(:,:,:,:,:)
@@ -2488,13 +2560,13 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
         integer, allocatable :: dati(:,:,:,:,:)
 
         allocate(dati(size(dat,1),size(dat,2),size(dat,3),size(dat,4),size(dat,5)))
         allocate(dat1D(size(dat)))
         dati = 0
-        where (dat) dati = 1 
+        where (dat) dati = 1
         dat1D = pack(dble(dati),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
@@ -2509,7 +2581,7 @@ contains
     subroutine nc_write_logical_6D(filename,name,dat,ncid,dims,dim1,dim2,dim3,dim4,dim5,dim6,start,count, &
                                    long_name,standard_name,grid_mapping,units)
 
-        implicit none 
+        implicit none
 
         ! Arguments
         logical :: dat(:,:,:,:,:,:)
@@ -2518,13 +2590,13 @@ contains
         integer, optional :: start(:), count(:),ncid
         character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
         character (len=*), optional :: long_name, standard_name, grid_mapping, units
-        double precision, allocatable :: dat1D(:) 
+        double precision, allocatable :: dat1D(:)
         integer, allocatable :: dati(:,:,:,:,:,:)
 
         allocate(dati(size(dat,1),size(dat,2),size(dat,3),size(dat,4),size(dat,5),size(dat,6)))
         allocate(dat1D(size(dat)))
         dati = 0
-        where (dat) dati = 1 
+        where (dat) dati = 1
         dat1D = pack(dble(dati),.TRUE.)    ! Pack here to avoid segmentation faults!
 
         ! Finally call the internal writing routine
@@ -2546,7 +2618,7 @@ contains
 
 ! ================================
 !
-!      INTS 
+!      INTS
 !
 ! ================================
     !> Read an integer value (one point) from a NetCDF file.
@@ -2557,19 +2629,19 @@ contains
     !! @param count vector of values specifying how many values to read in each dimension
     subroutine nc_read_int_pt(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         integer :: dat
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
 
-        integer, optional :: missing_value 
+        integer, optional :: missing_value
 
         ! Allocate dat1D and store input data to faciliate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -2588,19 +2660,19 @@ contains
 
     subroutine nc_read_int_1D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         integer :: dat(:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
 
-        integer, optional :: missing_value 
+        integer, optional :: missing_value
 
         ! Allocate dat1D and store input data to faciliate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -2619,19 +2691,19 @@ contains
 
     subroutine nc_read_int_2D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         integer :: dat(:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
 
-        integer, optional :: missing_value 
+        integer, optional :: missing_value
 
         ! Allocate dat4D and store input data to faciliate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -2650,19 +2722,19 @@ contains
 
     subroutine nc_read_int_3D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         integer :: dat(:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
 
-        integer, optional :: missing_value 
+        integer, optional :: missing_value
 
         ! Allocate dat1D and store input data to faciliate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -2681,19 +2753,19 @@ contains
 
     subroutine nc_read_int_4D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         integer :: dat(:,:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
 
-        integer, optional :: missing_value 
+        integer, optional :: missing_value
 
         ! Allocate dat1D and store input data to faciliate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -2712,19 +2784,19 @@ contains
 
     subroutine nc_read_int_5D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         integer :: dat(:,:,:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
 
-        integer, optional :: missing_value 
+        integer, optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -2743,19 +2815,19 @@ contains
 
     subroutine nc_read_int_6D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         integer :: dat(:,:,:,:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
 
-        integer, optional :: missing_value 
+        integer, optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -2774,25 +2846,25 @@ contains
 
 ! ================================
 !
-!      DOUBLES 
+!      DOUBLES
 !
 ! ================================
-    
+
     subroutine nc_read_double_pt(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         double precision :: dat
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_DOUBLE"
 
-        double precision, optional :: missing_value 
+        double precision, optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -2811,19 +2883,19 @@ contains
 
     subroutine nc_read_double_1D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         double precision :: dat(:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_DOUBLE"
 
-        double precision, optional :: missing_value 
+        double precision, optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -2842,19 +2914,19 @@ contains
 
     subroutine nc_read_double_2D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         double precision :: dat(:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_DOUBLE"
 
-        double precision, optional :: missing_value 
+        double precision, optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -2873,19 +2945,19 @@ contains
 
     subroutine nc_read_double_3D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         double precision :: dat(:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_DOUBLE"
 
-        double precision, optional :: missing_value 
+        double precision, optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -2904,19 +2976,19 @@ contains
 
     subroutine nc_read_double_4D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         double precision :: dat(:,:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_DOUBLE"
 
-        double precision, optional :: missing_value 
+        double precision, optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -2935,19 +3007,19 @@ contains
 
     subroutine nc_read_double_5D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         double precision :: dat(:,:,:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_DOUBLE"
 
-        double precision, optional :: missing_value 
+        double precision, optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -2966,19 +3038,19 @@ contains
 
     subroutine nc_read_double_6D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         double precision :: dat(:,:,:,:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_DOUBLE"
 
-        double precision, optional :: missing_value 
+        double precision, optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -3000,22 +3072,22 @@ contains
 !      FLOATS
 !
 ! ================================
-    
+
     subroutine nc_read_float_pt(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         real(4) :: dat
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
 
-        real(4), optional :: missing_value 
+        real(4), optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -3034,19 +3106,19 @@ contains
 
     subroutine nc_read_float_1D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         real(4) :: dat(:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
 
-        real(4), optional :: missing_value 
+        real(4), optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -3065,19 +3137,19 @@ contains
 
     subroutine nc_read_float_2D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         real(4) :: dat(:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
 
-        real(4), optional :: missing_value 
+        real(4), optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -3096,19 +3168,19 @@ contains
 
     subroutine nc_read_float_3D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         real(4) :: dat(:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
 
-        real(4), optional :: missing_value 
+        real(4), optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -3127,19 +3199,19 @@ contains
 
     subroutine nc_read_float_4D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         real(4) :: dat(:,:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
 
-        real(4), optional :: missing_value 
+        real(4), optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -3158,19 +3230,19 @@ contains
 
     subroutine nc_read_float_5D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         real(4) :: dat(:,:,:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
 
-        real(4), optional :: missing_value 
+        real(4), optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -3189,19 +3261,19 @@ contains
 
     subroutine nc_read_float_6D(filename,name,dat,start,count,missing_value, ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:), ncid
-        
+
         !! Arguments related to data size and type
         real(4) :: dat(:,:,:,:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_FLOAT"
 
-        real(4), optional :: missing_value 
+        real(4), optional :: missing_value
 
         ! Allocate dat1D and store input data to facilitate calling internal write subroutine
         if (allocated(dat1D)) deallocate(dat1D)
@@ -3220,20 +3292,20 @@ contains
 
 ! ================================
 !
-!      LOGICALS 
+!      LOGICALS
 !
 ! ================================
 
     subroutine nc_read_logical_pt(filename,name,dat,start,count,ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:),ncid
-        
+
         !! Arguments related to data size and type
         logical :: dat
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
@@ -3255,14 +3327,14 @@ contains
 
     subroutine nc_read_logical_1D(filename,name,dat,start,count,ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:),ncid
-        
+
         !! Arguments related to data size and type
         logical :: dat(:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
@@ -3284,14 +3356,14 @@ contains
 
     subroutine nc_read_logical_2D(filename,name,dat,start,count,ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:),ncid
-        
+
         !! Arguments related to data size and type
         logical :: dat(:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
@@ -3313,14 +3385,14 @@ contains
 
     subroutine nc_read_logical_3D(filename,name,dat,start,count,ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:),ncid
-        
+
         !! Arguments related to data size and type
         logical :: dat(:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
@@ -3342,14 +3414,14 @@ contains
 
     subroutine nc_read_logical_4D(filename,name,dat,start,count,ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:),ncid
-        
+
         !! Arguments related to data size and type
         logical :: dat(:,:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
@@ -3371,14 +3443,14 @@ contains
 
     subroutine nc_read_logical_5D(filename,name,dat,start,count,ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:),ncid
-        
+
         !! Arguments related to data size and type
         logical :: dat(:,:,:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
@@ -3400,14 +3472,14 @@ contains
 
     subroutine nc_read_logical_6D(filename,name,dat,start,count,ncid)
 
-        implicit none 
+        implicit none
 
         double precision, dimension(:), allocatable :: dat1D
 
         ! Arguments
         character (len=*) :: filename, name
         integer, optional :: start(:), count(:),ncid
-        
+
         !! Arguments related to data size and type
         logical :: dat(:,:,:,:,:,:)
         character(len=NC_STRLEN), parameter :: xtype    = "NF90_INT"
@@ -3429,20 +3501,20 @@ contains
 
 ! ================================
 !
-!      CHARACTERS 
+!      CHARACTERS
 !
 ! ================================
 
     subroutine nc_write_char_1D(filename,name,dat,ncid)
 
-        implicit none 
+        implicit none
 
         character(len=NC_STRLEN_MAX) :: string
 
         ! Arguments
         character(len=*) :: dat(:)
         character (len=*) :: filename, name
-        integer :: i 
+        integer :: i
         integer, intent(in), optional :: ncid
 
         ! Convert the character array into a long string
@@ -3460,7 +3532,7 @@ contains
 
     subroutine nc_write_char_2D(filename,name,dat, ncid)
 
-        implicit none 
+        implicit none
 
         character(len=NC_STRLEN_MAX) :: string
 
@@ -3479,7 +3551,7 @@ contains
 
     subroutine nc_write_char_3D(filename,name,dat, ncid)
 
-        implicit none 
+        implicit none
 
         character(len=NC_STRLEN_MAX) :: string
 
@@ -3498,7 +3570,7 @@ contains
 
     subroutine nc_write_char_4D(filename,name,dat, ncid)
 
-        implicit none 
+        implicit none
 
         character(len=NC_STRLEN_MAX) :: string
 
@@ -3517,18 +3589,18 @@ contains
 
     subroutine nc_read_char_1D(filename,name,dat,sep,ncid)
 
-        implicit none 
+        implicit none
 
         character(len=NC_STRLEN_MAX) :: string
 
         ! Arguments
         character(len=*) :: dat(:)
-        character(len=*), optional :: sep 
+        character(len=*), optional :: sep
         character (len=*) :: filename, name
-        integer :: i, j, nsep 
+        integer :: i, j, nsep
         integer, intent(in), optional :: ncid
 
-        character(len=10) :: separator 
+        character(len=10) :: separator
 
         ! Determine the separator used to parse the elements of the
         ! array from the string saved in the netcdf file
@@ -3554,12 +3626,12 @@ contains
 
     subroutine nc_write_internal_char(filename,name,string, ncid)
 
-        implicit none 
+        implicit none
 
         character (len=*), intent(in) :: string
         character (len=*), intent(in) :: filename, name
         integer, intent(in), optional :: ncid
-        character (len=256) :: dimname 
+        character (len=256) :: dimname
 
         type(ncvar) :: v
 
@@ -3570,7 +3642,7 @@ contains
         call nc_v_init(v,trim(name),xtype="NF90_CHAR")
 
         dimname = trim(v%name)//"_len"
-        str_len = len_trim(string) 
+        str_len = len_trim(string)
 
         ! Open the file
         call nc_check_open(filename, ncid, nf90_write, nc_id)
@@ -3580,7 +3652,7 @@ contains
         call nc_check( nf90_def_dim(nc_id, trim(dimname), str_len, dimid) )
         call nc_check( nf90_def_var(nc_id, trim(v%name), NF90_CHAR, (/ dimid /), v%varid) )
         call nc_check( nf90_enddef(nc_id) )
-        
+
         ! Write the data to the netcdf file
         ! (NF90 converts dat to proper type (int, real, dble)
         call nc_check( nf90_put_var(nc_id, v%varid, trim(string) ) )
@@ -3590,14 +3662,14 @@ contains
         if (.not. present(ncid)) call nc_check( nf90_close(nc_id) )
 
         !write(*,"(a,a,a14)") "ncio:: nc_write_char:: ",trim(filename)//" : ",trim(v%name)
-        
-        return 
+
+        return
 
     end subroutine nc_write_internal_char
 
     subroutine nc_read_internal_char(filename,name,string, ncid)
 
-        implicit none 
+        implicit none
 
         character (len=*) :: string
         character (len=*) :: filename, name
@@ -3613,7 +3685,7 @@ contains
 
         ! Open the file if necessary
         call nc_check_open(filename, ncid, nf90_write, nc_id)
-        call nc_get_att(nc_id,v) 
+        call nc_get_att(nc_id,v)
 
         ! Read the string from the netcdf file
         call nc_check( nf90_get_var(nc_id, v%varid, string(1:v%dlen(1))) )
@@ -3626,17 +3698,17 @@ contains
         if (.not. present(ncid)) call nc_check( nf90_close(nc_id) )
 
         !write(*,"(a,a,a14)") "ncio:: nc_read_char:: ",trim(filename)//" : ",trim(v%name)
-        
-        return 
+
+        return
 
     end subroutine nc_read_internal_char
 
     function str_to_num(str)
-        implicit none 
-        character(len=*), intent(IN) :: str 
-        character(len=100) :: tmpstr 
+        implicit none
+        character(len=*), intent(IN) :: str
+        character(len=100) :: tmpstr
         integer :: stat, n
-        double precision :: str_to_num, x 
+        double precision :: str_to_num, x
 
         tmpstr = trim(adjustl(str))
         n      = len_trim(tmpstr)
@@ -3644,21 +3716,21 @@ contains
         read(tmpstr(1:n),*,IOSTAT=stat) x
 
         str_to_num = 0
-        if (stat .eq. 0) then 
-            str_to_num = x 
+        if (stat .eq. 0) then
+            str_to_num = x
         else
             n = len_trim(tmpstr)-1
             READ(tmpstr(1:n),*,IOSTAT=stat) x
-            if (stat .ne. 0) then 
+            if (stat .ne. 0) then
                 write(*,*) "ncio::str_to_num:: ","Error converting string to number!"
                 write(*,*) "|",trim(tmpstr),"|",n,stat,x
             else
-                str_to_num = x 
-            end if 
-        end if 
+                str_to_num = x
+            end if
+        end if
 
-        return 
-    end function str_to_num 
+        return
+    end function str_to_num
 
     ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ! Check for existence of variables or attributes

@@ -21,6 +21,10 @@ program test
     integer :: i, j, k, t, testval 
     character(len=256) :: testchar
 
+    integer :: ndims
+    character(len=32), allocatable :: dimnames(:)
+    integer, allocatable :: dimlens(:)
+
     ! Define array sizes and allocate arrays
     nx = 8
     ny = 10
@@ -64,7 +68,7 @@ program test
                        "Universidad Complutense de Madrid; Potsdam Institute for Climate Impact Research")
 
     ! Write a projection map (not used) centered at [-39E,90N] and no easting or northing offset
-    call nc_write_map(filename,"polar stereographic",lambda=-39.d0,phi=90.d0,x_e=0.d0,y_n=0.d0) 
+    call nc_write_map(filename,"polar_stereographic",lambda=-39.d0,phi=90.d0,x_e=0.d0,y_n=0.d0) 
 
     ! Write the dimensions (p, x, y, z, time), defined inline
     call nc_write_dim(filename,"p",x=1,units="-")
@@ -143,5 +147,14 @@ program test
     write(*,*)
     write(*,*) "====== DONE ======"
     write(*,*)
+
+!     ndims = nc_ndims(filename,"d3D")
+!     allocate(dimnames(ndims))
+!     dimnames = nc_dimnames(filename,"d3D",ndims)
+    
+    call nc_shape(filename,"d3D",dimnames,dimlens)
+!     write(*,*) "ndims= ", ndims
+    write(*,*) "dimnames= ", dimnames
+    write(*,*) "dimlens=  ", dimlens 
 
 end program 
