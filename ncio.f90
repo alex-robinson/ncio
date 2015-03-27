@@ -127,9 +127,8 @@ module ncio
     public :: nc_open, nc_close
     public :: nc_write, nc_write_attr, nc_size
 
-    public :: nc_shape, nc_ndims
+    public :: nc_shape, nc_ndims, nc_dims
     public :: nc_write_attr_std_dim
-    public :: nc_variables, nc_dimensions
     public :: nc_exists_var, nc_exists_attr
 
 contains
@@ -1095,33 +1094,6 @@ contains
 
     end function nc_size
 
-    !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    ! Return an array of variables present in the netCDF file
-    !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    function nc_variables(filename) result(names)
-      character(len=*) :: filename
-      character (len=NC_STRLEN), allocatable :: names(:)
-      integer, parameter :: nmax = 99
-      integer :: ncid,i, varids(nmax), nvar,j
-      logical :: isvar(nmax)
-      character (len=NC_STRLEN) :: names_tmp(nmax)
-      integer :: ndims ! TODO: introduce a filter on the number of dimensions ?
-      call nc_open(filename, ncid)
-      do i =1,nmax
-        isvar(i) = nf90_inquire_variable(ncid, i, ndims=ndims, name=names_tmp(i)) == nf90_noerr
-      enddo
-      nvar = count(isvar)
-      allocate(names(nvar))
-      j = 0
-      do i=1,nmax
-        if (isvar(i)) then
-          j = j+1
-          names(j) = names_tmp(i)
-        endif
-      enddo
-      call nc_close(ncid)
-    end function nc_variables
-
     ! Return the number of dimensions of a variable
     function nc_ndims(filename,name) result(ndims)
 
@@ -1147,7 +1119,7 @@ contains
     end function nc_ndims
 
     ! Return the dimension names of a given variable in a given file
-    function nc_dimensions(filename,name,ndims) result(names)
+    function nc_dims(filename,name,ndims) result(names)
 
         implicit none
 
@@ -1172,7 +1144,7 @@ contains
 
         return
 
-    end function nc_dimensions
+    end function nc_dims
 
     ! Return variable shape
     subroutine nc_shape(filename,name,names,dims)
@@ -3754,12 +3726,12 @@ contains
         call nc_check( nf90_close(ncid) )
     end function
 
-    function nc_exists_var(filename, attname) result(exists)
-        character(len=*), intent(IN) :: filename, attname
+    function nc_exists_var(filename, varname) result(exists)
+        character(len=*), intent(IN) :: filename, varname
         integer :: stat, n, ncid, varid
         logical :: exists
         call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
-        exists = nf90_inq_varid(ncid, trim(attname), varid) == NF90_NOERR
+        exists = nf90_inq_varid(ncid, trim(varname), varid) == NF90_NOERR
         call nc_check( nf90_close(ncid) )
     end function
 
