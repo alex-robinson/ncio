@@ -127,7 +127,7 @@ module ncio
     public :: nc_open, nc_close
     public :: nc_write, nc_write_attr, nc_size
 
-    public :: nc_shape, nc_ndims, nc_dimnames
+    public :: nc_dims, nc_ndims, nc_dimnames
     public :: nc_write_attr_std_dim
     public :: nc_exists_var, nc_exists_attr
 
@@ -1146,8 +1146,8 @@ contains
 
     end function nc_dimnames
 
-    ! Return variable shape
-    subroutine nc_shape(filename,name,names,dims)
+    ! Return dimension names and shape for a specific variable
+    subroutine nc_dims(filename,name,names,dims)
 
         implicit none
 
@@ -1190,7 +1190,7 @@ contains
 
         return
 
-    end subroutine nc_shape
+    end subroutine nc_dims
 
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ! Subroutine :  n c _ c r e a t e
