@@ -152,7 +152,7 @@ program test
 !     allocate(dimnames(ndims))
 !     dimnames = nc_dimnames(filename,"d3D",ndims)
     
-    call nc_shape(filename,"d3D",dimnames,dimlens)
+    call nc_dims(filename,"d3D",dimnames,dimlens)
 !     write(*,*) "ndims= ", ndims
     write(*,*) "dimnames= ", dimnames
     write(*,*) "dimlens=  ", dimlens 

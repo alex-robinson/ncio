@@ -127,7 +127,7 @@ module ncio
     public :: nc_open, nc_close
     public :: nc_write, nc_write_attr, nc_size
 
-    public :: nc_dims, nc_ndims, nc_dimnames
+    public :: nc_dims, nc_ndims
     public :: nc_write_attr_std_dim
     public :: nc_exists_var, nc_exists_attr
 
@@ -1094,6 +1094,56 @@ contains
 
     end function nc_size
 
+    ! Return variable shape
+    subroutine nc_dims(filename,name,names,dims)
+
+        implicit none
+
+        character (len=*),  intent(IN)  :: filename, name
+        character (len=*), allocatable, intent(OUT), optional :: names(:)
+        integer, allocatable, intent(OUT), optional :: dims(:)
+
+        character (len=64), allocatable :: names0(:)
+        integer, allocatable :: dimids(:), dims0(:)
+        integer :: nc_id, varid, ndims, q
+
+        ! Open the file
+        call nc_check_open(filename, mode=nf90_nowrite, nc_id=nc_id)
+        call nc_check( nf90_inq_varid(nc_id, name, varid) )
+        call nc_check( nf90_inquire_variable(nc_id, varid, ndims=ndims) )
+
+        ! Allocate dim arrays
+        allocate(dims0(ndims), names0(ndims), dimids(ndims))
+
+        ! First get dimids
+        call nc_check( nf90_inquire_variable(nc_id, varid, dimids=dimids) )
+
+        ! Get the dimension name and length
+        do q = 1, size(dimids)
+          call nc_check( nf90_inquire_dimension(nc_id, dimids(q), name=names0(q), len=dims0(q)) )
+        end do
+
+        ! Close the file
+        call nc_check( nf90_close(nc_id) )
+
+        ! Check what optional arguments were provided and assign as necessary
+        if (present(dims)) then
+          if (allocated(dims)) deallocate(dims)
+          allocate(dims(ndims))
+          dims = dims0
+        end if
+        if (present(names)) then
+            if (allocated(names)) deallocate(names)
+            allocate(names(ndims))
+            names = names0
+        end if
+
+        deallocate(names0, dims0, dimids)
+
+        return
+
+    end subroutine nc_dims
+
     ! Return the number of dimensions of a variable
     function nc_ndims(filename,name) result(ndims)
 
@@ -1118,79 +1168,6 @@ contains
 
     end function nc_ndims
 
-    ! Return the dimension names of a given variable in a given file
-    function nc_dimnames(filename,name,ndims) result(names)
-
-        implicit none
-
-        character (len=*),  intent(IN)  :: filename, name
-        character (len=32) :: names(ndims)
-        integer :: nc_id, varid, ndims
-        integer :: dimids(ndims)
-        integer :: q
-
-        ! Open the file
-        call nc_check_open(filename, mode=nf90_nowrite, nc_id=nc_id)
-        call nc_check( nf90_inq_varid(nc_id, name, varid) )
-        call nc_check( nf90_inquire_variable(nc_id, varid, dimids=dimids) )
-
-        ! Get the dimension length and close the file
-        do q = 1, size(dimids)
-            call nc_check( nf90_inquire_dimension(nc_id, dimids(q), name=names(q)) )
-        end do
-
-        ! Close the file
-        call nc_check( nf90_close(nc_id) )
-
-        return
-
-    end function nc_dimnames
-
-    ! Return dimension names and shape for a specific variable
-    subroutine nc_dims(filename,name,names,dims)
-
-        implicit none
-
-        character (len=*),  intent(IN)  :: filename, name
-        character (len=*), allocatable :: names(:)
-        integer, allocatable, optional :: dims(:)
-        integer, allocatable :: dimids(:), dims0(:)
-        integer :: nc_id, varid, ndims, q
-
-        ! Deallocate input arrays
-        if (allocated(names))   deallocate(names)
-        if (allocated(dimids))  deallocate(dimids)
-        if (allocated(dims0))   deallocate(dims0)
-
-        ! Open the file
-        call nc_check_open(filename, mode=nf90_nowrite, nc_id=nc_id)
-        call nc_check( nf90_inq_varid(nc_id, name, varid) )
-        call nc_check( nf90_inquire_variable(nc_id, varid, ndims=ndims) )
-
-        ! Allocate dim arrays
-        allocate(names(ndims),dimids(ndims),dims0(ndims))
-
-        ! First get dimids
-        call nc_check( nf90_inquire_variable(nc_id, varid, dimids=dimids) )
-
-        ! Get the dimension name and length
-        do q = 1, size(dimids)
-            call nc_check( nf90_inquire_dimension(nc_id, dimids(q), name=names(q), len=dims0(q)) )
-        end do
-
-        ! Close the file
-        call nc_check( nf90_close(nc_id) )
-
-        ! Also return dim lengths if desired
-        if (present(dims)) then
-            if (allocated(dims))    deallocate(dims)
-            allocate(dims(ndims))
-            dims = dims0
-        end if
-
-        return
-
-    end subroutine nc_dims
 
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ! Subroutine :  n c _ c r e a t e
