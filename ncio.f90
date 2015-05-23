@@ -673,7 +673,7 @@ contains
         integer, intent (out), optional :: stat
 
         if(status /= nf90_noerr .and. (.not. present(stat)) ) then
-            write(*,*) "ncio:: error: "//trim(nf90_strerror(status))
+            write(0,*) "ncio:: error: "//trim(nf90_strerror(status))
             stop "stopped by ncio."
         end if
 
@@ -1174,25 +1174,39 @@ contains
     ! Author     :  Alex Robinson
     ! Purpose    :  Create a new empty netcdf file
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    subroutine nc_create(filename, author, creation_date, institution, description)
+    subroutine nc_create(filename, overwrite, netcdf4, author, creation_date, institution, description)
 
         implicit none
 
         character(len=*) :: filename
+        logical, optional :: overwrite 
+        logical, optional :: netcdf4 
+        character(len=*), optional, intent(in) :: author, creation_date, institution, description
+        
         integer :: ncid
         integer :: status
         character(len=1024) :: history
-        character(len=*), optional, intent(in) :: author, creation_date, institution, description
+        logical :: clobber, nc4 
+        integer :: cmode 
+
+        ! Check whether to overwrite existing files 
+        clobber = .TRUE. 
+        if (present(overwrite)) clobber = overwrite 
+
+        ! Check whether to write netcdf4 of netcdf3 
+        nc4 = .FALSE. 
+        if (present(netcdf4)) nc4 = netcdf4 
+
+        cmode = nf90_clobber 
+        if (.not. clobber) cmode = nf90_noclobber 
+
+        if (nc4) cmode = nf90_hdf5 
 
         ! Get ncio version for writing
         write(history,"(a,f5.2)") "Dataset generated using ncio v", NCIO_VERSION
 
         ! Create the new empty file and close it (necessary to avoid errors with dim vars)
-        status = nf90_create(trim(adjustl(filename)), nf90_clobber, ncid)
-        if (status .ne. NF90_NOERR) then
-            write(*, *) "ncio :: error when creating file, no such file or directory? :: ",trim(filename)
-            stop
-        endif
+        call nc_check( nf90_create(trim(adjustl(filename)), cmode, ncid) )
         call nc_check( nf90_close(ncid) )
 
         if (present(author))        call nc_write_attr(filename, 'author', author)

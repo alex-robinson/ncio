@@ -22,8 +22,8 @@ debug ?= 0
 FC = gfortran
 LIB = /opt/local/lib
 INC = /opt/local/include
-LIB = /usr/lib
-INC = /usr/include
+# LIB = /usr/lib
+# INC = /usr/include
 
 FLAGS  = -I$(objdir) -J$(objdir) -I$(INC)
 LFLAGS = -L$(LIB) -lnetcdff -lnetcdf

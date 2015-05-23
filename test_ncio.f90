@@ -62,7 +62,7 @@ program test
     filename = "out_ncio.nc"
 
     ! Create the netcdf file, write global attributes
-    call nc_create(filename)
+    call nc_create(filename,overwrite=.TRUE.,netcdf4=.FALSE.)
     call nc_write_attr(filename,"title","Checkerboard output")
     call nc_write_attr(filename,"institution", &
                        "Universidad Complutense de Madrid; Potsdam Institute for Climate Impact Research")
