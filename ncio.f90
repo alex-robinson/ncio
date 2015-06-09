@@ -303,13 +303,13 @@ contains
             ncount = ncount*v%count(i)
         end do
         if (size(dat) .ne. ncount) then
-            write(*,*) "ncio:: error: "// &
+            write(0,*)  "ncio:: error: "// &
                        "The input variable size does not match the count of values to write to file."
-            write(*,*) trim(filename)//": "//trim(v%name)
-            write(*,*) "Size of variable, count: ",size(dat), ncount
-            write(*,*) "  start: ",start
-            write(*,*) "  count: ",count
-            write(*,*) "v%count: ",v%count
+            write(0,*)  trim(filename)//": "//trim(v%name)
+            write(0,*)  "Size of variable, count: ",size(dat), ncount
+            write(0,*)  "  start: ",start
+            write(0,*)  "  count: ",count
+            write(0,*)  "v%count: ",v%count
             stop 
         end if
 
@@ -323,12 +323,12 @@ contains
             call nc_check( nf90_inquire_dimension(nc_id, dimid, len=size_var(i)) )
 
             if (v%count(i) .gt. size_var(i)) then
-                write(*,*) "ncio:: error: "// &
+                write(0,*)  "ncio:: error: "// &
                            "count exceeds this dimension length."
-                write(*,*) trim(filename)//": "//trim(v%name)
-                write(*,*) "Dimension exceeded: ",trim(v%dims(i)), size_var(i)," < ",v%count(i)
-                write(*,*) "Are the data values a different shape than the file dimensions?"
-                write(*,*) "   In that case, specify start+count as arguments."
+                write(0,*)  trim(filename)//": "//trim(v%name)
+                write(0,*)  "Dimension exceeded: ",trim(v%dims(i)), size_var(i)," < ",v%count(i)
+                write(0,*)  "Are the data values a different shape than the file dimensions?"
+                write(0,*)  "   In that case, specify start+count as arguments."
                 stop
             end if
         end do
@@ -705,7 +705,7 @@ contains
             if (trim(nf90_strerror(status)) .eq. "NetCDF: Attribute not found") then
                 nc_check_att = -1
             else
-                print *, trim(nf90_strerror(status))
+                write(0,*) trim(nf90_strerror(status))
                 stop "Stopped"
             end if
         end if
@@ -733,12 +733,12 @@ contains
           nc_id = ncid
         else
           if (.not. present(filename)) then
-                write(*, *) "ncio :: neither filename nor ncid provided, stop"
+                write(0,*)  "ncio :: neither filename nor ncid provided, stop"
                 stop
           endif
           stat = nf90_open(filename, mode, nc_id)
           if (stat .ne. NF90_NOERR) then
-              write(*, *) "ncio :: error when opening file, no such file or directory? :: ",trim(filename)
+              write(0,*)  "ncio :: error when opening file, no such file or directory? :: ",trim(filename)
               stop
           endif
         end if
@@ -1196,6 +1196,13 @@ contains
         ! Check whether to write netcdf4 of netcdf3 
         nc4 = .FALSE. 
         if (present(netcdf4)) nc4 = netcdf4 
+
+        ! Make sure options make sense 
+        if (nc4 .and. (.not. clobber)) then 
+            write(0,*) "ncio:: nc_create:: Error: &
+                       &only overwrite=.TRUE. is allowed with the NetCDF4 format"
+            stop 
+        end if 
 
         cmode = nf90_clobber 
         if (.not. clobber) cmode = nf90_noclobber 
