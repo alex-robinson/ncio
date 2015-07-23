@@ -157,4 +157,11 @@ program test
     write(*,*) "dimnames= ", dimnames
     write(*,*) "dimlens=  ", dimlens 
 
+    deallocate(i3D)
+    deallocate(r3D)
+    deallocate(d3D)
+    deallocate(l3D)
+    deallocate(c2D)
+    deallocate(x,y,z,time)
+
 end program 
