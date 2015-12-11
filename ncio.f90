@@ -378,13 +378,18 @@ contains
 
         double precision    :: tmp
         character (len=NC_STRLEN) :: tmpstr
-        integer :: i
+        integer :: i, status
 
         ! Open the file.
         call nc_check_open(filename, ncid, nf90_nowrite, nc_id)
 
         ! Check to make sure variable exists !!!!
-        call nc_check( nf90_inq_varid(nc_id, trim(name), v_id) )
+        status = nf90_inq_varid(nc_id, trim(name), v_id)
+        if (status /= nf90_noerr) then
+          write(*,*) "ncio :: error when reading file: ",trim(filename)
+          write(*,*) "ncio :: error when reading variable: ",trim(name)
+          call nc_check( status )  ! throw error
+        endif
 
         ! Initialize the netcdf variable info and load attributes
         call nc_v_init(v,name)
