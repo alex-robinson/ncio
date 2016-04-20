@@ -42,9 +42,9 @@ ifeq ($(ifort),1)
 	FLAGS        = -module $(objdir) -L$(objdir) -I$(INC)
 	LFLAGS		 = -L$(LIB) -lnetcdf
 
-	DFLAGS   = -vec-report0 -O3
+	DFLAGS   = -O3
 	ifeq ($(debug), 1)
-	    DFLAGS   = -C -traceback -ftrapuv -fpe0 -check all -vec-report0
+	    DFLAGS   =-C -traceback -ftrapuv -fpe0 -check all
 	    # -w 
 	endif
 endif
