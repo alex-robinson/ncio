@@ -1765,7 +1765,7 @@ contains
         if (.not. present(ncid)) call nc_check( nf90_close(nc_id) )
 
         tmpchar = trim(v%name)
-        write(*,"(a,a,a14,i6)") "ncio:: nc_write_dim:: ",trim(filename)//" : ",adjustl(tmpchar),size(v%dim)
+        write(*,"(a,a,a14,i11)") "ncio:: nc_write_dim:: ",trim(filename)//" : ",adjustl(tmpchar),size(v%dim)
 
         return
 
