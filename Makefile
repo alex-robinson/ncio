@@ -53,25 +53,28 @@ endif
 $(objdir)/ncio.o: ncio.f90
 	$(FC) $(DFLAGS) $(FLAGS) -c -o $@ $<
 
+$(objdir)/ncio_transpose.o: ncio_transpose.f90 $(objdir)/ncio.o
+	$(FC) $(DFLAGS) $(FLAGS) -c -o $@ $<
+
 ## Share library 
-$(objdir)/ncio.so: ncio.f90
-	$(FC) -c -shared -fPIC $(DFLAGS) $(FLAGS) -o ncio.so $<
+$(objdir)/ncio.so: ncio.f90 ncio_transpose.f90
+	$(FC) -c -shared -fPIC $(DFLAGS) $(FLAGS) -o ncio.so $^
 
 ## Complete programs
 
-test: $(objdir)/ncio.o
+test: $(objdir)/ncio.o $(objdir)/ncio_transpose.o
 	$(FC) $(DFLAGS) $(FLAGS) -o test_ncio.x $^ test_ncio.f90 $(LFLAGS)
 	@echo " "
 	@echo "    test_ncio.x is ready."
 	@echo " "
 
-test-extra: $(objdir)/ncio.o
+test-extra: $(objdir)/ncio.o $(objdir)/ncio_transpose.o
 	$(FC) $(DFLAGS) $(FLAGS) -o test_ncio2.x $^ extra/test_ncio2.f90 $(LFLAGS)
 	@echo " "
 	@echo "    test_ncio2.x is ready."
 	@echo " "
 
-compare: $(objdir)/ncio.o
+compare: $(objdir)/ncio.o $(objdir)/ncio_transpose.o
 	$(FC) $(DFLAGS) $(FLAGS) -o pres_temp_4D_wr.x $^ pres_temp_4D_wr_compare.f90 $(LFLAGS)
 	@echo " "
 	@echo "    pres_temp_4D_wr.x is ready."
