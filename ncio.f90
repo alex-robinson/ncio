@@ -310,7 +310,7 @@ contains
             write(0,*)  "  start: ",start
             write(0,*)  "  count: ",count
             write(0,*)  "v%count: ",v%count
-            stop 
+            stop "stopped by ncio."
         end if
 
         do i = 1, ndims
@@ -329,7 +329,7 @@ contains
                 write(0,*)  "Dimension exceeded: ",trim(v%dims(i)), size_var(i)," < ",v%count(i)
                 write(0,*)  "Are the data values a different shape than the file dimensions?"
                 write(0,*)  "   In that case, specify start+count as arguments."
-                stop
+                stop "stopped by ncio."
             end if
         end do
 
@@ -719,7 +719,7 @@ contains
                 nc_check_att = -1
             else
                 write(0,*) trim(nf90_strerror(status))
-                stop "Stopped"
+                stop "stopped by ncio."
             end if
         end if
 
@@ -746,13 +746,16 @@ contains
           nc_id = ncid
         else
           if (.not. present(filename)) then
-                write(0,*)  "ncio :: neither filename nor ncid provided, stop"
-                stop
+                write(0,*)  "ncio :: error: neither filename nor ncid provided."
+                write(0,*) "stopped by ncio."
+                stop 9
           endif
           stat = nf90_open(filename, mode, nc_id)
           if (stat .ne. NF90_NOERR) then
-              write(0,*)  "ncio :: error when opening file, no such file or directory? :: ",trim(filename)
-              stop
+              write(0,*)  "ncio :: error when opening file, no such file or directory? :: "
+              write(0,*)  trim(filename)
+              write(0,*) "stopped by ncio."
+              stop 9
           endif
         end if
 
@@ -852,7 +855,8 @@ contains
                     call nc_check( nf90_def_var(ncid,name=trim(v%name),xtype=NF90_CHAR,dimids=dimids,varid=v%varid) )
                 case DEFAULT
                     write(*,*) "nc_put_att:: Error, wrong xtype defined:"//trim(v%xtype)
-                    stop
+                    write(0,*) "stopped by ncio."
+                    stop 9
             end select
 
             if (trim(v%xtype) .ne. "NF90_CHAR") then
@@ -920,7 +924,8 @@ contains
                     v%actual_range = (/ 0.d0, 0.d0 /)
                 case DEFAULT
                     write(*,*) "nc_put_att:: Error, wrong xtype defined:"//trim(v%xtype)
-                    stop
+                    write(0,*) "stopped by ncio."
+                    stop 9
             end select
         end if
 
@@ -1214,7 +1219,7 @@ contains
         if (nc4 .and. (.not. clobber)) then 
             write(0,*) "ncio:: nc_create:: Error: &
                        &only overwrite=.TRUE. is allowed with the NetCDF4 format"
-            stop 
+            stop "stopped by ncio."
         end if 
 
         cmode = nf90_clobber 
