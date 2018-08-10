@@ -1467,6 +1467,12 @@ contains
                     call nc_check( nf90_put_att(nc_id,varid, "false_easting",  x_e) )
                     call nc_check( nf90_put_att(nc_id,varid, "false_northing", y_n) )
 
+                case("lambert_conformal_conic")
+                    call nc_check( nf90_put_att(nc_id,varid, "longitude_of_central_meridian", lambda) )
+                    call nc_check( nf90_put_att(nc_id,varid, "latitude_of_projection_origin", phi) )
+                    if (present(alpha)) &
+                    call nc_check( nf90_put_att(nc_id,varid, "standard_parallel", alpha) )
+                    
                 case DEFAULT
                     ! Do nothing
 
