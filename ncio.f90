@@ -183,12 +183,15 @@ contains
         if (present(missing_value_int)) then
             v%missing_set = .TRUE.
             v%missing_value = dble(missing_value_int)
+            v%FillValue = v%missing_value
         else if (present(missing_value_float)) then
             v%missing_set = .TRUE.
             v%missing_value = dble(missing_value_float)
+            v%FillValue = v%missing_value
         else if (present(missing_value_double)) then
             v%missing_set = .TRUE.
             v%missing_value = missing_value_double
+            v%FillValue = v%missing_value
         end if
 
         ! Open the file in write mode from filename or ncid
