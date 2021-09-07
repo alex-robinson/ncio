@@ -543,10 +543,10 @@ contains
         v%add_offset    = 0.d0
         v%scale_factor  = 1.d0
         v%actual_range  = (/ 0.d0, 0.d0 /)
-        v%missing_set   = .TRUE.
+        v%missing_set   = .FALSE.
         v%missing_value = -9999d0
         v%FillValue     = v%missing_value
-        v%FillValue_set = .TRUE.
+        v%FillValue_set = .FALSE.
 
         v%xtype = "NF90_DOUBLE"
         v%coord = .FALSE.
