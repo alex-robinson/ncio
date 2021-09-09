@@ -825,8 +825,6 @@ contains
 
         integer, parameter :: noerr = NF90_NOERR
 
-        ndims = size(v%dims)
-
         ! Check if variable already exists - if so, gets the varid
         stat = nf90_inq_varid(ncid, trim(v%name), v%varid)
 
@@ -843,6 +841,7 @@ contains
             else
                 ! This is a data variable
                 ! Determine ids of dimensions
+                ndims = size(v%dims)
                 allocate(dimids(ndims))
                 do i = 1, ndims
                     call nc_check ( nf90_inq_dimid(ncid, v%dims(i), dimids(i)) )
