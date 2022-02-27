@@ -22,6 +22,7 @@
 
 module ncio
 
+    use ieee_arithmetic
     use netcdf
 
     implicit none
@@ -34,7 +35,11 @@ module ncio
     double precision, parameter :: NC_TOL = 1d-7
     double precision, parameter :: NC_LIM = 1d25
 
+    double precision, parameter :: NCIO_TOL_UNDERFLOW = 1d-36 
+
     character(len=NC_STRLEN), parameter :: NC_CHARDIM = "strlen"
+
+    character(len=3), parameter :: GRID_MAPPING_NAME_DEFAULT = "crs" 
 
     type ncvar
         character (len=NC_STRLEN) :: name, long_name, standard_name, units
@@ -381,6 +386,8 @@ contains
         integer, optional :: iostat
         integer :: i, status
 
+        double precision, parameter :: missing_value_default = -9999.0
+
         ! Open the file.
         call nc_check_open(filename, ncid, nf90_nowrite, nc_id)
 
@@ -430,7 +437,7 @@ contains
               v%count(i) = size_in(i)
             end do
         end if
-
+        
         ! Read the variable data from the file
         ! (NF90 converts dat to proper type (int, real, dble)
         call nc_check( nf90_get_var(nc_id, v%varid, dat, v%start, v%count) )
@@ -440,6 +447,15 @@ contains
         if (.not. present(ncid)) call nc_check( nf90_close(nc_id) )
 
         if (v%missing_set) then
+
+            ! === SPECIAL CASE: missing_value == NaN ==== 
+
+            ! Replace NaNs with internal missing value to avoid crashes
+            where ( ieee_is_nan(dat) ) dat = missing_value_default
+            v%missing_value = missing_value_default 
+
+            ! ===========================================
+            
             where( dabs(dat-v%missing_value) .gt. NC_TOL ) dat = dat*v%scale_factor + v%add_offset
 
             ! Fill with user-desired missing value
@@ -456,7 +472,10 @@ contains
               dat = dat*v%scale_factor + v%add_offset
         end if
 
-        ! Also eliminate crazy values (in case they are not handled by missing_value for some reason)
+        ! Eliminate tiny values that may cause underflow errors
+        where(dabs(dat) .lt. NCIO_TOL_UNDERFLOW) dat = 0.0d0 
+        
+        ! Also eliminate crazy high values (in case they are not handled by missing_value for some reason)
         ! Fill with user-desired missing value
         if (present(missing_value_int)) &
             where( dabs(dat) .ge. NC_LIM ) dat = dble(missing_value_int)
@@ -548,7 +567,7 @@ contains
         v%xtype = "NF90_DOUBLE"
         v%coord = .FALSE.
 
-        v%grid_mapping  = ""
+        v%grid_mapping  = GRID_MAPPING_NAME_DEFAULT
 
         ! If args are present, reassign these variables
         if ( present(long_name) )     v%long_name      = trim(long_name)
@@ -1426,19 +1445,19 @@ contains
         call nc_check( nf90_close(ncid) )
     end subroutine
 
-    subroutine nc_write_map(filename,grid_mapping_name,lambda,phi,alpha,x_e,y_n,ncid)
+    subroutine nc_write_map(filename,grid_mapping_name,lambda,phi,alpha,x_e,y_n, &
+                            is_sphere,semi_major_axis,inverse_flattening,ncid)
         ! CF map conventions can be found here:
         ! http://cfconventions.org/Data/cf-conventions/cf-conventions-1.6/build/cf-conventions.html#appendix-grid-mappings
         
-        ! ajr: note this is deprecated, as it won't work for generating 
-        ! a grid description file using eg, cdo -griddes. Better to use 
-        ! the projection specific functions below nc_write_map_stereographic, etc...
-
         implicit none
 
         character(len=*), intent(IN) :: filename, grid_mapping_name
         double precision, intent(IN), optional :: lambda, phi
         double precision, intent(IN), optional :: alpha, x_e, y_n
+        logical,          intent(IN), optional :: is_sphere 
+        double precision, intent(IN), optional :: semi_major_axis
+        double precision, intent(IN), optional :: inverse_flattening
         integer,          intent(in), optional :: ncid
         
         ! Local variables 
@@ -1464,6 +1483,7 @@ contains
         if ( stat .ne. noerr ) then
             ! Define the mapping variable as an integer with no dimensions,
             ! and include the grid mapping name
+            
             call nc_check( nf90_def_var(nc_id, trim(crs_name), NF90_INT, varid) )
             
             ! Add grid attributes depending on grid_mapping type
@@ -1533,17 +1553,56 @@ contains
                     if (present(alpha)) &
                     call nc_check( nf90_put_att(nc_id,varid, "standard_parallel", alpha) )
                         
-                case("latlon")
+                case("latitude_longitude","latlon","gaussian")
                     
+                    ! Pass - no grid mapping needed for a latitude_longitude grid
                     
                     ! Add grid mapping attributes 
-                    call nc_check( nf90_put_att(nc_id,varid, "grid_mapping_name", "latitude_longitude") )
+                    !call nc_check( nf90_put_att(nc_id,varid, "grid_mapping_name", "latitude_longitude") )
                     ! == No additional parameters needed == 
 
                 case DEFAULT
                     ! Do nothing
 
-            end select
+            end select 
+
+
+            select case(trim(grid_mapping_name))
+
+                case("latitude_longitude","latlon","gaussian")
+
+                    ! Pass - do nothing for latitude_longitude grids 
+
+                case DEFAULT 
+                    ! For other projections, add planet information if available
+
+                    ! Add planet information if desired 
+                    if (present(is_sphere) .and. &
+                        present(semi_major_axis) .and. &
+                        present(inverse_flattening)) then 
+
+                        if (is_sphere) then  
+                            call nc_check( nf90_put_att(nc_id,varid, "semi_major_axis", semi_major_axis) )
+                            call nc_check( nf90_put_att(nc_id,varid, "inverse_flattening", 0.0d0) )
+                        else 
+                            call nc_check( nf90_put_att(nc_id,varid, "semi_major_axis", semi_major_axis) )
+                            call nc_check( nf90_put_att(nc_id,varid, "inverse_flattening", inverse_flattening) )
+                            
+                        end if 
+
+                    else if (present(is_sphere) .or. &
+                             present(semi_major_axis) .or. &
+                             present(inverse_flattening)) then 
+
+                        write(*,*) "ncio:: nc_write_map:: Error: to write planet information, &
+                                    &all three planet parameters must be provided: &
+                                    &is_sphere, semi_major_axis, inverse_flattening. &
+                                    &Try again."
+                                    
+                                    stop
+                    end if
+
+            end select 
 
             write(*,"(a,a,a)") "ncio:: nc_write_map:: ",trim(filename)//" : ",trim(grid_mapping_name)
 
@@ -1794,6 +1853,10 @@ contains
         endif
 
         call nc_v_init(v,name=trim(name),xtype=xtype,coord=.TRUE.)
+
+        ! Ensure grid_mapping is set to blank since a dimension cannot 
+        ! have a grid mapping. 
+        v%grid_mapping = "" 
 
         !! Now fill in values of arguments that are present
         if ( present(long_name) )     v%long_name     = trim(long_name)
