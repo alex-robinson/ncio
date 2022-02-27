@@ -1,6 +1,16 @@
 .SUFFIXES: .f .F .F90 .f90 .o .mod
 .SHELL: /bin/sh
 
+## GFORTRAN OPTIONS (default) ##
+FC = gfortran
+LIB = /opt/local/lib
+INC = /opt/local/include
+# LIB = /usr/lib
+# INC = /usr/include
+
+objdir = .obj
+libname = libncio.a
+
 .PHONY : usage
 usage:
 	@echo ""
@@ -8,22 +18,14 @@ usage:
 	@echo ""
 	@echo " make test       : compiles the test program test_ncio.x"
 	@echo " make f2py       : compiles the ncio source for use as a Python module using f2py."
+	@echo " make lib        : creates a static library $(libname) in $(objdir)."
+	@echo " make install    : installs a static library in $(LIB) and $(INC)"
 	@echo " make clean      : cleans object and executable files"
 	@echo ""
-
-
-objdir = .obj
 
 # Command-line options at make call
 ifort ?= 0
 debug ?= 0 
-
-## GFORTRAN OPTIONS (default) ##
-FC = gfortran
-LIB = /opt/local/lib
-INC = /opt/local/include
-# LIB = /usr/lib
-# INC = /usr/include
 
 FLAGS  = -I$(objdir) -J$(objdir) -I$(INC)
 LFLAGS = -L$(LIB) -lnetcdff -lnetcdf
@@ -60,6 +62,17 @@ $(objdir)/ncio_transpose.o: ncio_transpose.f90 $(objdir)/ncio.o
 $(objdir)/ncio.so: ncio.f90 ncio_transpose.f90
 	$(FC) -c -shared -fPIC $(DFLAGS) $(FLAGS) -o ncio.so $^
 
+## Static library
+lib: $(objdir)/$(libname)
+
+$(objdir)/$(libname): $(objdir)/ncio.o $(objdir)/ncio_transpose.o
+	ar -rv $@ $^
+	ranlib $@
+
+install: $(objdir)/$(libname)
+	@cp -v $^ $(LIB)
+	@cp -v $(objdir)/ncio.mod $(INC)
+
 ## Complete programs
 
 test: $(objdir)/ncio.o $(objdir)/ncio_transpose.o
@@ -81,5 +94,5 @@ compare: $(objdir)/ncio.o $(objdir)/ncio_transpose.o
 	@echo " "
 
 clean:
-	rm -f test_ncio.x test_ncio2.x pres_temp_4D_wr.x $(objdir)/*.o $(objdir)/*.mod
+	rm -f test_ncio.x test_ncio2.x pres_temp_4D_wr.x $(objdir)/*.o $(objdir)/*.mod $(objdir)/$(libname)
 

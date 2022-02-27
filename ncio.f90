@@ -187,13 +187,19 @@ contains
 
         if (present(missing_value_int)) then
             v%missing_set = .TRUE.
+            v%FillValue_set = .TRUE.
             v%missing_value = dble(missing_value_int)
+            v%FillValue = v%missing_value
         else if (present(missing_value_float)) then
             v%missing_set = .TRUE.
+            v%FillValue_set = .TRUE.
             v%missing_value = dble(missing_value_float)
+            v%FillValue = v%missing_value
         else if (present(missing_value_double)) then
             v%missing_set = .TRUE.
+            v%FillValue_set = .TRUE.
             v%missing_value = missing_value_double
+            v%FillValue = v%missing_value
         end if
 
         ! Open the file in write mode from filename or ncid
@@ -559,10 +565,10 @@ contains
         v%add_offset    = 0.d0
         v%scale_factor  = 1.d0
         v%actual_range  = (/ 0.d0, 0.d0 /)
-        v%missing_set   = .TRUE.
+        v%missing_set   = .FALSE.
         v%missing_value = -9999d0
         v%FillValue     = v%missing_value
-        v%FillValue_set = .TRUE.
+        v%FillValue_set = .FALSE.
 
         v%xtype = "NF90_DOUBLE"
         v%coord = .FALSE.
@@ -838,8 +844,6 @@ contains
 
         integer, parameter :: noerr = NF90_NOERR
 
-        ndims = size(v%dims)
-
         ! Check if variable already exists - if so, gets the varid
         stat = nf90_inq_varid(ncid, trim(v%name), v%varid)
 
@@ -856,6 +860,7 @@ contains
             else
                 ! This is a data variable
                 ! Determine ids of dimensions
+                ndims = size(v%dims)
                 allocate(dimids(ndims))
                 do i = 1, ndims
                     call nc_check ( nf90_inq_dimid(ncid, v%dims(i), dimids(i)) )
