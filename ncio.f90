@@ -35,7 +35,7 @@ module ncio
     double precision, parameter :: NC_TOL = 1d-7
     double precision, parameter :: NC_LIM = 1d25
 
-    double precision, parameter :: NCIO_TOL_UNDERFLOW = 1d-36 
+    double precision, parameter :: NCIO_TOL_UNDERFLOW = 1d-30 
 
     character(len=NC_STRLEN), parameter :: NC_CHARDIM = "strlen"
 
@@ -452,16 +452,23 @@ contains
         ! associated with the file.
         if (.not. present(ncid)) call nc_check( nf90_close(nc_id) )
 
+
+        ! === SPECIAL CASE: missing_value == NaN ==== 
+
+        ! Replace NaNs with internal missing value to avoid crashes.
+        ! IF NaNs are found, it may mean that the missing value
+        ! in the file is also set to NaN, which this program cannot
+        ! handle. Therefore, we replace all NaN values with the
+        ! default missing value, and then set the missing value. 
+        where ( ieee_is_nan(dat) ) dat = missing_value_default
+        v%missing_value = missing_value_default 
+        v%missing_set   = .TRUE. 
+
+        ! ===========================================
+        
+
         if (v%missing_set) then
 
-            ! === SPECIAL CASE: missing_value == NaN ==== 
-
-            ! Replace NaNs with internal missing value to avoid crashes
-            where ( ieee_is_nan(dat) ) dat = missing_value_default
-            v%missing_value = missing_value_default 
-
-            ! ===========================================
-            
             where( dabs(dat-v%missing_value) .gt. NC_TOL ) dat = dat*v%scale_factor + v%add_offset
 
             ! Fill with user-desired missing value
@@ -478,8 +485,8 @@ contains
               dat = dat*v%scale_factor + v%add_offset
         end if
 
-        ! Eliminate tiny values that may cause underflow errors
-        where(dabs(dat) .lt. NCIO_TOL_UNDERFLOW) dat = 0.0d0 
+        ! Finally, eliminate tiny values that may cause underflow errors
+        where ( dabs(dat) .lt. NCIO_TOL_UNDERFLOW ) dat = 0.0d0
         
         ! Also eliminate crazy high values (in case they are not handled by missing_value for some reason)
         ! Fill with user-desired missing value
