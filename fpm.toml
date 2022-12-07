@@ -1,0 +1,13 @@
+name = "ncio"
+version = "0.1.0"
+license = "license"
+author = "alex-robinson"
+maintainer = ""
+copyright = "Copyright 2013, alex-robinson"
+[build]
+auto-executables = true
+auto-tests = true
+auto-examples = true
+external-modules = ["netcdf"]
+[install]
+library = false
