@@ -8,6 +8,7 @@ copyright = "Copyright 2013, alex-robinson"
 auto-executables = true
 auto-tests = false
 auto-examples = true
+external-modules = ["netcdff","netcdf"]
 [install]
 library = false
 [[test]]
