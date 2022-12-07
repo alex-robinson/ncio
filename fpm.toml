@@ -6,8 +6,11 @@ maintainer = ""
 copyright = "Copyright 2013, alex-robinson"
 [build]
 auto-executables = true
-auto-tests = true
+auto-tests = false
 auto-examples = true
-external-modules = ["netcdf"]
 [install]
 library = false
+[[test]]
+name = "test_ncio"
+link = ["netcdff","netcdf"]
+
