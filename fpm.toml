@@ -9,9 +9,9 @@ auto-executables = true
 auto-tests = false
 auto-examples = true
 external-modules = ["netcdff","netcdf"]
+link = ["netcdff","netcdf"]
 [install]
 library = false
 [[test]]
 name = "test_ncio"
-link = ["netcdff","netcdf"]
 
