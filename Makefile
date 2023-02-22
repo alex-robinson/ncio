@@ -2,11 +2,14 @@
 .SHELL: /bin/sh
 
 ## GFORTRAN OPTIONS (default) ##
+
 FC = gfortran
-LIB = /opt/local/lib
-INC = /opt/local/include
-# LIB = /usr/lib
-# INC = /usr/include
+
+NC_CROOT=/usr/local/Cellar/netcdf/4.9.0
+NC_FROOT=/usr/local/Cellar/netcdf-fortran/4.6.0
+INC_NC  = -I${NC_FROOT}/include
+LIB_NC  = -L${NC_FROOT}/lib -lnetcdff -L${NC_CROOT}/lib -lnetcdf 
+
 
 objdir = .obj
 libname = libncio.a
@@ -27,8 +30,8 @@ usage:
 ifort ?= 0
 debug ?= 0 
 
-FLAGS  = -I$(objdir) -J$(objdir) -I$(INC)
-LFLAGS = -L$(LIB) -lnetcdff -lnetcdf
+FLAGS  = -I$(objdir) -J$(objdir) $(INC_NC)
+LFLAGS = $(LIB_NC)
 
 DFLAGS = -O3
 ifeq ($(debug), 1)
