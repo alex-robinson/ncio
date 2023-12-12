@@ -5,8 +5,8 @@
 
 FC = gfortran
 
-NC_CROOT=/usr/local/Cellar/netcdf/4.9.0
-NC_FROOT=/usr/local/Cellar/netcdf-fortran/4.6.0
+NC_CROOT=/usr/local/Cellar/netcdf/4.9.2_1
+NC_FROOT=/usr/local/Cellar/netcdf-fortran/4.6.1
 INC_NC  = -I${NC_FROOT}/include
 LIB_NC  = -L${NC_FROOT}/lib -lnetcdff -L${NC_CROOT}/lib -lnetcdf 
 
@@ -55,14 +55,14 @@ ifeq ($(ifort),1)
 endif
 
 ## Individual libraries or modules ##
-$(objdir)/ncio.o: ncio.f90
+$(objdir)/ncio.o: src/ncio.f90
 	$(FC) $(DFLAGS) $(FLAGS) -c -o $@ $<
 
-$(objdir)/ncio_transpose.o: ncio_transpose.f90 $(objdir)/ncio.o
+$(objdir)/ncio_transpose.o: src/ncio_transpose.f90 $(objdir)/ncio.o
 	$(FC) $(DFLAGS) $(FLAGS) -c -o $@ $<
 
-## Share library 
-$(objdir)/ncio.so: ncio.f90 ncio_transpose.f90
+## Shared library 
+$(objdir)/ncio.so: src/ncio.f90 src/ncio_transpose.f90
 	$(FC) -c -shared -fPIC $(DFLAGS) $(FLAGS) -o ncio.so $^
 
 ## Static library
@@ -79,7 +79,7 @@ install: $(objdir)/$(libname)
 ## Complete programs
 
 test: $(objdir)/ncio.o $(objdir)/ncio_transpose.o
-	$(FC) $(DFLAGS) $(FLAGS) -o test_ncio.x $^ test_ncio.f90 $(LFLAGS)
+	$(FC) $(DFLAGS) $(FLAGS) -o test_ncio.x $^ test/test_ncio.f90 $(LFLAGS)
 	@echo " "
 	@echo "    test_ncio.x is ready."
 	@echo " "

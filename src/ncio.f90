@@ -1885,6 +1885,10 @@ contains
         allocate(v%dim(v%n))
         v%dim = x
 
+        ! Allocate dimension names to length=1 (dimension variable has one dimension)
+        if (allocated(v%dims)) deallocate(v%dims)
+        allocate(v%dims(1))
+        
         ! Get the range from the x values
         v%actual_range = (/ minval(v%dim), maxval(v%dim) /)
         v%add_offset   = 0.d0
