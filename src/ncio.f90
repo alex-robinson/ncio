@@ -152,21 +152,24 @@ contains
 
         implicit none
 
+        character (len=*), intent(IN) :: filename
+        character (len=*), intent(IN) :: name
+        double precision,  intent(IN) :: dat(:)
+        character (len=*), intent(IN) :: xtype
+        integer,           intent(IN) :: size_in(:)
+        integer,           intent(IN), optional :: ncid
+        character (len=*), intent(IN), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
+        integer,           intent(IN), optional :: start(:)
+        integer,           intent(IN), optional :: count(:)
+        character (len=*), intent(IN), optional :: long_name, standard_name, grid_mapping, units
+        integer,           intent(IN), optional :: missing_value_int
+        real(4),           intent(IN), optional :: missing_value_float
+        double precision,  intent(IN), optional :: missing_value_double
+        
+        ! Local variables
         type(ncvar) :: v
-
-        double precision :: dat(:)
-        character (len=*), optional :: dims(:), dim1, dim2, dim3, dim4, dim5, dim6
-        integer, optional :: start(:), count(:)
-
-        character (len=*) :: filename, name, xtype
-        character (len=*),   optional :: long_name, standard_name, grid_mapping, units
-        integer,          optional :: missing_value_int
-        real(4),          optional :: missing_value_float
-        double precision, optional :: missing_value_double
-        integer :: size_in(:)
+        double precision, allocatable :: dat_to_write(:)
         integer, allocatable :: size_var(:)
-
-        integer, optional :: ncid
         integer :: nc_id
 
         ! netCDF needed counters, array, and names of dims
@@ -175,9 +178,27 @@ contains
         ! Additional helper variables
         integer :: i, j, k, m, ndims, dimid
         double precision :: actual_range(2)
+        logical :: var_is_coord
+
+        ! Check what type of variable we are working with
+        ! "coord" variables have no dimensional attributes
+        var_is_coord = .TRUE. 
+        if (present(dims) .or. present(dim1)) then
+            var_is_coord = .FALSE.
+        end if
+
+        ! Safety check
+        if (var_is_coord .and. (size(size_in,1) .gt. 1 .or. size_in(1) .ne. 1) ) then
+            write(0,*) "nc_write:: Error: dimension names must be provided for &
+            &variables that are larger than one scalar value."
+            write(0,*) "Filename: ", trim(filename)
+            write(0,*) "Variable name: ", trim(name)
+            write(0,*) "Size of variable: ", size_in
+            stop "stopped by ncio." 
+        end if
 
         ! Initialize ncvar type
-        call nc_v_init(v,trim(name),xtype=trim(xtype))
+        call nc_v_init(v,trim(name),xtype=trim(xtype),coord=var_is_coord)
 
         ! Add extra var info if available from arguments
         if ( present(long_name) )     v%long_name     = trim(long_name)
@@ -209,6 +230,11 @@ contains
         call nc_check( nf90_inquire(nc_id, unlimitedDimID=RecordDimID) ) ! Get Unlimited dimension ID if any
 
         ! Determine number of dims in file from arguments
+
+        ! First, assume a zero-dimenional/coord variable (so one value with no assigned axes)
+        ndims = 1
+
+        ! Check if dim arguments are provided and set ndims accordingly
         if (present(dims)) then
             ndims = size(dims)
 
@@ -218,7 +244,7 @@ contains
                 write(*,*) "           should be specified - not both. Using `dims`."
             end if
         else
-            ndims = 1
+            if (present(dim1)) ndims = 1
             if (present(dim2)) ndims = 2
             if (present(dim3)) ndims = 3
             if (present(dim4)) ndims = 4
@@ -229,27 +255,32 @@ contains
         ! Allocate dimensions of variable on file
         if (allocated(v%dims)) deallocate(v%dims)
         allocate( v%dims(ndims) )
-        if (present(dims)) then
-            do i = 1, ndims
-                v%dims(i) = trim(dims(i))
-            end do
-        else
-            do i = 1, ndims
-                select case(i)
-                    case(1)
-                        v%dims(i) = trim(dim1)
-                    case(2)
-                        v%dims(i) = trim(dim2)
-                    case(3)
-                        v%dims(i) = trim(dim3)
-                    case(4)
-                        v%dims(i) = trim(dim4)
-                    case(5)
-                        v%dims(i) = trim(dim5)
-                    case(6)
-                        v%dims(i) = trim(dim6)
-                end select
-            end do
+
+        if (.not. var_is_coord) then
+        
+            if (present(dims)) then
+                do i = 1, ndims
+                    v%dims(i) = trim(dims(i))
+                end do
+            else
+                do i = 1, ndims
+                    select case(i)
+                        case(1)
+                            v%dims(i) = trim(dim1)
+                        case(2)
+                            v%dims(i) = trim(dim2)
+                        case(3)
+                            v%dims(i) = trim(dim3)
+                        case(4)
+                            v%dims(i) = trim(dim4)
+                        case(5)
+                            v%dims(i) = trim(dim5)
+                        case(6)
+                            v%dims(i) = trim(dim6)
+                    end select
+                end do
+            end if
+
         end if
 
         ! Initialize the start and count arrays
@@ -257,24 +288,34 @@ contains
         v%start = 1
         if (present(start)) v%start = start
 
-        nvar = 1
-        do i = 1, ndims
-            size_var(i) = nc_size(filename,v%dims(i),ncid=nc_id)
-            nvar = nvar*size_var(i)
-        end do
-
-        ! Initialize count such that the entire input array will be stored in file
-        ! unless count argument is given
-        v%count = 1
-        if (present(count)) then
-            ! Assign argument as count
-            v%count = count
-        else if (size(dat) .eq. nvar) then
-            ! Assign count from size of variable on file
-            v%count = size_var
+        if (var_is_coord) then
+        
+            v%start = 1
+            v%count = 1
+            size_var(1) = 1
+        
         else
-            ! Assign count from input dimension size
-            v%count(1:size(size_in)) = size_in
+        
+            nvar = 1
+            do i = 1, ndims
+                size_var(i) = nc_size(filename,v%dims(i),ncid=nc_id)
+                nvar = nvar*size_var(i)
+            end do
+
+            ! Initialize count such that the entire input array will be stored in file
+            ! unless count argument is given
+            v%count = 1
+            if (present(count)) then
+                ! Assign argument as count
+                v%count = count
+            else if (size(dat) .eq. nvar) then
+                ! Assign count from size of variable on file
+                v%count = size_var
+            else
+                ! Assign count from input dimension size
+                v%count(1:size(size_in)) = size_in
+            end if
+        
         end if
 
         ! Reset or initialize the actual range of the variable
@@ -298,16 +339,6 @@ contains
             v%actual_range = [0.d0,0.d0]
         end if
 
-        ! Modify the variable according to scale and offset (if working with real or double data)
-        if (trim(v%xtype) .eq. "NF90_FLOAT" .or. trim(v%xtype) .eq. "NF90_DOUBLE") then
-            if (v%missing_set) then
-                where( dabs(dat-v%missing_value) .gt. NC_TOL ) dat = (dat-v%add_offset)/v%scale_factor
-            else
-                ! Apply the scalar and offset if available
-                dat = (dat-v%add_offset)/v%scale_factor
-            end if
-        end if
-
         ! Make sure count size makes sense
         ncount = 1
         do i = 1, ndims
@@ -324,25 +355,42 @@ contains
             stop "stopped by ncio."
         end if
 
-        do i = 1, ndims
+        ! Maks sure dimensions make sense
+        if (.not. var_is_coord) then
+            do i = 1, ndims
 
-            call nc_check( nf90_inq_dimid(nc_id, v%dims(i), dimid) )
+                call nc_check( nf90_inq_dimid(nc_id, v%dims(i), dimid) )
 
-            ! If unlimited dimension, the size does not matter
-            if (dimid .eq. RecordDimID) cycle
+                ! If unlimited dimension, the size does not matter
+                if (dimid .eq. RecordDimID) cycle
 
-            call nc_check( nf90_inquire_dimension(nc_id, dimid, len=size_var(i)) )
+                call nc_check( nf90_inquire_dimension(nc_id, dimid, len=size_var(i)) )
 
-            if (v%count(i) .gt. size_var(i)) then
-                write(0,*)  "ncio:: error: "// &
-                           "count exceeds this dimension length."
-                write(0,*)  trim(filename)//": "//trim(v%name)
-                write(0,*)  "Dimension exceeded: ",trim(v%dims(i)), size_var(i)," < ",v%count(i)
-                write(0,*)  "Are the data values a different shape than the file dimensions?"
-                write(0,*)  "   In that case, specify start+count as arguments."
-                stop "stopped by ncio."
+                if (v%count(i) .gt. size_var(i)) then
+                    write(0,*)  "ncio:: error: "// &
+                            "count exceeds this dimension length."
+                    write(0,*)  trim(filename)//": "//trim(v%name)
+                    write(0,*)  "Dimension exceeded: ",trim(v%dims(i)), size_var(i)," < ",v%count(i)
+                    write(0,*)  "Are the data values a different shape than the file dimensions?"
+                    write(0,*)  "   In that case, specify start+count as arguments."
+                    stop "stopped by ncio."
+                end if
+            end do
+        end if
+
+        ! Prepare the data for writing to file
+        allocate(dat_to_write(size(dat)))
+        dat_to_write = dat
+
+        ! Modify the variable according to scale and offset (if working with real or double data)
+        if (trim(v%xtype) .eq. "NF90_FLOAT" .or. trim(v%xtype) .eq. "NF90_DOUBLE") then
+            if (v%missing_set) then
+                where( dabs(dat-v%missing_value) .gt. NC_TOL ) dat_to_write = (dat-v%add_offset)/v%scale_factor
+            else
+                ! Apply the scalar and offset if available
+                dat_to_write = (dat-v%add_offset)/v%scale_factor
             end if
-        end do
+        end if
 
         ! Define / update the netCDF variable for the data.
         call nc_check( nf90_redef(nc_id) )
@@ -351,7 +399,7 @@ contains
 
         ! Write the data to the netcdf file
         ! Note: NF90 converts dat to proper type (int, real, dble) and shape
-        call nc_check( nf90_put_var(nc_id, v%varid, dat,v%start,v%count) )
+        call nc_check( nf90_put_var(nc_id, v%varid, dat_to_write,v%start,v%count) )
 
         ! Close the file. This causes netCDF to flush all buffers and make
         ! sure your data are really written to disk.
@@ -860,7 +908,7 @@ contains
             ! Check if it's a dimension (coordinate) variable or a data variable
             ! Get the dimension ids for the variable to be defined
             if ( v%coord ) then
-                ! This is a coordinate variable (ie, a dimension defintion)
+                ! This is a coordinate variable (ie, a dimension definition)
                 ! Only one dimid needed (that of current variable)
                 allocate(dimids(1))
                 dimids(1) = v%dimid

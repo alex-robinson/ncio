@@ -84,6 +84,12 @@ program test
     call nc_write(filename,"i2D",i3D(:,:,1),dim1="x",dim2="y")
     call nc_write(filename,"i3D",i3D(:,:,:),dim1="x",dim2="y",dim3="z")
 
+    ! Write scalar variables with no dimensional attributes.
+    call nc_write(filename,"ic", 1,long_name="0D integer")
+    call nc_write(filename,"fc", 1.0,long_name="0D float")
+    call nc_write(filename,"dc", 1.d0,long_name="0D double")
+    call nc_write(filename,"cc", "test")
+    
     ! Test writing: integer time slices 
     do k = 1, nt 
         call nc_write(filename,"i2Dt",i3D(:,:,1)+k,dim1="x",dim2="y",dim3="time", &

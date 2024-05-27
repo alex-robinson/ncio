@@ -5,8 +5,8 @@
 
 FC = gfortran
 
-NC_CROOT=/usr/local/Cellar/netcdf/4.9.2_1
-NC_FROOT=/usr/local/Cellar/netcdf-fortran/4.6.1
+NC_CROOT=/opt/homebrew/Cellar/netcdf/4.9.2_1
+NC_FROOT=/opt/homebrew/Cellar/netcdf-fortran/4.6.1
 INC_NC  = -I${NC_FROOT}/include
 LIB_NC  = -L${NC_FROOT}/lib -lnetcdff -L${NC_CROOT}/lib -lnetcdf 
 
