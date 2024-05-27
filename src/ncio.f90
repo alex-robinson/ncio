@@ -225,7 +225,8 @@ contains
 
         ! Open the file in write mode from filename or ncid
         call nc_check_open(filename, ncid, nf90_write, nc_id)
-        ! and get attributes if variable already exist
+        
+        ! and get attributes if variable already exists
         call nc_get_att(nc_id,v)
         call nc_check( nf90_inquire(nc_id, unlimitedDimID=RecordDimID) ) ! Get Unlimited dimension ID if any
 
@@ -256,8 +257,12 @@ contains
         if (allocated(v%dims)) deallocate(v%dims)
         allocate( v%dims(ndims) )
 
-        if (.not. var_is_coord) then
+        if (var_is_coord) then
+
+            v%dims(1) = trim(name)
         
+        else
+
             if (present(dims)) then
                 do i = 1, ndims
                     v%dims(i) = trim(dims(i))
@@ -904,39 +909,49 @@ contains
 
         ! Define the variable if it doesn't exist
         if ( stat .ne. noerr ) then
+            
+            ! Define the variable
+            if (v%coord) then
 
-            ! Check if it's a dimension (coordinate) variable or a data variable
-            ! Get the dimension ids for the variable to be defined
-            if ( v%coord ) then
-                ! This is a coordinate variable (ie, a dimension definition)
-                ! Only one dimid needed (that of current variable)
-                allocate(dimids(1))
-                dimids(1) = v%dimid
+                select case(trim(v%xtype))
+                    case("NF90_INT")
+                        call nc_check( nf90_def_var(ncid,name=trim(v%name),xtype=NF90_INT,varid=v%varid) )
+                    case("NF90_FLOAT")
+                        call nc_check( nf90_def_var(ncid,name=trim(v%name),xtype=NF90_FLOAT,varid=v%varid) )
+                    case("NF90_DOUBLE")
+                        call nc_check( nf90_def_var(ncid,name=trim(v%name),xtype=NF90_DOUBLE,varid=v%varid) )
+                    case("NF90_CHAR")
+                        call nc_check( nf90_def_var(ncid,name=trim(v%name),xtype=NF90_CHAR,varid=v%varid) )
+                    case DEFAULT
+                        write(*,*) "nc_put_att:: Error, wrong xtype defined:"//trim(v%xtype)
+                        write(0,*) "stopped by ncio."
+                        stop 9
+                end select
+
             else
-                ! This is a data variable
+
                 ! Determine ids of dimensions
                 ndims = size(v%dims)
                 allocate(dimids(ndims))
                 do i = 1, ndims
                     call nc_check ( nf90_inq_dimid(ncid, v%dims(i), dimids(i)) )
                 end do
-            end if
 
-            ! Define the variable
-            select case(trim(v%xtype))
-                case("NF90_INT")
-                    call nc_check( nf90_def_var(ncid,name=trim(v%name),xtype=NF90_INT,dimids=dimids,varid=v%varid) )
-                case("NF90_FLOAT")
-                    call nc_check( nf90_def_var(ncid,name=trim(v%name),xtype=NF90_FLOAT,dimids=dimids,varid=v%varid) )
-                case("NF90_DOUBLE")
-                    call nc_check( nf90_def_var(ncid,name=trim(v%name),xtype=NF90_DOUBLE,dimids=dimids,varid=v%varid) )
-                case("NF90_CHAR")
-                    call nc_check( nf90_def_var(ncid,name=trim(v%name),xtype=NF90_CHAR,dimids=dimids,varid=v%varid) )
-                case DEFAULT
-                    write(*,*) "nc_put_att:: Error, wrong xtype defined:"//trim(v%xtype)
-                    write(0,*) "stopped by ncio."
-                    stop 9
-            end select
+                select case(trim(v%xtype))
+                    case("NF90_INT")
+                        call nc_check( nf90_def_var(ncid,name=trim(v%name),xtype=NF90_INT,dimids=dimids,varid=v%varid) )
+                    case("NF90_FLOAT")
+                        call nc_check( nf90_def_var(ncid,name=trim(v%name),xtype=NF90_FLOAT,dimids=dimids,varid=v%varid) )
+                    case("NF90_DOUBLE")
+                        call nc_check( nf90_def_var(ncid,name=trim(v%name),xtype=NF90_DOUBLE,dimids=dimids,varid=v%varid) )
+                    case("NF90_CHAR")
+                        call nc_check( nf90_def_var(ncid,name=trim(v%name),xtype=NF90_CHAR,dimids=dimids,varid=v%varid) )
+                    case DEFAULT
+                        write(*,*) "nc_put_att:: Error, wrong xtype defined:"//trim(v%xtype)
+                        write(0,*) "stopped by ncio."
+                        stop 9
+                end select
+            end if
 
             if (trim(v%xtype) .ne. "NF90_CHAR") then
 

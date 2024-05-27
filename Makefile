@@ -84,6 +84,12 @@ test: $(objdir)/ncio.o $(objdir)/ncio_transpose.o
 	@echo "    test_ncio.x is ready."
 	@echo " "
 
+nodim: $(objdir)/ncio.o $(objdir)/ncio_transpose.o
+	$(FC) $(DFLAGS) $(FLAGS) -o test_nodim.x $^ test/test_nodim.f90 $(LFLAGS)
+	@echo " "
+	@echo "    test_nodim.x is ready."
+	@echo " "
+
 test-extra: $(objdir)/ncio.o $(objdir)/ncio_transpose.o
 	$(FC) $(DFLAGS) $(FLAGS) -o test_ncio2.x $^ extra/test_ncio2.f90 $(LFLAGS)
 	@echo " "
