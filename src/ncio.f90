@@ -53,6 +53,7 @@ module ncio
         logical :: missing_set, FillValue_set
         double precision, allocatable :: dim(:)
         logical :: coord
+        logical :: has_no_dims
     end type
 
     interface nc_write
@@ -178,17 +179,17 @@ contains
         ! Additional helper variables
         integer :: i, j, k, m, ndims, dimid
         double precision :: actual_range(2)
-        logical :: var_is_coord
+        logical :: var_has_no_dims
 
         ! Check what type of variable we are working with
-        ! "coord" variables have no dimensional attributes
-        var_is_coord = .TRUE. 
+        ! Some variables have no dimensional attributes and must be treated specially
+        var_has_no_dims = .TRUE. 
         if (present(dims) .or. present(dim1)) then
-            var_is_coord = .FALSE.
+            var_has_no_dims = .FALSE.
         end if
 
         ! Safety check
-        if (var_is_coord .and. (size(size_in,1) .gt. 1 .or. size_in(1) .ne. 1) ) then
+        if (var_has_no_dims .and. (size(size_in,1) .gt. 1 .or. size_in(1) .ne. 1) ) then
             write(0,*) "nc_write:: Error: dimension names must be provided for &
             &variables that are larger than one scalar value."
             write(0,*) "Filename: ", trim(filename)
@@ -198,7 +199,7 @@ contains
         end if
 
         ! Initialize ncvar type
-        call nc_v_init(v,trim(name),xtype=trim(xtype),coord=var_is_coord)
+        call nc_v_init(v,trim(name),xtype=trim(xtype),has_no_dims=var_has_no_dims)
 
         ! Add extra var info if available from arguments
         if ( present(long_name) )     v%long_name     = trim(long_name)
@@ -257,7 +258,7 @@ contains
         if (allocated(v%dims)) deallocate(v%dims)
         allocate( v%dims(ndims) )
 
-        if (var_is_coord) then
+        if (var_has_no_dims) then
 
             v%dims(1) = trim(name)
         
@@ -293,7 +294,7 @@ contains
         v%start = 1
         if (present(start)) v%start = start
 
-        if (var_is_coord) then
+        if (var_has_no_dims) then
         
             v%start = 1
             v%count = 1
@@ -361,7 +362,7 @@ contains
         end if
 
         ! Maks sure dimensions make sense
-        if (.not. var_is_coord) then
+        if (.not. var_has_no_dims) then
             do i = 1, ndims
 
                 call nc_check( nf90_inq_dimid(nc_id, v%dims(i), dimid) )
@@ -600,7 +601,7 @@ contains
     !! Purpose    :  Make some default initializations of netcdf dim vars
     !! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     subroutine nc_v_init(v,name,xtype,ndims_in,long_name,standard_name, &
-                         grid_mapping,units,axis,calendar,coord)
+                         grid_mapping,units,axis,calendar,coord,has_no_dims)
 
         implicit none
 
@@ -612,6 +613,7 @@ contains
         character(len=*), optional :: long_name, standard_name
         character(len=*), optional :: grid_mapping, units, axis, calendar
         logical, optional :: coord
+        logical, optional :: has_no_dims
 
         integer :: i
 
@@ -632,6 +634,7 @@ contains
 
         v%xtype = "NF90_DOUBLE"
         v%coord = .FALSE.
+        v%has_no_dims = .FALSE.
 
         v%grid_mapping  = GRID_MAPPING_NAME_DEFAULT
 
@@ -644,6 +647,7 @@ contains
                                       v%calendar       = trim(calendar)
 
         if ( present(coord)) v%coord = coord
+        if ( present(has_no_dims)) v%has_no_dims = has_no_dims
         if ( present(xtype)) v%xtype = trim(xtype)
 
         ! Deallocate all arrays
@@ -911,7 +915,7 @@ contains
         if ( stat .ne. noerr ) then
             
             ! Define the variable
-            if (v%coord) then
+            if (v%has_no_dims) then
 
                 select case(trim(v%xtype))
                     case("NF90_INT")
@@ -930,12 +934,22 @@ contains
 
             else
 
-                ! Determine ids of dimensions
-                ndims = size(v%dims)
-                allocate(dimids(ndims))
-                do i = 1, ndims
-                    call nc_check ( nf90_inq_dimid(ncid, v%dims(i), dimids(i)) )
-                end do
+                ! Check if it's a dimension (coordinate) variable or a data variable
+                ! Get the dimension ids for the variable to be defined
+                if ( v%coord ) then
+                    ! This is a coordinate variable (ie, a dimension defintion)
+                    ! Only one dimid needed (that of current variable)
+                    allocate(dimids(1))
+                    dimids(1) = v%dimid
+                else
+                    ! This is a data variable
+                    ! Determine ids of dimensions
+                    ndims = size(v%dims)
+                    allocate(dimids(ndims))
+                    do i = 1, ndims
+                        call nc_check ( nf90_inq_dimid(ncid, v%dims(i), dimids(i)) )
+                    end do
+                end if
 
                 select case(trim(v%xtype))
                     case("NF90_INT")

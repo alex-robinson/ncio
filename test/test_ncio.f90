@@ -77,7 +77,7 @@ program test
     call nc_write_dim(filename,"z",x=1.d0,dx=2.d0,nx=nz,units="meters")
     call nc_write_dim(filename,"time",x=[0.d0,5.d0,100.d0,150.d0], &
                       units="years",calendar="360_day", unlimited=.TRUE.)
-    
+
     ! Test writing: integers
     call nc_write(filename,"ip", [1],dim1="p")
     call nc_write(filename,"i1D",i3D(:,1,1),dim1="x")
