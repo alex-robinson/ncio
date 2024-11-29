@@ -127,11 +127,16 @@ module ncio
         module procedure    nc_exists_attr_global, nc_exists_attr_variable
     end interface 
 
+    interface nc_time_index
+        module procedure    nc_time_index_sp, nc_time_index_dp
+    end interface
+
     private
     public :: nc_read, nc_read_attr
     public :: nc_create, nc_write_map, nc_write_dim
     public :: nc_open, nc_close
     public :: nc_write, nc_write_attr, nc_size
+    public :: nc_time_index
 
     public :: nc_dims, nc_ndims
     public :: nc_write_attr_std_dim
@@ -1227,6 +1232,57 @@ contains
         return
 
     end function nc_size
+
+    function nc_time_index_sp(filename,nm,time,ncid) result(n)
+        ! For an already open netcdf file, check what is the last
+        ! available time index in the file. If current time is larger,
+        ! then advance time index by 1 to be able to write a new timestep.
+
+        implicit none
+
+        character(len=*), intent(IN) :: filename
+        character(len=*), intent(IN) :: nm
+        real(4),          intent(IN) :: time 
+        integer,          intent(IN) :: ncid 
+        integer :: n 
+
+        ! Local variables
+        double precision :: time_prev
+
+        n = nc_time_index_dp(filename,nm,dble(time),ncid)
+
+        return
+
+    end function nc_time_index_sp
+
+
+    function nc_time_index_dp(filename,nm,time,ncid) result(n)
+        ! For an already open netcdf file, check what is the last
+        ! available time index in the file. If current time is larger,
+        ! then advance time index by 1 to be able to write a new timestep.
+
+        implicit none
+
+        character(len=*), intent(IN) :: filename
+        character(len=*), intent(IN) :: nm
+        real(8),          intent(IN) :: time 
+        integer,          intent(IN) :: ncid 
+        integer :: n 
+
+        ! Local variables
+        double precision :: time_prev
+
+        ! Determine current maximum time index 
+        n = nc_size(filename,nm,ncid)
+
+        ! If current time is larger than that of the file, 
+        ! then advance index by 1 to be able to write to a new timestep
+        call nc_read(filename,nm,time_prev,start=[n],count=[1],ncid=ncid) 
+        if (dabs(time-time_prev).gt.NC_TOL) n = n+1 
+
+        return
+
+    end function nc_time_index_dp
 
     ! Return variable shape
     subroutine nc_dims(filename,name,names,dims)
