@@ -22,6 +22,7 @@
 
 module ncio
 
+    use, intrinsic :: iso_fortran_env, only : input_unit, output_unit, error_unit
     use ieee_arithmetic
     use netcdf
 
@@ -1257,8 +1258,9 @@ contains
 
 
     function nc_time_index_dp(filename,nm,time,ncid) result(n)
-        ! For an already open netcdf file, check what is the last
-        ! available time index in the file. If current time is larger,
+        ! For an already open netcdf file,find the index that
+        ! matches the current time to within tolerance.
+        ! If current time is larger than last available time,
         ! then advance time index by 1 to be able to write a new timestep.
 
         implicit none
@@ -1267,19 +1269,39 @@ contains
         character(len=*), intent(IN) :: nm
         real(8),          intent(IN) :: time 
         integer,          intent(IN) :: ncid 
-        integer :: n 
 
         ! Local variables
-        double precision :: time_prev
+        integer :: n, ntot
+        double precision, allocatable :: times(:)
+        logical :: found_index
 
         ! Determine current maximum time index 
-        n = nc_size(filename,nm,ncid)
+        ntot = nc_size(filename,nm,ncid)
+        allocate(times(ntot))
+        call nc_read(filename,nm,times,ncid=ncid) 
 
-        ! If current time is larger than that of the file, 
-        ! then advance index by 1 to be able to write to a new timestep
-        call nc_read(filename,nm,time_prev,start=[n],count=[1],ncid=ncid) 
-        if (dabs(time-time_prev).gt.NC_TOL) n = n+1 
+        found_index = .FALSE.
+        do n = 1, ntot
+            if (dabs(time-times(n)).le.NC_TOL) then
+                found_index = .TRUE.
+                exit
+            end if
+        end do
 
+        if (.not. found_index .and. &
+                dabs(time-times(ntot)).gt.NC_TOL ) then
+            ! If current time is larger than that of the file, 
+            ! then advance index by 1 to be able to write to a new timestep
+            n = ntot + 1
+        else if (.not. found_index) then
+            write(error_unit,*) "nc_time_index:: Error: index for current time not found in file &
+            & (ie, current time does not match any values stored in file)."
+            write(error_unit,*) "filename = ", trim(filename)
+            write(error_unit,*) "nm       = ", trim(nm)
+            write(error_unit,*) "time = ", time
+            write(error_unit,*) "times [in file] = ", times
+        end if
+        
         return
 
     end function nc_time_index_dp
