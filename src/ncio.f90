@@ -574,14 +574,26 @@ contains
         logical :: is_writable
         integer :: ncid
 
+        ! Local variables
+        integer :: stat
+
         is_writable = .TRUE.
         if (present(writable)) is_writable = writable
 
         if (is_writable) then
-            call nc_check( nf90_open(filename, nf90_write, ncid) )
+            !call nc_check( nf90_open(filename, nf90_write, ncid) )
+            stat = nf90_open(filename, nf90_write, ncid)
         else
-            call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+            !call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+            stat = nf90_open(filename, nf90_nowrite, ncid)
         end if
+
+        if (stat .ne. NF90_NOERR) then
+            write(0,*)  "ncio :: error when opening file, no such file or directory? :: "
+            write(0,*)  trim(filename)
+            write(0,*) "stopped by ncio."
+            stop 9
+        endif
 
         return
 
@@ -4063,7 +4075,12 @@ contains
         character(len=*), intent(IN) :: filename, attname
         integer :: ncid
         logical :: exists
-        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        integer :: stat
+        stat = nf90_open(filename, nf90_nowrite, ncid)
+        if (stat /= nf90_noerr) then
+            write(error_unit,*) "nc_exists_attr_global:: Error: filename = "//trim(filename)
+            call nc_check(stat)
+        end if
         exists = nf90_inquire_attribute(ncid, NF90_GLOBAL, trim(attname)) == NF90_NOERR
         call nc_check( nf90_close(ncid) )
     end function
@@ -4072,7 +4089,12 @@ contains
         character(len=*), intent(IN) :: filename, varname, attname
         integer :: ncid, varid
         logical :: exists
-        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        integer :: stat
+        stat = nf90_open(filename, nf90_nowrite, ncid)
+        if (stat /= nf90_noerr) then
+            write(error_unit,*) "nc_exists_attr_variable:: Error: filename = "//trim(filename)
+            call nc_check(stat)
+        end if
         call nc_check( nf90_inq_varid(ncid, trim(varname), varid) )
         exists = nf90_inquire_attribute(ncid, varid, trim(attname)) == NF90_NOERR
         call nc_check( nf90_close(ncid) )
@@ -4080,9 +4102,14 @@ contains
 
     function nc_exists_var(filename, varname) result(exists)
         character(len=*), intent(IN) :: filename, varname
-        integer :: stat, n, ncid, varid
+        integer :: n, ncid, varid
         logical :: exists
-        call nc_check( nf90_open(filename, nf90_nowrite, ncid) )
+        integer :: stat
+        stat = nf90_open(filename, nf90_nowrite, ncid)
+        if (stat /= nf90_noerr) then
+            write(error_unit,*) "nc_exists_var:: Error: filename = "//trim(filename)
+            call nc_check(stat)
+        end if
         exists = nf90_inq_varid(ncid, trim(varname), varid) == NF90_NOERR
         call nc_check( nf90_close(ncid) )
     end function
