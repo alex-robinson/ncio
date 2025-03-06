@@ -58,7 +58,7 @@ nc_close
 The first two are useful for reading variable attributes and data from an existing NetCDF file. The remaining functions are used for creating and writing to NetCDF files. 
 
 ```fortran
-subroutine nc_read(filename,dat,name,[start],[count],[missing value])
+subroutine nc_read(filename,dat,name,[start],[count],[missing_value])
 ```
 ```
 filename        name of the NetCDF data file to read from
